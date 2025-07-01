@@ -12,14 +12,13 @@ const result = ref("")
 const handleTest1 = () => {
   count.value++
   const result1 = test1();
+  console.log(result1);
   result.value = result1;
 }
 
 const handleTest2 = () => {
   const result2 = test2();
 }
-
-
 
 
 </script>
@@ -51,7 +50,7 @@ const handleTest2 = () => {
   </p>
   <p class="read-the-docs">Click on the Vite and Vue logos to learn more</p>
   <div>
-    <p>{{result}}</p>
+    <p>"""""{{result}}"""""</p>
   </div>
 </template>
 
