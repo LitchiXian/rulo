@@ -1,5 +1,6 @@
 package com.l2.web;
 
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -7,12 +8,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/hello")
 public class HelloController {
 
-    @RequestMapping("/test1")
+    @GetMapping("/test1")
     public String test1() {
         return "Hello world";
     }
 
-    @RequestMapping("/test2")
+    @GetMapping("/test2")
     public String test2() {
         return "Hello world2";
     }
