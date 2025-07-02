@@ -12,15 +12,15 @@ public class CorsConfig {
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
 
-//            // 配置跨域
-//            @Override
-//            public void addCorsMappings(CorsRegistry registry) {
-//                registry.addMapping("/**")
-//                        .allowedOrigins("http://localhost:5173")
-//                        .allowedMethods("GET", "POST")
-//                        .allowedHeaders("*")
-//                        .allowCredentials(true);
-//            }
+            // 配置跨域
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")
+                        .allowedOrigins("http://localhost:5173")// 允许的域名 // 尝试用*，失败了
+                        .allowedMethods("GET", "POST")
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
+            }
         };
     }
 
