@@ -5,14 +5,14 @@
 
     <groupId>com.l2</groupId>
     <artifactId>l2</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.2</version>
 
     <name>L2</name>
     <url>http://www.sosdan.cn</url>
     <description>快乐的蓝图</description>
 
     <properties>
-        <l2.version>0.0.3</l2.version>
+        <l2.version>0.0.2</l2.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>17</java.version>
