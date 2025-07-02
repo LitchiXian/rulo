@@ -17,6 +17,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>17</java.version>
         <spring-boot.version>3.5.3</spring-boot.version>
+        <commons-collections4.version>4.4</commons-collections4.version>
     </properties>
 
     <dependencyManagement>
@@ -27,6 +28,12 @@
                 <version>${spring-boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-collections4</artifactId>
+                <version>${commons-collections4.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
