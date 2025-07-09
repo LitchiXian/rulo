@@ -1,17 +1,230 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <header class="bg-white shadow-sm">
-      <div class="container mx-auto py-4 px-4">
-        <router-link to="/" class="text-xl font-bold">我的技术博客</router-link>
+  <div class="layout-container">
+    <!-- 左侧导航栏 -->
+    <aside class="left-sidebar">
+      <div class="author-info">
+        <img src="@/assets/avatar.png" alt="博主头像" class="author-avatar" />
+        <h2 class="author-name">Vify的博客</h2>
       </div>
-    </header>
 
-    <main class="container mx-auto py-8 px-4 max-w-3xl">
+      <nav class="sidebar-nav">
+        <router-link to="/">
+          <span class="icon">🏠</span> Home
+        </router-link>
+        <router-link to="/">
+          <span class="icon">🏷️</span> Tags
+        </router-link>
+        <router-link to="/">
+          <span class="icon">👤</span> About
+        </router-link>
+        <router-link to="/">
+          <span class="icon">🔗</span> Links
+        </router-link>
+        <router-link to="/">
+          <span class="icon">🛠️</span> Service
+        </router-link>
+
+        <div class="dark-mode-toggle" @click="toggleDarkMode">
+          <span class="icon">{{ darkMode ? '🌞' : '🌙' }}</span>
+          {{ darkMode ? 'Light Mode' : 'Dark Mode' }}
+        </div>
+      </nav>
+    </aside>
+
+    <!-- 中间内容区域 -->
+    <main class="content-area">
       <slot />
     </main>
 
-    <footer class="mt-16 py-8 text-center text-gray-500 text-sm">
-      © 2025 我的技术博客 · 用 ❤️ 搭建
-    </footer>
+    <!-- 右侧目录栏 -->
+    <aside class="right-sidebar" v-if="showToc">
+      <div class="toc-container">
+        <h3 class="toc-title">文章目录</h3>
+        <ul class="toc-list">
+          <li v-for="(item, index) in tocItems" :key="index" :class="`toc-level-${item.level}`">
+            <a :href="`#${item.id}`" @click.prevent="scrollToAnchor(item.id)">
+              {{ item.text }}
+            </a>
+          </li>
+        </ul>
+      </div>
+    </aside>
   </div>
 </template>
+
+<script setup>
+import { ref } from 'vue';
+
+const darkMode = ref(true);
+const showToc = ref(true);
+const tocItems = ref([]); // 从文章内容提取的目录项
+
+const toggleDarkMode = () => {
+  darkMode.value = !darkMode.value;
+  document.body.classList.toggle('dark-mode', darkMode.value);
+};
+
+const scrollToAnchor = (id) => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
+// 根据文章内容生成目录项的逻辑可以放在这里
+// 或者在文章页面加载时设置
+defineExpose({
+  setTocItems: (items) => {
+    tocItems.value = items;
+    showToc.value = items.length > 0;
+  }
+});
+</script>
+
+<style scoped>
+.layout-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #303030; /* 48,48,48 */
+}
+
+.left-sidebar {
+  width: 300px;
+  color: #e2e2ec; /* 226,226,236 - 标题颜色 */
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  overflow-y: auto;
+  padding: 20px;
+  margin-left: 200px;
+  border-right: 0px solid #424242; /* 66,66,66 - 框颜色 */
+}
+
+.author-info {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.author-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+
+.author-name {
+  font-size: 1.5rem;
+  margin-bottom: 5px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  color: #ece2c0; /* 236,226,192 - 字体颜色 */
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.sidebar-nav a:hover {
+  background-color: #424242; /* 66,66,66 */
+}
+
+.icon {
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+.dark-mode-toggle {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 20px;
+  background-color: #424242; /* 66,66,66 */
+  transition: background-color 0.3s;
+}
+
+.dark-mode-toggle:hover {
+  background-color: #555;
+}
+
+.content-area {
+  flex: 1;
+  margin: 0 590px; /* 左右边距匹配侧边栏宽度 */
+  padding: 30px;
+  background-color: var(--card-bg-color); /* 66,66,66 - 内容背景色 */
+  color: #ece2c0; /* 236,226,192 - 字体颜色 */
+}
+
+.right-sidebar {
+  width: 300px;
+  color: #e2e2ec; /* 226,226,236 - 标题颜色 */
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  overflow-y: auto;
+  padding: 20px;
+  margin-right: 200px;
+  border-left: 0px solid #424242; /* 66,66,66 - 框颜色 */
+}
+
+.toc-container {
+  background-color: #424242; /* 66,66,66 */
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.toc-title {
+  font-size: 1.25rem;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #555;
+}
+
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.toc-list li {
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.toc-list a {
+  color: #ece2c0; /* 236,226,192 */
+  text-decoration: none;
+  transition: color 0.3s;
+  display: block;
+  padding: 5px 0;
+}
+
+.toc-list a:hover {
+  color: #4abbb5; /* 青色高亮 */
+}
+
+.toc-level-2 {
+  padding-left: 15px;
+}
+
+.toc-level-3 {
+  padding-left: 30px;
+}
+
+.toc-level-4 {
+  padding-left: 45px;
+}
+</style>

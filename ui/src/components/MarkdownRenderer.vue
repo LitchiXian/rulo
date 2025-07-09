@@ -1,37 +1,59 @@
 <template>
-  <div class="markdown-body" v-html="compiledMarkdown" />
+  <div class="markdown-body" v-html="htmlContent"></div>
 </template>
 
-<script setup lang="ts">
-import { marked } from 'marked';
-import { computed } from 'vue';
-import hljs from 'highlight.js';
+<script setup>
+import { defineProps, ref, onMounted } from 'vue'
+import markdownParser from '@/utils/markdownParser'
+import '@/styles/markdown.css'
 
 const props = defineProps({
   content: {
     type: String,
     required: true
   }
-});
+})
 
-const compiledMarkdown = computed(() => {
-  return marked(props.content, {
-    highlight: (code) => hljs.highlightAuto(code).value
-  });
-});
-</script>
+const emit = defineEmits(['toc-generated'])
+const htmlContent = ref('')
 
-<style>
-/* 基础Markdown样式 */
-.markdown-body {
-  line-height: 1.6;
-  h1, h2, h3 {
-    @apply mt-8 mb-4 font-bold;
-  }
-  h1 { @apply text-3xl; }
-  h2 { @apply text-2xl; }
-  h3 { @apply text-xl; }
-  code { @apply bg-gray-100 px-1 py-0.5 rounded; }
-  pre { @apply bg-gray-100 p-4 rounded overflow-auto; }
+onMounted(() => {
+  const md = markdownParser({
+    // 配置生成锚点链接
+    anchorOptions: {
+      permalink: true,
+      permalinkBefore: true,
+      permalinkSymbol: '#'
+    }
+  })
+
+  htmlContent.value = md.render(props.content)
+
+  // 提取标题生成目录
+  generateToc()
+})
+
+// 生成文章目录
+const generateToc = () => {
+  // 等待DOM更新
+  setTimeout(() => {
+    const tocItems = []
+    const headings = document.querySelectorAll('.markdown-body h2, .markdown-body h3, .markdown-body h4')
+
+    headings.forEach((heading, index) => {
+      const level = parseInt(heading.tagName.substring(1))
+      const id = `heading-${index}`
+      heading.id = id
+
+      tocItems.push({
+        id: id,
+        text: heading.innerText.replace('#', ''),
+        level: level
+      })
+    })
+
+    // 发送生成的目录
+    emit('toc-generated', tocItems)
+  }, 100)
 }
-</style>
+</script>

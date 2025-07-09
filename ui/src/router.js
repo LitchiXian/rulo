@@ -1,15 +1,27 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import Home from '@/pages/Home.vue';
-import Post from '@/pages/Post.vue';
-import NotFound from '@/pages/NotFound.vue';
+import { createRouter, createWebHistory } from 'vue-router'
+
+const routes = [
+    {
+        path: '/',
+        name: 'Home',
+        component: () => import('@/pages/Home.vue')
+    },
+    {
+        path: '/post/:id',
+        name: 'Post',
+        component: () => import('@/pages/Post.vue'),
+        props: true
+    },
+    {
+        path: '/:pathMatch(.*)*',
+        name: 'NotFound',
+        component: () => import('@/pages/NotFound.vue')
+    }
+]
 
 const router = createRouter({
-    history: createWebHistory(),
-    routes: [
-        { path: '/', component: Home },
-        { path: '/post/:id', component: Post, props: true },
-        { path: '/:pathMatch(.*)*', component: NotFound }
-    ]
-});
+    history: createWebHistory(import.meta.env.BASE_URL),
+    routes
+})
 
-export default router;
+export default router
