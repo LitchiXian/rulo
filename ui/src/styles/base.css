@@ -128,3 +128,8 @@ code {
         padding: 20px;
     }
 }
+
+* {
+    scrollbar-width: thin; /* thin | auto | none */
+    scrollbar-color: #424242 var(--body-bg-color); /* 滑块颜色 轨道颜色 */
+}
