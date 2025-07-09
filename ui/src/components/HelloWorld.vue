@@ -1,13 +1,5 @@
 <template>
   <div class="hello">
-    <!-- Logo展示 -->
-    <img
-        v-if="showLogo"
-        alt="Vue logo"
-        :src="logoSource"
-        class="logo"
-        :class="{ 'logo-animation': animationActive }"
-    />
 
     <!-- 主要欢迎信息 -->
     <h1 :class="{ 'pulse': isHighlighted }">
@@ -89,10 +81,6 @@ export default defineComponent({
     // 计算属性
     const greetingMessage = computed(() => {
       return customGreeting.value || props.msg;
-    });
-
-    const logoSource = computed(() => {
-      return '/vite.svg'; // 项目中实际路径可能不同
     });
 
     // 响应式对象
@@ -198,7 +186,6 @@ export default defineComponent({
 
       // 计算属性
       greetingMessage,
-      logoSource,
 
       // 数据
       functionalButtons,
