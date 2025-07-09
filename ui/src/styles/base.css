@@ -1,43 +1,51 @@
-/* 更新背景颜色 */
+/* ======== 全局变量 ======== */
 :root {
     --body-bg-color: #303030;
-    /*--card-bg-color: #272822;*/
     --card-bg-color: #606060;
-    --bg-primary: #303030;       /* 48,48,48 - 主背景 */
-    --bg-secondary: #1a1a1a;      /* 26,26,26 - 次级背景 */
-    --card-bg: #424242;           /* 66,66,66 - 内容区域背景 */
-    --title-color: #e2e2ec;       /* 226,226,236 - 标题颜色 */
-    --text-color: #ece2c0;        /* 236,226,192 - 正文颜色 */
-    --border-color: #555;         /* 边框颜色 */
-    --primary: #4abbb5;           /* 主色调 - 青色（接近第二张截图） */
+    --bg-primary: #303030;
+    --bg-secondary: #1a1a1a;
+    --card-bg: #424242;
+    --title-color: #e2e2ec;
+    --text-color: #ece2c0;
+    --border-color: #555;
+    --primary: #4abbb5; /* 主色调 */
+}
+
+/* ======== 基础样式 ======== */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #424242 var(--body-bg-color);
 }
 
 body {
+    font-family: 'Inter', 'Source Han Sans', 'PingFang SC', sans-serif;
     background-color: var(--body-bg-color);
     color: var(--text-color);
+    line-height: 1.6;
+    margin: 0;
+    position: relative;
 }
 
-/* 添加左右两侧固定背景区域 */
+body.dark-mode { /* 暗色模式扩展点 */
+    /* 扩展样式 */
+}
+
+/* ======== 布局组件 ======== */
+/* 两侧固定背景 */
 body::before,
 body::after {
     content: '';
     position: fixed;
     top: 0;
     bottom: 0;
-    width: calc((100% - 900px) / 2); /* 计算宽度使中间区域为900px */
+    width: calc((100% - 900px) / 2);
     background-color: var(--bg-secondary);
     z-index: -1;
 }
+body::before { left: 0; }
+body::after { right: 0; }
 
-body::before {
-    left: 0;
-}
-
-body::after {
-    right: 0;
-}
-
-/* 容器样式 - 保持居中 */
+/* 主内容容器 */
 .container {
     width: 900px;
     margin: 0 auto;
@@ -47,36 +55,19 @@ body::after {
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
-
-/*!* 基础样式 *!*/
-/*body {*/
-/*    font-family: 'Inter', 'Source Han Sans', 'PingFang SC', sans-serif;*/
-/*    background-color: #303030; !* 48,48,48 *!*/
-/*    color: #ece2c0; !* 236,226,192 *!*/
-/*    line-height: 1.6;*/
-/*    margin: 0;*/
-/*}*/
-
-/* 暗色模式 */
-body.dark-mode {
-    /* 可以根据需要添加额外的暗色模式样式 */
-}
-
-/* 链接样式 */
+/* ======== 元素样式 ======== */
 a {
-    color: #4abbb5; /* 青色链接 */
+    color: var(--primary);
     text-decoration: none;
     transition: color 0.3s;
 }
-
 a:hover {
-    color: #80d0cc; /* 浅青色 */
+    color: #80d0cc;
     text-decoration: underline;
 }
 
-/* 代码块样式 */
 pre {
-    background-color: #1a1a1a;
+    background-color: var(--bg-secondary);
     border-radius: 8px;
     padding: 15px;
     overflow-x: auto;
@@ -89,15 +80,10 @@ code {
     border-radius: 4px;
 }
 
-/* 响应式调整 */
+/* ======== 响应式设计 ======== */
 @media (max-width: 1200px) {
-    .right-sidebar {
-        display: none;
-    }
-
-    .content-area {
-        margin-right: 0;
-    }
+    .right-sidebar { display: none; }
+    .content-area { margin-right: 0; }
 }
 
 @media (max-width: 900px) {
@@ -106,30 +92,18 @@ code {
         padding: 10px;
         overflow: hidden;
     }
-
     .author-name,
     .sidebar-nav a span:last-child,
     .dark-mode-toggle span:last-child {
         display: none;
     }
-
-    .content-area {
-        margin-left: 80px;
-    }
+    .content-area { margin-left: 80px; }
 }
 
 @media (max-width: 600px) {
-    .left-sidebar {
-        display: none;
-    }
-
+    .left-sidebar { display: none; }
     .content-area {
         margin-left: 0;
         padding: 20px;
     }
-}
-
-* {
-    scrollbar-width: thin; /* thin | auto | none */
-    scrollbar-color: #424242 var(--body-bg-color); /* 滑块颜色 轨道颜色 */
 }
