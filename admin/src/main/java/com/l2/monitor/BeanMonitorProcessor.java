@@ -1,5 +1,6 @@
 package com.l2.monitor;
 
+import com.baomidou.mybatisplus.core.mapper.Mapper;
 import com.l2.stats.BeanStats;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
@@ -21,6 +22,10 @@ public class BeanMonitorProcessor implements BeanPostProcessor {
 
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) {
+        // 跳过MyBatis Mapper的监控
+        if(beanName.contains("Mapper") || bean instanceof Mapper) {
+            return bean;
+        }
         // 计算耗时
         long cost = System.currentTimeMillis() - startTime.get(beanName);
         // 记录到统计器

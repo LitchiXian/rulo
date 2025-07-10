@@ -1,0 +1,45 @@
+package com.l2.web;
+
+import com.l2.entity.BBlogArticle;
+import com.l2.entity.dto.IdDto;
+import com.l2.entity.dto.SaveBBlogArticleDto;
+import com.l2.service.BBlogArticleService;
+import com.l2.util.AjaxResult;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/blog/article")
+@RequiredArgsConstructor
+public class BBlogArticleController {
+
+    private final BBlogArticleService bBlogArticleService;
+
+    @PostMapping("/save")
+    public AjaxResult save(@RequestBody SaveBBlogArticleDto dto) {
+        bBlogArticleService.save(dto);
+        return AjaxResult.success();
+    }
+
+    @PostMapping("/remove")
+    public AjaxResult remove(@RequestBody IdDto idDto) {
+        bBlogArticleService.removeById(idDto.getId());
+        return AjaxResult.success();
+    }
+
+    @PostMapping("/update")
+    public AjaxResult update(@RequestBody BBlogArticle bBlogArticle) {
+        bBlogArticleService.updateById(bBlogArticle);
+        return AjaxResult.success();
+    }
+
+    @GetMapping("/list")
+    public AjaxResult list() {
+        return AjaxResult.success(bBlogArticleService.list());
+    }
+
+    @GetMapping("/get")
+    public AjaxResult get(IdDto idDto) {
+        return AjaxResult.success(bBlogArticleService.getById(idDto.getId()));
+    }
+}
