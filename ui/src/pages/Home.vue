@@ -5,6 +5,8 @@
       <p>A simple markdown-based blog built with Vue 3 + Vite</p>
     </section>
 
+    <hr>
+
     <section class="featured-posts">
       <h2>Latest Posts</h2>
       <div v-for="post in featuredPosts" :key="post.id" class="post-card">
@@ -47,7 +49,6 @@ const formatDate = (dateString) => {
   text-align: center;
   margin-bottom: 3rem;
   padding: 2rem;
-  background-color: rgba(0,0,0,0.2);
   border-radius: 8px;
 }
 
@@ -63,7 +64,6 @@ const formatDate = (dateString) => {
 }
 
 .featured-posts {
-  background-color: rgba(0,0,0,0.2);
   border-radius: 8px;
   padding: 2rem;
 }

@@ -4,7 +4,7 @@
     <aside class="left-sidebar">
       <div class="author-info">
         <img src="@/assets/avatar.png" alt="博主头像" class="author-avatar" />
-        <h2 class="author-name">Vify的博客</h2>
+        <h2 class="author-name">Litchi 的博客</h2>
       </div>
 
       <nav class="sidebar-nav">
@@ -89,7 +89,7 @@ defineExpose({
 }
 
 .left-sidebar {
-  width: 300px;
+  width: 250px;
   color: #e2e2ec; /* 226,226,236 - 标题颜色 */
   position: fixed;
   left: 0;
@@ -97,7 +97,8 @@ defineExpose({
   bottom: 0;
   overflow-y: auto;
   padding: 20px;
-  margin-left: 200px;
+  margin-left: 100px;
+  margin-top: 30px;
   border-right: 0px solid #424242; /* 66,66,66 - 框颜色 */
 }
 
@@ -151,7 +152,6 @@ defineExpose({
   cursor: pointer;
   border-radius: 5px;
   margin-top: 20px;
-  background-color: #424242; /* 66,66,66 */
   transition: background-color 0.3s;
 }
 
@@ -161,14 +161,16 @@ defineExpose({
 
 .content-area {
   flex: 1;
-  margin: 0 590px; /* 左右边距匹配侧边栏宽度 */
-  padding: 30px;
+  margin: 50px 598px 0 380px; /* 上右下左边距匹配侧边栏宽度 */
+  padding: 10px;
   background-color: var(--card-bg-color); /* 66,66,66 - 内容背景色 */
   color: #ece2c0; /* 236,226,192 - 字体颜色 */
+  border-top-left-radius: 10px;     /* 左上角圆角 */
+  border-top-right-radius: 10px;    /* 右上角圆角 */
 }
 
 .right-sidebar {
-  width: 300px;
+  width: 350px;
   color: #e2e2ec; /* 226,226,236 - 标题颜色 */
   position: fixed;
   right: 0;
@@ -177,6 +179,7 @@ defineExpose({
   overflow-y: auto;
   padding: 20px;
   margin-right: 200px;
+  margin-top: 30px;
   border-left: 0px solid #424242; /* 66,66,66 - 框颜色 */
 }
 
