@@ -13,9 +13,9 @@
         <router-link :to="`/post/${post.id}`">
           <h3>{{ post.title }}</h3>
         </router-link>
-        <p class="excerpt">{{ post.excerpt }}</p>
+        <p class="excerpt">空空如也</p>
         <div class="meta">
-          <span class="date">{{ formatDate(post.date) }}</span>
+          <span class="date">{{ formatDate(post.content) }}</span>
         </div>
       </div>
     </section>
@@ -25,13 +25,34 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import posts from '@/data/posts.json'
+import {list} from "@/api/web/bBlogArticle.js";
 
 const router = useRouter()
 const featuredPosts = ref([])
+const loading = ref(true)
+const error = ref(null)
 
-onMounted(() => {
-  featuredPosts.value = posts.slice(0, 5)
+// onMounted(() => {
+//   featuredPosts.value = posts.slice(0, 5)
+// })
+
+onMounted(async () => {
+  try {
+    // 调用API获取文章列表
+    const response = await list()
+
+    // 从响应中提取data字段
+    if (response.data && Array.isArray(response.data)) {
+      featuredPosts.value = response.data
+    } else {
+      throw new Error('Invalid response format')
+    }
+  } catch (err) {
+    console.error('Error fetching posts:', err)
+    error.value = 'Failed to load posts. Please try again later.'
+  } finally {
+    loading.value = false
+  }
 })
 
 const formatDate = (dateString) => {

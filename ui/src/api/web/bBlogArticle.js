@@ -31,7 +31,7 @@ export function list() {
     });
 }
 
-export function get(data) {
+export function getArticle(data) {
     return request({
         url: '/blog/article/get',
         method: 'get',
