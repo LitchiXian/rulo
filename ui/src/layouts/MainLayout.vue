@@ -20,8 +20,8 @@
         <router-link to="/">
           <span class="icon">🔗</span> Links
         </router-link>
-        <router-link to="/">
-          <span class="icon">🛠️</span> Service
+        <router-link to="/saveArticle">
+          <span class="icon">🛠️</span> 新增
         </router-link>
 
         <div class="dark-mode-toggle" @click="toggleDarkMode">

@@ -16,6 +16,11 @@ const routes = [
         path: '/:pathMatch(.*)*',
         name: 'NotFound',
         component: () => import('@/pages/NotFound.vue')
+    },
+    {
+        path: '/saveArticle',
+        name: 'SaveArticle',
+        component: () => import('@/pages/SaveArticle.vue')
     }
 ]
 
