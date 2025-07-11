@@ -22,21 +22,25 @@
 DROP TABLE IF EXISTS `b_blog_article`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `b_blog_article` (
-  `id` bigint NOT NULL COMMENT 'ID',
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '文章标题',
-  `content` longtext COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Markdown内容',
-  `user_id` bigint NOT NULL COMMENT '作者ID',
-  `user_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '作者名称（冗余存储）',
-  `published_time` datetime DEFAULT NULL COMMENT '发布时间（当设置为公开时）',
-  `is_published` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否发布（0=私密，1=公开）',
-  `is_deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT '逻辑删除标志（0=正常，1=已删除）',
-  `create_id` bigint NOT NULL COMMENT '创建人ID',
-  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_id` bigint NOT NULL COMMENT '更新人ID',
-  `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='博客文章核心表';
+DROP TABLE IF EXISTS `b_blog_article`;
+CREATE TABLE `b_blog_article`
+(
+    `id`             BIGINT(20) UNSIGNED NOT NULL COMMENT 'ID',
+    `title`          VARCHAR(255)        NOT NULL COMMENT '文章标题',
+    `content`        LONGTEXT            NOT NULL COMMENT 'Markdown内容',
+    `user_id`        BIGINT(20) UNSIGNED NOT NULL COMMENT '作者ID',
+    `user_name`      VARCHAR(255)        NOT NULL COMMENT '作者名称（冗余存储）',
+    `published_time` DATETIME COMMENT '发布时间（当设置为公开时）',
+    `is_published`   TINYINT(1)          NOT NULL DEFAULT 0 COMMENT '是否发布（0=私密，1=公开）',
+    `is_deleted`     TINYINT(1)          NOT NULL DEFAULT 0 COMMENT '逻辑删除标志（0=正常，1=已删除）',
+    `create_id`      BIGINT(20) UNSIGNED NOT NULL COMMENT '创建人ID',
+    `create_time`    DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_id`      BIGINT(20) UNSIGNED NOT NULL COMMENT '更新人ID',
+    `update_time`    DATETIME                     DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci COMMENT '博客文章核心表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
