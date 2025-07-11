@@ -1,5 +1,6 @@
 package com.l2.config;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
@@ -21,6 +22,9 @@ public class JacksonConfig {
         module.addSerializer(long.class, new ToStringSerializer());
 
         objectMapper.registerModule(module);
+
+        // 忽略未知字段（不报错）
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         return objectMapper;
     }
 }

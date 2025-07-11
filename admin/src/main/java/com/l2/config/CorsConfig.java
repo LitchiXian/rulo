@@ -17,9 +17,17 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:5173")// 允许的域名 // 尝试用*，失败了
+                        // 允许的域名 // 尝试用*，失败了
+                        .allowedOrigins(
+                                "http://localhost:*",
+                                "https://sosdan.cn",
+                                "https://*.sosdan.cn"
+                        )
+                        // 允许的HTTP方法
                         .allowedMethods("GET", "POST")
+                        // 允许的请求头
                         .allowedHeaders("*")
+                        // 是否允许携带凭证（如cookies）
                         .allowCredentials(true);
             }
         };

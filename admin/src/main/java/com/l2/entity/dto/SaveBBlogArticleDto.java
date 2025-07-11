@@ -2,8 +2,10 @@ package com.l2.entity.dto;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class SaveBBlogArticleDto {
+public class SaveBBlogArticleDto implements Serializable {
 
     /**
      * 文章标题

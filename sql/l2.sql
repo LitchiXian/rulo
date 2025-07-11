@@ -29,7 +29,7 @@ CREATE TABLE `b_blog_article`
     `title`          VARCHAR(255)        NOT NULL COMMENT '文章标题',
     `content`        LONGTEXT            NOT NULL COMMENT 'Markdown内容',
     `user_id`        BIGINT(20) UNSIGNED NOT NULL COMMENT '作者ID',
-    `user_name`      VARCHAR(255)        NOT NULL COMMENT '作者名称（冗余存储）',
+    `user_name`      VARCHAR(255)                 COMMENT '作者名称（冗余存储）',
     `published_time` DATETIME COMMENT '发布时间（当设置为公开时）',
     `is_published`   TINYINT(1)          NOT NULL DEFAULT 0 COMMENT '是否发布（0=私密，1=公开）',
     `is_deleted`     TINYINT(1)          NOT NULL DEFAULT 0 COMMENT '逻辑删除标志（0=正常，1=已删除）',
