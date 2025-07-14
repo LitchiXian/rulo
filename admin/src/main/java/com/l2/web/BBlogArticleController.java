@@ -1,5 +1,6 @@
 package com.l2.web;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.l2.entity.BBlogArticle;
 import com.l2.entity.dto.IdDto;
 import com.l2.entity.dto.SaveBBlogArticleDto;
@@ -35,7 +36,7 @@ public class BBlogArticleController {
 
     @GetMapping("/list")
     public AjaxResult list() {
-        return AjaxResult.success(bBlogArticleService.list());
+        return AjaxResult.success(bBlogArticleService.list(new LambdaQueryWrapper<BBlogArticle>().orderByDesc(BBlogArticle::getUpdateTime)));
     }
 
     @GetMapping("/get")

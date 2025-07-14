@@ -27,7 +27,7 @@ public class BBlogArticleServiceImpl extends ServiceImpl<BBlogArticleMapper, BBl
     @Override
     public int save(SaveBBlogArticleDto dto) {
         BBlogArticle bBlogArticle = new BBlogArticle();
-        bBlogArticle.setId(snowflakeConfig.snowflakeId());
+//        bBlogArticle.setId(snowflakeConfig.snowflakeId());
         bBlogArticle.setTitle(dto.getTitle());
         bBlogArticle.setContent(dto.getContent());
         bBlogArticle.setUserId(1L);
@@ -35,11 +35,11 @@ public class BBlogArticleServiceImpl extends ServiceImpl<BBlogArticleMapper, BBl
         Date date = new Date();
         bBlogArticle.setPublishedTime(date);
         bBlogArticle.setIsPublished(dto.getIsPublished());
-        bBlogArticle.setIsDeleted(0);
-        bBlogArticle.setCreateId(1L);
-        bBlogArticle.setCreateTime(date);
-        bBlogArticle.setUpdateId(1L);
-        bBlogArticle.setUpdateTime(date);
+//        bBlogArticle.setIsDeleted(0);
+//        bBlogArticle.setCreateId(1L);
+//        bBlogArticle.setCreateTime(date);
+//        bBlogArticle.setUpdateId(1L);
+//        bBlogArticle.setUpdateTime(date);
 
         int insert = baseMapper.insert(bBlogArticle);
         return insert;

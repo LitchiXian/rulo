@@ -19,7 +19,7 @@ public class CorsConfig {
                 registry.addMapping("/**")
                         // 允许的域名 // 尝试用*，失败了
                         .allowedOrigins(
-                                "http://localhost:*",
+                                "http://localhost",
                                 "https://sosdan.cn",
                                 "https://*.sosdan.cn"
                         )

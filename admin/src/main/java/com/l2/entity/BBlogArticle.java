@@ -3,6 +3,8 @@ package com.l2.entity;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
@@ -21,6 +23,7 @@ public class BBlogArticle implements Serializable {
      */
     // JacksonConfig 配置了全局的序列化，这里就不需要了
 //    @JsonSerialize(using  = ToStringSerializer.class)
+//    @TableField(fill = FieldFill.INSERT)
     private Long id;
 
     /**
@@ -61,21 +64,25 @@ public class BBlogArticle implements Serializable {
     /**
      * 创建人ID
      */
+    @TableField(fill = FieldFill.INSERT)
     private Long createId;
 
     /**
      * 创建时间
      */
+    @TableField(fill = FieldFill.INSERT)
     private Date createTime;
 
     /**
      * 更新人ID
      */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updateId;
 
     /**
      * 更新时间
      */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updateTime;
 
     @Override

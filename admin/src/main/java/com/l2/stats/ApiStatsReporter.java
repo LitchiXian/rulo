@@ -13,7 +13,7 @@ public class ApiStatsReporter {
 
     private static final DecimalFormat AVG_FORMAT = new DecimalFormat("#.##");
 
-    @Scheduled(fixedRate = 60 * 1000)
+    @Scheduled(fixedRate = 1 * 60 * 60 * 1000)
     public void generateReport() {
         System.out.println("\n[API性能日报]");
         System.out.println("==================================================");
