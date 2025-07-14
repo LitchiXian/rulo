@@ -14,11 +14,9 @@
       <article class="post">
         <header class="post-header">
           <h1 class="post-title">{{ currentPost.title }}</h1>
-          <div class="post-subtitle">空空空空</div>
 
           <div class="post-meta">
-            <span class="post-date">{{ formatDate(currentPost.content) }}</span>
-            <span class="post-read-time">⏱️ {{ currentPost.readTime }} 分钟阅读</span>
+            <span class="post-date">⏱️ {{ formatDate(currentPost.createTime) }}</span>
           </div>
         </header>
 
@@ -79,9 +77,24 @@ const handleTocGenerated = (items) => {
   window.dispatchEvent(new CustomEvent('set-toc', {detail: items}));
 }
 
-const formatDate = (dateString) => {
-  const options = {year: 'numeric', month: 'long', day: 'numeric'}
-  return new Date(dateString).toLocaleDateString('zh-CN', options)
+/**
+ * 将时间戳转换为格式化的日期时间字符串 (YYYY-MM-DD HH:mm)
+ * @param {number} timestamp - 时间戳（毫秒）
+ * @returns {string} 格式化后的日期时间字符串
+ */
+const formatDate = (timestamp) => {
+  // 创建日期对象
+  const date = new Date(timestamp);
+
+  // 获取日期组件
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // 月份从0开始
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  // 组合成格式化字符串
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
 // 监听路由参数变化
