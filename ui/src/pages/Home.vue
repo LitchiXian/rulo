@@ -14,7 +14,7 @@
           <h3>{{ post.title }}</h3>
         </router-link>
         <div class="meta">
-          <span class="date">{{  formatDate(post.createTime) }}</span>
+          <span class="date">{{  smartFormatDate(post.createTime) }}</span>
         </div>
       </div>
     </section>
@@ -55,24 +55,46 @@ onMounted(async () => {
 })
 
 /**
- * 将时间戳转换为格式化的日期时间字符串 (YYYY-MM-DD HH:mm)
+ * 智能格式化时间戳为易读格式
  * @param {number} timestamp - 时间戳（毫秒）
- * @returns {string} 格式化后的日期时间字符串
+ * @returns {string} 格式化后的时间字符串
  */
-const formatDate = (timestamp) => {
-  // 创建日期对象
+const smartFormatDate = (timestamp) => {
+  const now = new Date();
   const date = new Date(timestamp);
 
-  // 获取日期组件
+  // 时间差计算（毫秒）
+  const diffMs = now - date;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  // 获取时间组件
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // 月份从0开始
+  const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
 
-  // 组合成格式化字符串
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
-}
+  // 判断时间范围并返回对应格式
+  if (diffMs < 0) {
+    // 未来时间：显示完整时间
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  } else if (diffDays === 0) {
+    // 今天：显示"今天 HH:mm"
+    return `今天 ${hours}:${minutes}`;
+  } else if (diffDays === 1) {
+    // 昨天：显示"昨天 HH:mm"
+    return `昨天 ${hours}:${minutes}`;
+  } else if (diffDays <= 7) {
+    // 7天内：显示"X天前"
+    return `${diffDays}天前`;
+  } else if (date.getFullYear() === now.getFullYear()) {
+    // 今年内：显示"MM-DD HH:mm"
+    return `${month}-${day} ${hours}:${minutes}`;
+  } else {
+    // 往年：显示完整时间
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  }
+};
 </script>
 
 <style scoped>
