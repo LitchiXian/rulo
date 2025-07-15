@@ -63,9 +63,16 @@ const smartFormatDate = (timestamp) => {
   const now = new Date();
   const date = new Date(timestamp);
 
-  // 时间差计算（毫秒）
-  const diffMs = now - date;
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  // 计算今天的开始时间（0点0分0秒）
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+
+  // 计算目标日期的开始时间（0点0分0秒）
+  const targetDateStart = new Date(date);
+  targetDateStart.setHours(0, 0, 0, 0);
+
+  // 计算日历天数差（基于天数的计算，而不是24小时周期）
+  const dayDiff = Math.round((todayStart - targetDateStart) / (1000 * 60 * 60 * 24));
 
   // 获取时间组件
   const year = date.getFullYear();
@@ -75,18 +82,15 @@ const smartFormatDate = (timestamp) => {
   const minutes = String(date.getMinutes()).padStart(2, '0');
 
   // 判断时间范围并返回对应格式
-  if (diffMs < 0) {
-    // 未来时间：显示完整时间
-    return `${year}-${month}-${day} ${hours}:${minutes}`;
-  } else if (diffDays === 0) {
+  if (dayDiff === 0) {
     // 今天：显示"今天 HH:mm"
     return `今天 ${hours}:${minutes}`;
-  } else if (diffDays === 1) {
+  } else if (dayDiff === 1) {
     // 昨天：显示"昨天 HH:mm"
     return `昨天 ${hours}:${minutes}`;
-  } else if (diffDays <= 7) {
+  } else if (dayDiff <= 7) {
     // 7天内：显示"X天前"
-    return `${diffDays}天前`;
+    return `${dayDiff}天前`;
   } else if (date.getFullYear() === now.getFullYear()) {
     // 今年内：显示"MM-DD HH:mm"
     return `${month}-${day} ${hours}:${minutes}`;
