@@ -1,5 +1,6 @@
 package com.l2.entity;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -18,6 +19,10 @@ import lombok.Data;
 @Data
 @TableName("b_blog_article")
 public class BBlogArticle implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     /**
      * ID
      */
