@@ -43,4 +43,9 @@ public class BBlogArticleController {
     public AjaxResult get(IdDto idDto) {
         return AjaxResult.success(bBlogArticleService.getById(idDto.getId()));
     }
+
+    @GetMapping("/list2")
+    public AjaxResult list2() {
+        return AjaxResult.success(bBlogArticleService.listBlogArticle());
+    }
 }

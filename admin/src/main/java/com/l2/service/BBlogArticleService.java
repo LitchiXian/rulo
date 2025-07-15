@@ -4,6 +4,8 @@ import com.l2.entity.BBlogArticle;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.l2.entity.dto.SaveBBlogArticleDto;
 
+import java.util.List;
+
 /**
 * @author Administrator
 * @description 针对表【b_blog_article(博客文章核心表)】的数据库操作Service
@@ -12,4 +14,6 @@ import com.l2.entity.dto.SaveBBlogArticleDto;
 public interface BBlogArticleService extends IService<BBlogArticle> {
 
     int save(SaveBBlogArticleDto dto);
+
+    List<BBlogArticle> listBlogArticle();
 }

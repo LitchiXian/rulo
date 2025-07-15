@@ -3,6 +3,8 @@ package com.l2.mapper;
 import com.l2.entity.BBlogArticle;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
+import java.util.List;
+
 /**
 * @author Administrator
 * @description 针对表【b_blog_article(博客文章核心表)】的数据库操作Mapper
@@ -10,6 +12,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.l2.entity.BBlogArticle
 */
 public interface BBlogArticleMapper extends BaseMapper<BBlogArticle> {
+
+    List<BBlogArticle> listBlogArticle();
 
 }
 

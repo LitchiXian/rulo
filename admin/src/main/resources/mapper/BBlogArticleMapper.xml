@@ -24,4 +24,15 @@
         is_published,is_deleted,create_id,create_time,update_id,
         update_time
     </sql>
+
+    <select id="listBlogArticle" resultType="BBlogArticle">
+        select id,
+               title,
+               content,
+               user_id,
+               user_name,
+               published_time,
+               is_published
+        from b_blog_article
+    </select>
 </mapper>

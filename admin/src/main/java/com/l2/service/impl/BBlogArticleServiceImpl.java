@@ -1,15 +1,14 @@
 package com.l2.service.impl;
 
 import java.util.Date;
+import java.util.List;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.l2.config.SnowflakeConfig;
 import com.l2.entity.BBlogArticle;
 import com.l2.entity.dto.SaveBBlogArticleDto;
 import com.l2.service.BBlogArticleService;
 import com.l2.mapper.BBlogArticleMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -22,7 +21,7 @@ import org.springframework.stereotype.Service;
 public class BBlogArticleServiceImpl extends ServiceImpl<BBlogArticleMapper, BBlogArticle>
         implements BBlogArticleService {
 
-    private final SnowflakeConfig snowflakeConfig;
+//    private final BBlogArticleMapper blogArticleMapper;
 
     @Override
     public int save(SaveBBlogArticleDto dto) {
@@ -43,6 +42,11 @@ public class BBlogArticleServiceImpl extends ServiceImpl<BBlogArticleMapper, BBl
 
         int insert = baseMapper.insert(bBlogArticle);
         return insert;
+    }
+
+    @Override
+    public List<BBlogArticle> listBlogArticle() {
+        return baseMapper.listBlogArticle();
     }
 }
 
