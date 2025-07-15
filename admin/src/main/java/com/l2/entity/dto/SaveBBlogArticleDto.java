@@ -2,10 +2,14 @@ package com.l2.entity.dto;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 @Data
 public class SaveBBlogArticleDto implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     /**
      * 文章标题
