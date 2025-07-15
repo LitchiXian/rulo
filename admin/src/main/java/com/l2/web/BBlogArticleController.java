@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.l2.entity.BBlogArticle;
 import com.l2.entity.dto.IdDto;
 import com.l2.entity.dto.SaveBBlogArticleDto;
+import com.l2.exception.ServiceException;
 import com.l2.service.BBlogArticleService;
 import com.l2.util.AjaxResult;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,8 @@ public class BBlogArticleController {
 
     @GetMapping("/list2")
     public AjaxResult list2() {
-        return AjaxResult.success(bBlogArticleService.listBlogArticle());
+//        int i = 1/0;
+        throw new ServiceException(10086,"自定义异常");
+//        return AjaxResult.success(bBlogArticleService.listBlogArticle());
     }
 }

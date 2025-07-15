@@ -1,36 +1,128 @@
 package com.l2.util;
 
-import lombok.Data;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
-@Data
-public class AjaxResult<T> {
-    private Integer code = 200;
-    private String msg;
-    private T data;
+public class AjaxResult {
+    // 使用枚举定义状态类型
+    public enum Status {
+        SUCCESS(200),
+        ERROR(500);
 
-    public AjaxResult() {
+        private final int code;
+
+        Status(int code) {
+            this.code = code;
+        }
+
+        public int getCode() {
+            return code;
+        }
     }
 
-    public AjaxResult(T data) {
-        this.code = 200;
-        this.data = data;
+    // 使用静态常量替代字符串硬编码
+    public static final String CODE_KEY = "code";
+    public static final String MSG_KEY = "msg";
+    public static final String DATA_KEY = "data";
+
+    // 使用不可变Map封装结果
+    private final Map<String, Object> result;
+
+    /**
+     * 构造结果对象
+     * @param status 状态枚举
+     * @param message 提示消息
+     * @param data 业务数据
+     */
+    private AjaxResult(Status status, String message, Object data) {
+        Map<String, Object> map = new HashMap<>(3);
+        map.put(CODE_KEY, status.getCode());
+        if (message != null) {
+            map.put(MSG_KEY, message);
+        }
+        if (data != null) {
+            map.put(DATA_KEY, data);
+        }
+        this.result = Collections.unmodifiableMap(map);
     }
 
-    public AjaxResult(Integer code, String msg) {
-        this.code = code;
-        this.msg = msg;
+    /**
+     * 获取结果映射
+     */
+    public Map<String, Object> getResult() {
+        return result;
     }
 
-    public static AjaxResult error() {
-        return new AjaxResult<>(500, "操作失败");
+    /**
+     * 获取状态码
+     */
+    public int getCode() {
+        return (int) result.get(CODE_KEY);
     }
 
+    /**
+     * 判断是否成功
+     */
+    public boolean isSuccess() {
+        return getCode() == Status.SUCCESS.getCode();
+    }
+
+    // ================= 工厂方法 =================
+
+    /**
+     * 成功响应（无消息无数据）
+     */
     public static AjaxResult success() {
-        return new AjaxResult<>();
+        return new AjaxResult(Status.SUCCESS, null, null);
     }
 
-    public static <T> AjaxResult<T> success(T  data) {
-        return new AjaxResult<>(data);
+    /**
+     * 成功响应（无消息有数据）
+     * @param data 需要返回的数据
+     */
+    public static AjaxResult success(Object data) {
+        return new AjaxResult(Status.SUCCESS, null, data);
     }
 
+    /**
+     * 成功响应（有消息有数据）
+     * @param message 提示消息
+     * @param data 需要返回的数据
+     */
+    public static AjaxResult success(String message, Object data) {
+        return new AjaxResult(Status.SUCCESS, message, data);
+    }
+
+    /**
+     * 失败响应（默认消息）
+     */
+    public static AjaxResult error() {
+        return new AjaxResult(Status.ERROR, "操作失败", null);
+    }
+
+    /**
+     * 失败响应（自定义消息）
+     * @param message 错误提示
+     */
+    public static AjaxResult error(String message) {
+        return new AjaxResult(Status.ERROR, message, null);
+    }
+
+    /**
+     * 失败响应（自定义错误码+消息）
+     * @param code 自定义错误码
+     * @param message 错误提示
+     */
+    public static AjaxResult error(int code, String message) {
+        Map<String, Object> map = new HashMap<>(3);
+        map.put(CODE_KEY, code);
+        map.put(MSG_KEY, message);
+        return new AjaxResult(Status.ERROR, message, null) {
+            @Override
+            public Map<String, Object> getResult() {
+                return Collections.unmodifiableMap(map);
+            }
+        };
+    }
 }

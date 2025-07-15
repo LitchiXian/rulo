@@ -59,8 +59,8 @@ const fetchArticle = async () => {
     const response = await getArticle({id: route.params.id})
 
     // 检查返回的数据结构
-    if (response.data && response.data.id) {
-      currentPost.value = response.data
+    if (response.result.data && response.result.data.id) {
+      currentPost.value = response.result.data
     } else {
       throw new Error('文章数据格式错误')
     }
