@@ -30,21 +30,6 @@ body.dark-mode { /* 暗色模式扩展点 */
     /* 扩展样式 */
 }
 
-/* ======== 布局组件 ======== */
-/* 两侧固定背景 */
-body::before,
-body::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    width: calc((100% - 900px) / 2);
-    background-color: var(--bg-secondary);
-    z-index: -1;
-}
-body::before { left: 0; }
-body::after { right: 0; }
-
 /* 主内容容器 */
 .container {
     width: 900px;

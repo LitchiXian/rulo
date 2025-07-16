@@ -10,13 +10,16 @@ const useLayout = computed(() => !route.meta.noLayout)
 </script>
 
 <template>
-  <MainLayout v-if="useLayout">
-    <router-view/>
-  </MainLayout>
+<!--  <router-view v-if="useLayout"/>-->
 
-  <EmptyLayout v-else>
-    <router-view/>
-  </EmptyLayout>
+    <MainLayout v-if="useLayout">
+      <router-view />
+    </MainLayout>
+
+    <EmptyLayout v-else>
+      <router-view/>
+    </EmptyLayout>
+
 </template>
 
 <style scoped>

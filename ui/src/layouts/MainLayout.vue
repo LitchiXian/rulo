@@ -11,7 +11,7 @@
         <router-link to="/">
           <span class="icon">🏠</span> Home
         </router-link>
-        <a href="#" @click="checkLogin" class="api-link">
+        <a href="#" @click.prevent="checkLogin" class="api-link">
           <span class="icon">🏷️</span> Login
         </a>
         <router-link to="/">
@@ -110,7 +110,7 @@ defineExpose({
 .layout-container {
   display: flex;
   min-height: 100vh;
-  background-color: #303030; /* 48,48,48 */
+  background-color: var(--body-bg-color); /* 48,48,48 */
 }
 
 .left-sidebar {
@@ -122,7 +122,7 @@ defineExpose({
   bottom: 0;
   overflow-y: auto;
   padding: 20px;
-  margin-left: 100px;
+  margin-left: 5%;
   margin-top: 30px;
   border-right: 0px solid #424242; /* 66,66,66 - 框颜色 */
 }
@@ -146,6 +146,7 @@ defineExpose({
 }
 
 .sidebar-nav {
+  margin-left: 20%;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -185,10 +186,10 @@ defineExpose({
 }
 
 .content-area {
-  flex: 1;
-  margin: 50px 598px 0 380px; /* 上右下左边距匹配侧边栏宽度 */
+  width: 43%;
+  margin: 50px 0 0 24%; /* 上右下左边距匹配侧边栏宽度 */
   padding: 10px;
-  /*background-color: var(--card-bg-color);  66,66,66 - 内容背景色 */
+  background-color: var(--card-bg-color);/*  66,66,66 - 内容背景色 */
   color: #ece2c0; /* 236,226,192 - 字体颜色 */
   border-top-left-radius: 10px;     /* 左上角圆角 */
   border-top-right-radius: 10px;    /* 右上角圆角 */
