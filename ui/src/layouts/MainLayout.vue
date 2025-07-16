@@ -11,9 +11,9 @@
         <router-link to="/">
           <span class="icon">🏠</span> Home
         </router-link>
-        <router-link to="/">
-          <span class="icon">🏷️</span> Tags
-        </router-link>
+        <a href="#" @click="checkLogin" class="api-link">
+          <span class="icon">🏷️</span> Login
+        </a>
         <router-link to="/">
           <span class="icon">👤</span> About
         </router-link>
@@ -34,7 +34,7 @@
 
     <!-- 中间内容区域 -->
     <main class="content-area">
-      <slot />
+      <router-view />
     </main>
 
     <!-- 右侧目录栏 -->
@@ -54,10 +54,12 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
 import { ref } from 'vue';
 
 const darkMode = ref(true);
 const showToc = ref(true);
+const router = useRouter();
 const tocItems = ref([]); // 从文章内容提取的目录项
 
 const toggleDarkMode = () => {
@@ -83,6 +85,16 @@ const openApiDoc = () => {
     apiLink.style.transform = '';
   }, 300);
 };
+
+const checkLogin = () => {
+  if (true) { // 替换为你的登录状态检查
+    // 跳转到登录页，并记录来源页面
+    router.push({
+      path: '/login',
+      query: { redirect: router.currentRoute.value.fullPath }
+    })
+  }
+}
 
 // 根据文章内容生成目录项的逻辑可以放在这里
 // 或者在文章页面加载时设置

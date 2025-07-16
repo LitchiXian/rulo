@@ -1,25 +1,25 @@
 <script setup>
-import MainLayout from '@/layouts/MainLayout.vue'
+import { useRoute } from 'vue-router'
+import { computed } from 'vue'
+import MainLayout from "@/layouts/MainLayout.vue";
+
+const route = useRoute()
+// 直接根据meta信息判断是否使用布局
+const useLayout = computed(() => !route.meta.noLayout)
 </script>
 
 <template>
-  <MainLayout>
-    <router-view v-slot="{ Component }">
-      <transition name="fade" mode="out-in">
-        <component :is="Component" />
-      </transition>
-    </router-view>
+  <MainLayout v-if="useLayout">
+    <router-view />
   </MainLayout>
+
+  <div v-else class="full-page">
+    <router-view />
+  </div>
 </template>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+.full-page {
+  min-height: 100vh;
 }
 </style>

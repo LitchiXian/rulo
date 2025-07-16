@@ -1,27 +1,25 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import {createRouter, createWebHistory} from 'vue-router'
 
 const routes = [
     {
         path: '/',
-        name: 'Home',
-        component: () => import('@/pages/Home.vue')
+        component: () => import('@/layouts/MainLayout.vue'),
+        children: [
+            {path: '', name: 'Home', component: () => import('@/pages/Home.vue')},
+            {path: 'post/:id', name: 'Post', component: () => import('@/pages/Post.vue')},
+            {path: 'saveArticle', name: 'SaveArticle', component: () => import('@/pages/SaveArticle.vue')},
+        ]
     },
     {
-        path: '/post/:id',
-        name: 'Post',
-        component: () => import('@/pages/Post.vue'),
-        props: true
+        path: '/login',
+        component: () => import('@/pages/Login.vue'),
+        meta: {noLayout: true}
     },
     {
         path: '/:pathMatch(.*)*',
-        name: 'NotFound',
-        component: () => import('@/pages/NotFound.vue')
+        component: () => import('@/pages/NotFound.vue'),
+        meta: {noLayout: true}
     },
-    {
-        path: '/saveArticle',
-        name: 'SaveArticle',
-        component: () => import('@/pages/SaveArticle.vue')
-    }
 ]
 
 const router = createRouter({
