@@ -1,7 +1,7 @@
 <template>
   <div class="layout-container">
     <!-- 左侧导航栏 -->
-    <aside class="left-sidebar">
+    <div class="left-sidebar">
       <div class="author-info">
         <img src="@/assets/avatar.png" alt="博主头像" class="author-avatar" />
         <h2 class="author-name">Litchi 的博客</h2>
@@ -30,15 +30,15 @@
           {{ darkMode ? 'Light Mode' : 'Dark Mode' }}
         </div>
       </nav>
-    </aside>
+    </div>
 
     <!-- 中间内容区域 -->
-    <main class="content-area">
+    <div class="content-area">
       <router-view />
-    </main>
+    </div>
 
     <!-- 右侧目录栏 -->
-    <aside class="right-sidebar" v-if="showToc">
+    <div class="right-sidebar" v-if="showToc">
       <div class="toc-container">
         <h3 class="toc-title">文章目录</h3>
         <ul class="toc-list">
@@ -49,7 +49,7 @@
           </li>
         </ul>
       </div>
-    </aside>
+    </div>
   </div>
 </template>
 
@@ -188,7 +188,7 @@ defineExpose({
   flex: 1;
   margin: 50px 598px 0 380px; /* 上右下左边距匹配侧边栏宽度 */
   padding: 10px;
-  background-color: var(--card-bg-color); /* 66,66,66 - 内容背景色 */
+  /*background-color: var(--card-bg-color);  66,66,66 - 内容背景色 */
   color: #ece2c0; /* 236,226,192 - 字体颜色 */
   border-top-left-radius: 10px;     /* 左上角圆角 */
   border-top-right-radius: 10px;    /* 右上角圆角 */

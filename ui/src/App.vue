@@ -1,7 +1,8 @@
 <script setup>
-import { useRoute } from 'vue-router'
-import { computed } from 'vue'
+import {useRoute} from 'vue-router'
+import {computed} from 'vue'
 import MainLayout from "@/layouts/MainLayout.vue";
+import EmptyLayout from "@/layouts/EmptyLayout.vue";
 
 const route = useRoute()
 // 直接根据meta信息判断是否使用布局
@@ -10,16 +11,14 @@ const useLayout = computed(() => !route.meta.noLayout)
 
 <template>
   <MainLayout v-if="useLayout">
-    <router-view />
+    <router-view/>
   </MainLayout>
 
-  <div v-else class="full-page">
-    <router-view />
-  </div>
+  <EmptyLayout v-else>
+    <router-view/>
+  </EmptyLayout>
 </template>
 
 <style scoped>
-.full-page {
-  min-height: 100vh;
-}
+
 </style>
