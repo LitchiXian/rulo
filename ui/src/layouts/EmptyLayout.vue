@@ -3,11 +3,14 @@
 </script>
 
 <template>
-  <router-view v-slot="{ Component }">
-    <component :is="Component" />
-  </router-view>
+  <div class="layout-container">
+    <router-view/>
+  </div>
 </template>
 
 <style scoped>
-
+.layout-container {
+  min-height: 100vh;
+  min-width: 100vw;
+}
 </style>
