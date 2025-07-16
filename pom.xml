@@ -12,16 +12,17 @@
     <description>快乐的蓝图</description>
 
     <properties>
-        <l2.version>0.0.2</l2.version>
+        <l2.version>0.0.3</l2.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>17</java.version>
-        <spring-boot.version>3.5.3</spring-boot.version>
+<!--        <spring-boot.version>3.5.3</spring-boot.version>-->
+        <spring-boot.version>3.3.13</spring-boot.version>
         <commons-collections4.version>4.4</commons-collections4.version>
         <lombok.version>1.18.30</lombok.version>
         <mysql-connector-j.version>8.2.0</mysql-connector-j.version>
         <mybatis-plus.version>3.5.12</mybatis-plus.version>
-        <knife4j.version>4.4.0</knife4j.version>
+        <knife4j.version>4.5.0</knife4j.version>
         <hutool.version>5.8.24</hutool.version>
         <minio.version>8.5.17</minio.version>
     </properties>
