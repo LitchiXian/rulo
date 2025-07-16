@@ -17,9 +17,10 @@
         <router-link to="/">
           <span class="icon">👤</span> About
         </router-link>
-        <router-link to="/">
-          <span class="icon">🔗</span> Links
-        </router-link>
+        <!-- 修改 API 链接 -->
+        <a href="#" @click="openApiDoc" class="api-link">
+          <span class="icon">🔗</span> API
+        </a>
         <router-link to="/saveArticle">
           <span class="icon">🛠️</span> 新增
         </router-link>
@@ -69,6 +70,18 @@ const scrollToAnchor = (id) => {
   if (el) {
     el.scrollIntoView({ behavior: 'smooth' });
   }
+};
+
+const openApiDoc = () => {
+  // 在新窗口打开 API 文档
+  window.open('http://localhost:8090/doc.html', '_blank');
+
+  // 添加点击反馈效果
+  const apiLink = document.querySelector('.api-link');
+  apiLink.style.transform = 'scale(0.95)';
+  setTimeout(() => {
+    apiLink.style.transform = '';
+  }, 300);
 };
 
 // 根据文章内容生成目录项的逻辑可以放在这里

@@ -16,8 +16,8 @@ public class ApiStatsReporter {
     @Scheduled(fixedRate = 1 * 60 * 60 * 1000)
     public void generateReport() {
         System.out.println("\n[API性能日报]");
-        System.out.println("==================================================");
-        System.out.printf("%-20s %-10s %-10s %-10s%n", "API", "平均(ms)", "P99(ms)", "调用次数");
+        System.out.println("========================================================================================");
+        System.out.printf("%-50s %-10s %-10s %-10s%n", "API", "平均(ms)", "P99(ms)", "调用次数");
 
         // 获取所有方法并按照调用次数排序
         List<String> methods = ApiStats.getTrackedMethods().stream()
@@ -33,14 +33,14 @@ public class ApiStatsReporter {
             // 高亮标出需要优化的API
             String highlight = (p99 > 300 || avg > 100) ? "<- 需要优化!" : "";
 
-            System.out.printf("%-20s %-10s %-10d %-10d %s%n",
+            System.out.printf("%-50s %-10s %-10d %-10d %s%n",
                     trimApiPath(apiPath),
                     AVG_FORMAT.format(avg),
                     p99,
                     count,
                     highlight);
         }
-        System.out.println("==================================================\n");
+        System.out.println("========================================================================================\n");
     }
 
     // 简化和美化API路径显示
