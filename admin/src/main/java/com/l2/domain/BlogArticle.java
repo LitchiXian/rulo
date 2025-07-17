@@ -1,6 +1,5 @@
 package com.l2.domain;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -16,9 +15,7 @@ import lombok.Data;
  */
 @Data
 @TableName("b_blog_article")
-public class BBlogArticle implements Serializable {
-
-    @Serial
+public class BlogArticle implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -99,7 +96,7 @@ public class BBlogArticle implements Serializable {
         if (getClass() != that.getClass()) {
             return false;
         }
-        BBlogArticle other = (BBlogArticle) that;
+        BlogArticle other = (BlogArticle) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
                 && (this.getTitle() == null ? other.getTitle() == null : this.getTitle().equals(other.getTitle()))
                 && (this.getContent() == null ? other.getContent() == null : this.getContent().equals(other.getContent()))
