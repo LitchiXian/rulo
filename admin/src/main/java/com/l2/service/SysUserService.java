@@ -2,6 +2,7 @@ package com.l2.service;
 
 import com.l2.domain.SysUser;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.l2.domain.dto.UserDto;
 
 /**
 * @author Administrator
@@ -10,4 +11,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface SysUserService extends IService<SysUser> {
 
+    int login(UserDto userDto);
 }
