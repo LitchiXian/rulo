@@ -41,7 +41,7 @@
 <script setup>
 import {ref, computed, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
-import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
+import MarkdownRenderer from '@/component/MarkdownRenderer.vue'
 import {getArticle} from "@/api/web/bBlogArticle.js";
 
 const route = useRoute()

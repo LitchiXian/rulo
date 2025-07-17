@@ -4,8 +4,8 @@
 
 <script setup>
 import { defineProps, ref, onMounted } from 'vue'
-import markdownParser from '@/utils/markdownParser'
-import '@/styles/markdown.css'
+import markdownParser from '@/util/markdownParser'
+import '@/style/markdown.css'
 
 const props = defineProps({
   content: {

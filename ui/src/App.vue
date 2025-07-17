@@ -1,8 +1,8 @@
 <script setup>
 import {useRoute} from 'vue-router'
 import {computed} from 'vue'
-import MainLayout from "@/layouts/MainLayout.vue";
-import EmptyLayout from "@/layouts/EmptyLayout.vue";
+import MainLayout from "@/layout/MainLayout.vue";
+import EmptyLayout from "@/layout/EmptyLayout.vue";
 
 const route = useRoute()
 // 直接根据meta信息判断是否使用布局
