@@ -4,8 +4,8 @@ import java.util.Date;
 import java.util.List;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.l2.entity.BBlogArticle;
-import com.l2.entity.dto.SaveBBlogArticleDto;
+import com.l2.domain.BBlogArticle;
+import com.l2.domain.dto.SaveBBlogArticleDto;
 import com.l2.service.BBlogArticleService;
 import com.l2.mapper.BBlogArticleMapper;
 import lombok.RequiredArgsConstructor;

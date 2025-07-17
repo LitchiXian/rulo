@@ -1,9 +1,9 @@
 package com.l2.web;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.l2.entity.BBlogArticle;
-import com.l2.entity.dto.IdDto;
-import com.l2.entity.dto.SaveBBlogArticleDto;
+import com.l2.domain.BBlogArticle;
+import com.l2.domain.dto.IdDto;
+import com.l2.domain.dto.SaveBBlogArticleDto;
 import com.l2.exception.ServiceException;
 import com.l2.service.BBlogArticleService;
 import com.l2.util.AjaxResult;

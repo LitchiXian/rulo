@@ -13,7 +13,7 @@ mybatis-plus:
   # 指定 MyBatis Mapper 对应的 XML 文件位置。
   mapper-locations: classpath*:/mapper/*.xml
   # 指定 MyBatis 别名包扫描路径，用于给包中的类注册别名。
-  type-aliases-package: com.l2.entity
+  type-aliases-package: com.l2.domain
   # MyBatis-Plus 提供的全局策略配置
   global-config:
     # 控制是否在控制台打印 MyBatis-Plus 的 LOGO。
