@@ -1,4 +1,4 @@
-package com.l2.entity;
+package com.l2.domain;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -7,8 +7,6 @@ import java.util.Date;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 /**

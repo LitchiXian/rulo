@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.l2.mapper.SysUserMapper">
+
+    <resultMap id="BaseResultMap" type="SysUser">
+            <id property="id" column="id" />
+            <result property="userName" column="user_name" />
+            <result property="nickName" column="nick_name" />
+            <result property="password" column="password" />
+            <result property="email" column="email" />
+            <result property="isActive" column="is_active" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="createId" column="create_id" />
+            <result property="createTime" column="create_time" />
+            <result property="updateId" column="update_id" />
+            <result property="updateTime" column="update_time" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_name,nick_name,password,email,is_active,
+        is_deleted,create_id,create_time,update_id,update_time,
+        remark
+    </sql>
+</mapper>

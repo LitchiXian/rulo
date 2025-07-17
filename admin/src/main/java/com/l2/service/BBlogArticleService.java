@@ -1,8 +1,8 @@
 package com.l2.service;
 
-import com.l2.entity.BBlogArticle;
+import com.l2.domain.BBlogArticle;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.l2.entity.dto.SaveBBlogArticleDto;
+import com.l2.domain.dto.SaveBBlogArticleDto;
 
 import java.util.List;
 

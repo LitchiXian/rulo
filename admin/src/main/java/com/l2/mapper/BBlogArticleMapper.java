@@ -1,6 +1,6 @@
 package com.l2.mapper;
 
-import com.l2.entity.BBlogArticle;
+import com.l2.domain.BBlogArticle;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 import java.util.List;
