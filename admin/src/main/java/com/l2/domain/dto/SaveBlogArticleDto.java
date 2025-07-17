@@ -5,7 +5,7 @@ import lombok.Data;
 import java.io.Serializable;
 
 @Data
-public class SaveBBlogArticleDto implements Serializable {
+public class SaveBlogArticleDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**

@@ -1,5 +1,6 @@
 package com.l2.domain;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
@@ -13,7 +14,9 @@ import lombok.Data;
  */
 @Data
 @TableName("sys_user")
-public class SysUser {
+public class SysUser implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     /**
      * ID
      */

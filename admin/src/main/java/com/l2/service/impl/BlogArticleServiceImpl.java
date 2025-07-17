@@ -4,10 +4,10 @@ import java.util.Date;
 import java.util.List;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.l2.domain.BBlogArticle;
-import com.l2.domain.dto.SaveBBlogArticleDto;
-import com.l2.service.BBlogArticleService;
-import com.l2.mapper.BBlogArticleMapper;
+import com.l2.domain.BlogArticle;
+import com.l2.domain.dto.SaveBlogArticleDto;
+import com.l2.service.BlogArticleService;
+import com.l2.mapper.BlogArticleMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,34 +18,34 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class BBlogArticleServiceImpl extends ServiceImpl<BBlogArticleMapper, BBlogArticle>
-        implements BBlogArticleService {
+public class BlogArticleServiceImpl extends ServiceImpl<BlogArticleMapper, BlogArticle>
+        implements BlogArticleService {
 
 //    private final BBlogArticleMapper blogArticleMapper;
 
     @Override
-    public int save(SaveBBlogArticleDto dto) {
-        BBlogArticle bBlogArticle = new BBlogArticle();
+    public int save(SaveBlogArticleDto dto) {
+        BlogArticle blogArticle = new BlogArticle();
 //        bBlogArticle.setId(snowflakeConfig.snowflakeId());
-        bBlogArticle.setTitle(dto.getTitle());
-        bBlogArticle.setContent(dto.getContent());
-        bBlogArticle.setUserId(1L);
-        bBlogArticle.setUserName(dto.getUserName());
+        blogArticle.setTitle(dto.getTitle());
+        blogArticle.setContent(dto.getContent());
+        blogArticle.setUserId(1L);
+        blogArticle.setUserName(dto.getUserName());
         Date date = new Date();
-        bBlogArticle.setPublishedTime(date);
-        bBlogArticle.setIsPublished(dto.getIsPublished());
+        blogArticle.setPublishedTime(date);
+        blogArticle.setIsPublished(dto.getIsPublished());
 //        bBlogArticle.setIsDeleted(0);
 //        bBlogArticle.setCreateId(1L);
 //        bBlogArticle.setCreateTime(date);
 //        bBlogArticle.setUpdateId(1L);
 //        bBlogArticle.setUpdateTime(date);
 
-        int insert = baseMapper.insert(bBlogArticle);
+        int insert = baseMapper.insert(blogArticle);
         return insert;
     }
 
     @Override
-    public List<BBlogArticle> listBlogArticle() {
+    public List<BlogArticle> listBlogArticle() {
         return baseMapper.listBlogArticle();
     }
 }

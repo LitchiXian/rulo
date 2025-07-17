@@ -1,8 +1,8 @@
 package com.l2.service;
 
-import com.l2.domain.BBlogArticle;
+import com.l2.domain.BlogArticle;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.l2.domain.dto.SaveBBlogArticleDto;
+import com.l2.domain.dto.SaveBlogArticleDto;
 
 import java.util.List;
 
@@ -11,9 +11,9 @@ import java.util.List;
 * @description 针对表【b_blog_article(博客文章核心表)】的数据库操作Service
 * @createDate 2025-07-10 15:08:54
 */
-public interface BBlogArticleService extends IService<BBlogArticle> {
+public interface BlogArticleService extends IService<BlogArticle> {
 
-    int save(SaveBBlogArticleDto dto);
+    int save(SaveBlogArticleDto dto);
 
-    List<BBlogArticle> listBlogArticle();
+    List<BlogArticle> listBlogArticle();
 }

@@ -1,6 +1,6 @@
 package com.l2.mapper;
 
-import com.l2.domain.BBlogArticle;
+import com.l2.domain.BlogArticle;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 import java.util.List;
@@ -11,9 +11,9 @@ import java.util.List;
 * @createDate 2025-07-10 15:08:54
 * @Entity com.l2.entity.BBlogArticle
 */
-public interface BBlogArticleMapper extends BaseMapper<BBlogArticle> {
+public interface BlogArticleMapper extends BaseMapper<BlogArticle> {
 
-    List<BBlogArticle> listBlogArticle();
+    List<BlogArticle> listBlogArticle();
 
 }
 

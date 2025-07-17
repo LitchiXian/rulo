@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.l2.mapper.BBlogArticleMapper">
+<mapper namespace="com.l2.mapper.BlogArticleMapper">
 
-    <resultMap id="BaseResultMap" type="BBlogArticle">
+    <resultMap id="BaseResultMap" type="BlogArticle">
             <id property="id" column="id" />
             <result property="title" column="title" />
             <result property="content" column="content" />
@@ -25,7 +25,7 @@
         update_time
     </sql>
 
-    <select id="listBlogArticle" resultType="BBlogArticle">
+    <select id="listBlogArticle" resultType="BlogArticle">
         select id,
                title,
                content,
