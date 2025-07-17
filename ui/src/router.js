@@ -18,6 +18,11 @@ const routes = [
         meta: {noLayout: true}
     },
     {
+        path: '/register',
+        component: () => import('@/page/Register.vue'),
+        meta: {noLayout: true}
+    },
+    {
         path: '/:pathMatch(.*)*',
         component: () => import('@/page/NotFound.vue'),
         meta: {noLayout: true}
