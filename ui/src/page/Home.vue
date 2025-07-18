@@ -24,7 +24,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import {list} from "@/api/web/bBlogArticle.js";
+import {list} from "@/api/web/blogArticle.js";
 
 const router = useRouter()
 const featuredPosts = ref([])

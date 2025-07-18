@@ -12,4 +12,6 @@ import com.l2.domain.dto.UserDto;
 public interface SysUserService extends IService<SysUser> {
 
     int login(UserDto userDto);
+
+    int register(UserDto userDto);
 }

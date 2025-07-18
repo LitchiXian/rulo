@@ -42,7 +42,7 @@
 import {ref, computed, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
 import MarkdownRenderer from '@/component/MarkdownRenderer.vue'
-import {getArticle} from "@/api/web/bBlogArticle.js";
+import {getArticle} from "@/api/web/blogArticle.js";
 
 const route = useRoute()
 const currentPost = ref(null)

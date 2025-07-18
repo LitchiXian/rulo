@@ -1,14 +1,20 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Hide, View } from '@element-plus/icons-vue';
+import {useRouter} from "vue-router";
+import {register} from "@/api/web/login";
 
 /*--------------- 响应式状态声明 ---------------*/
-const username = ref<string>('');       // 用户名输入值
+const userName = ref<string>('');       // 用户名输入值
 const email = ref<string>('');         // 邮箱输入值
 const password = ref<string>('');      // 密码输入值
 const confirmPassword = ref<string>(''); // 确认密码输入值
 const isPasswordVisible = ref<boolean>(false); // 密码可见状态
 const isConfirmPasswordVisible = ref<boolean>(false); // 确认密码可见状态
+
+const router = useRouter()
+const loginButtonRef = ref<HTMLButtonElement | null>(null);
+const loading = ref<boolean>(false);
 
 /*--------------- 密码可见性切换方法 ---------------*/
 const togglePasswordVisibility = () => {
@@ -20,22 +26,51 @@ const toggleConfirmPasswordVisibility = () => {
 };
 
 /*--------------- 表单提交处理（示例） ---------------*/
-const handleSubmit = (e: Event) => {
+const handleSubmit = async(e: Event) => {
   e.preventDefault(); // 阻止表单默认提交
   console.log('注册信息:', {
-    username: username.value,
+    userName: userName.value,
     email: email.value,
     password: password.value,
     confirmPassword: confirmPassword.value
   });
   // 这里添加实际注册逻辑（如调用API）
+
+  loading.value = true;
+  if (loginButtonRef.value) {
+    loginButtonRef.value.disabled = true;
+    loginButtonRef.value.textContent = '注册中...';
+  }
+
+  try {
+    const res = await register({
+      userName: userName.value,
+      password: password.value
+    });
+
+    if (res.code === 200) {
+      // 注册成功
+      console.log('注册成功');
+      // 跳转到首页
+      router.push('/login');
+    } else {
+      // 注册失败
+      console.log('注册失败');
+    }
+  } finally {
+    loading.value = false;
+    if (loginButtonRef.value) {
+      loginButtonRef.value.disabled = false;
+      loginButtonRef.value.textContent = 'Register';
+    }
+  }
 };
 </script>
 
 <template>
   <div class="login-container">
     <!-- 背景图（取消注释启用） -->
-    <img src="@/assets/image/login-bg.png" alt="登录背景" class="login-bg">
+    <img src="@/asset/image/login-bg.png" alt="登录背景" class="login-bg">
 
     <form @submit="handleSubmit" class="login-form">
       <h1 class="login-title">Register</h1>
@@ -51,9 +86,9 @@ const handleSubmit = (e: Event) => {
                 class="login-input"
                 id="register-username"
                 placeholder=" "
-                v-model="username"
+                v-model="userName"
             >
-            <label for="register-username" class="login-label">Username</label>
+            <label for="register-username" class="login-label">UserName</label>
           </div>
         </div>
 

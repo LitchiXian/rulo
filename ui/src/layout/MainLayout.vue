@@ -3,7 +3,7 @@
     <!-- 左侧导航栏 -->
     <div class="left-sidebar">
       <div class="author-info">
-        <img src="@/assets/avatar.png" alt="博主头像" class="author-avatar" />
+        <img src="@/asset/avatar.png" alt="博主头像" class="author-avatar" />
         <h2 class="author-name">Litchi 的博客</h2>
       </div>
 

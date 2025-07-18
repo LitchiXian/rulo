@@ -4,10 +4,7 @@ import com.l2.domain.dto.UserDto;
 import com.l2.service.SysUserService;
 import com.l2.util.AjaxResult;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @Author: Linzx
@@ -22,8 +19,14 @@ public class LoginController {
     private final SysUserService sysUserService;
 
     @PostMapping("/login")
-    public AjaxResult login(UserDto userDto) {
+    public AjaxResult login(@RequestBody UserDto userDto) {
         int i = sysUserService.login(userDto);
+        return AjaxResult.success();
+    }
+
+    @PostMapping("/register")
+    public AjaxResult register(@RequestBody UserDto userDto) {
+        int i = sysUserService.register(userDto);
         return AjaxResult.success();
     }
 }

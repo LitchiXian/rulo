@@ -1,10 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import {ref} from 'vue';
+import {login} from "@/api/web/login.js";
+import {useRouter} from 'vue-router';
 
 /*--------------- 响应式状态声明 ---------------*/
-const email = ref<string>('');       // 邮箱输入值
-const password = ref<string>('');    // 密码输入值
-const isPasswordVisible = ref<boolean>(false); // 密码可见状态
+// 邮箱输入值
+const email = ref<string>('');
+// 密码输入值
+const password = ref<string>('');
+// 密码可见状态
+const isPasswordVisible = ref<boolean>(false);
+
+const router = useRouter()
+const loginButtonRef = ref<HTMLButtonElement | null>(null);
+const loading = ref<boolean>(false);
 
 /*--------------- 密码可见性切换方法 ---------------*/
 const togglePasswordVisibility = () => {
@@ -12,9 +21,39 @@ const togglePasswordVisibility = () => {
 };
 
 /*--------------- 表单提交处理（示例） ---------------*/
-const handleSubmit = (e: Event) => {
+const handleSubmit = async(e: Event) => {
   e.preventDefault(); // 阻止表单默认提交
-  console.log('登录信息:', { email: email.value, password: password.value });
+  console.log('登录信息:', {email: email.value, password: password.value});
+
+  loading.value = true;
+  if (loginButtonRef.value) {
+    loginButtonRef.value.disabled = true;
+    loginButtonRef.value.textContent = '登录中...';
+  }
+
+  try {
+    const res = await login({
+      userName: email.value,
+      password: password.value
+    });
+
+    if (res.code === 200) {
+      // 登录成功
+      console.log('登录成功');
+      // 跳转到首页
+      router.push('/');
+    } else {
+      // 登录失败
+      console.log('登录失败');
+    }
+  } finally {
+    loading.value = false;
+    if (loginButtonRef.value) {
+      loginButtonRef.value.disabled = false;
+      loginButtonRef.value.textContent = 'Login';
+    }
+  }
+
   // 这里添加实际登录逻辑（如调用API）
 };
 </script>
@@ -22,7 +61,7 @@ const handleSubmit = (e: Event) => {
 <template>
   <div class="login-container">
     <!-- 背景图（取消注释启用） -->
-     <img src="@/assets/image/login-bg.png" alt="登录背景" class="login-bg">
+    <img src="@/asset/image/login-bg.png" alt="登录背景" class="login-bg">
 
     <form @submit="handleSubmit" class="login-form">
       <h1 class="login-title">Login</h1>
@@ -62,8 +101,8 @@ const handleSubmit = (e: Event) => {
                 :class="['login-eye']"
                 @click="togglePasswordVisibility"
             >
-              <Hide v-if="isPasswordVisible" />
-              <View v-else />
+              <Hide v-if="isPasswordVisible"/>
+              <View v-else/>
             </el-icon>
           </div>
         </div>
@@ -74,7 +113,7 @@ const handleSubmit = (e: Event) => {
           <input type="checkbox" class="login-check-input" id="login-check">
           <label for="login-check" class="login-check-label">Remember me</label>
         </div>
-<!--        <a href="#" class="login-forgot">Forgot Password?</a>-->
+        <!--        <a href="#" class="login-forgot">Forgot Password?</a>-->
       </div>
 
       <button type="submit" class="login-button">Login</button>
@@ -82,7 +121,7 @@ const handleSubmit = (e: Event) => {
       <p class="login-register">
         Don't have an account?
         <router-link to="/register" class="login-register-link">Register</router-link>
-<!--        <a href="#" class="login-register-link">Register</a>-->
+        <!--        <a href="#" class="login-register-link">Register</a>-->
       </p>
     </form>
   </div>
