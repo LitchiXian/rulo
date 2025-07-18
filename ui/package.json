@@ -20,11 +20,12 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.10",
+    "@types/vue": "^1.0.31",
     "@vitejs/plugin-vue": "^6.0.0",
     "unplugin-auto-import": "^19.3.0",
     "unplugin-vue-setup-extend-plus": "^1.0.1",
     "vite": "^7.0.0",
     "vite-plugin-compression": "^0.5.1",
-    "vite-plugin-svg-icons": "^2.0.1"
+    "vite-plugin-svg-icons-ng": "^1.4.1"
   }
 }

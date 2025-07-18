@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Hide, View } from '@element-plus/icons-vue';
+import {getCurrentInstance, ref} from 'vue';
+import {Hide, View} from '@element-plus/icons-vue';
 import {useRouter} from "vue-router";
 import {register} from "@/api/web/login";
+
+const {proxy} = getCurrentInstance();
+const $msg = ref();
+
+onMounted(() => {
+  $msg.value = proxy.$msg
+})
 
 /*--------------- 响应式状态声明 ---------------*/
 const userName = ref<string>('');       // 用户名输入值
@@ -26,7 +33,7 @@ const toggleConfirmPasswordVisibility = () => {
 };
 
 /*--------------- 表单提交处理（示例） ---------------*/
-const handleSubmit = async(e: Event) => {
+const handleSubmit = async (e: Event) => {
   e.preventDefault(); // 阻止表单默认提交
   console.log('注册信息:', {
     userName: userName.value,
@@ -51,11 +58,13 @@ const handleSubmit = async(e: Event) => {
     if (res.code === 200) {
       // 注册成功
       console.log('注册成功');
+      $msg.success('注册成功');
       // 跳转到首页
       router.push('/login');
     } else {
       // 注册失败
       console.log('注册失败');
+      $msg.error(res.request.msg);
     }
   } finally {
     loading.value = false;
@@ -126,8 +135,8 @@ const handleSubmit = async(e: Event) => {
                 :class="['login-eye']"
                 @click="togglePasswordVisibility"
             >
-              <Hide v-if="isPasswordVisible" />
-              <View v-else />
+              <Hide v-if="isPasswordVisible"/>
+              <View v-else/>
             </el-icon>
           </div>
         </div>
@@ -150,8 +159,8 @@ const handleSubmit = async(e: Event) => {
                 :class="['login-eye']"
                 @click="toggleConfirmPasswordVisibility"
             >
-              <Hide v-if="isConfirmPasswordVisible" />
-              <View v-else />
+              <Hide v-if="isConfirmPasswordVisible"/>
+              <View v-else/>
             </el-icon>
           </div>
         </div>
@@ -168,7 +177,8 @@ const handleSubmit = async(e: Event) => {
 
       <!-- 添加登录链接，与登录页保持一致 -->
       <p class="login-register">
-        Already have an account? <router-link to="/login" class="login-register-link">Login</router-link>
+        Already have an account?
+        <router-link to="/login" class="login-register-link">Login</router-link>
       </p>
     </form>
   </div>

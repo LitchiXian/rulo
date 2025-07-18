@@ -15,5 +15,5 @@ const message = (type, content, options = {}) => {
 export const msg = {
     success: (content, options = {}) => message('success', content, options),
     warning: (content, options = {}) => message('warning', content, options),
-    error: (content, options = {}) => message('error', content, options),
+    error: (content, options = {}) => message('error', content, options)
 };
