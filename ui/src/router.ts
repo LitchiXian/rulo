@@ -1,6 +1,6 @@
-import {createRouter, createWebHistory} from 'vue-router'
+import {createRouter, createWebHistory, RouteRecordRaw} from 'vue-router'
 
-const routes = [
+export const constantRoutes: RouteRecordRaw[] = [
     {
         path: '/',
         // 在 App.vue 中定义了 MainLayout.vue，所以这里不用再设置了，不然会嵌套 layout
@@ -30,8 +30,9 @@ const routes = [
 ]
 
 const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
-    routes
+    // history: createWebHistory(import.meta.env.VITE_APP_CONTEXT_PATH),
+    history: createWebHistory('/'),
+    routes: constantRoutes
 })
 
 export default router

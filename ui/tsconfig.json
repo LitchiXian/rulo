@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    // 编译目标为 ES 最新特性（Vite 会进一步处理为浏览器兼容代码）
+    "target": "ES2023",
+    // 使用 ESM 模块系统（Vite 原生支持）
+    "module": "ESNext",
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    // 严格类型检查（推荐开启）
+    "strict": true,
+    // 允许从没有默认导出的模块中导入（如 Vue 组件）
+    "allowImportingTsExtensions": true,
+    // 解析非相对路径的导入（如 `import { ref } from 'vue'`）
+    "baseUrl": ".",
+    // 路径别名（需配合 Vite 的 resolve.alias 配置）
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    },
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "lib": [
+      "ES2023"
+    ],
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "outDir": "./dist/types",
+    "noEmit": false
+  },
+  // 指定需要处理的文件（覆盖默认规则）
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "vite.config.ts"
+  ]
+}

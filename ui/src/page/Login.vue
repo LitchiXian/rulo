@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import {inject, ref} from 'vue';
+import {getCurrentInstance, ref} from 'vue';
 import {login} from "@/api/web/login.js";
 import {useRouter} from 'vue-router';
+
+const {proxy} = getCurrentInstance();
 
 /*--------------- 响应式状态声明 ---------------*/
 // 邮箱输入值
@@ -15,15 +17,13 @@ const router = useRouter()
 const loginButtonRef = ref<HTMLButtonElement | null>(null);
 const loading = ref<boolean>(false);
 
-const $msg = inject('msg');
-
 /*--------------- 密码可见性切换方法 ---------------*/
 const togglePasswordVisibility = () => {
   isPasswordVisible.value = !isPasswordVisible.value;
 };
 
 /*--------------- 表单提交处理（示例） ---------------*/
-const handleSubmit = async(e: Event) => {
+const handleSubmit = async (e: Event) => {
   e.preventDefault(); // 阻止表单默认提交
   console.log('登录信息:', {email: email.value, password: password.value});
 
@@ -42,12 +42,13 @@ const handleSubmit = async(e: Event) => {
     if (res.code === 200) {
       // 登录成功
       console.log('登录成功');
-      // $msg.success('登录成功', {duration: 2000});
+      proxy.$msg.success('登录成功');
       // 跳转到首页
       router.push('/');
     } else {
       // 登录失败
       console.log('登录失败');
+      proxy.$msg.error(res.result.msg);
     }
   } finally {
     loading.value = false;
