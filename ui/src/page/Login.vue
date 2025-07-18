@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref} from 'vue';
+import {inject, ref} from 'vue';
 import {login} from "@/api/web/login.js";
 import {useRouter} from 'vue-router';
 
@@ -14,6 +14,8 @@ const isPasswordVisible = ref<boolean>(false);
 const router = useRouter()
 const loginButtonRef = ref<HTMLButtonElement | null>(null);
 const loading = ref<boolean>(false);
+
+const $msg = inject('msg');
 
 /*--------------- 密码可见性切换方法 ---------------*/
 const togglePasswordVisibility = () => {
@@ -40,6 +42,7 @@ const handleSubmit = async(e: Event) => {
     if (res.code === 200) {
       // 登录成功
       console.log('登录成功');
+      // $msg.success('登录成功', {duration: 2000});
       // 跳转到首页
       router.push('/');
     } else {
