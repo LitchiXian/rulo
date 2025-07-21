@@ -1,4 +1,4 @@
-import request from '../request';
+import request from '../request.js';
 
 export function test1() {
   return request({

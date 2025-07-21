@@ -1,11 +1,14 @@
 {
+  //tsconfig.json 是 TypeScript（TS）项目的核心配置文件，
+  //专门用于告诉 TypeScript 编译器（tsc）或基于 TS 的工具链（如 Vite、ESBuild）如何处理项目中的 TypeScript 代码。
+
   "compilerOptions": {
     // 编译目标为 ES 最新特性（Vite 会进一步处理为浏览器兼容代码）
     "target": "ES2023",
     // 使用 ESM 模块系统（Vite 原生支持）
     "module": "ESNext",
     /* Bundler mode */
-    "moduleResolution": "bundler",
+    "moduleResolution": "Bundler",
     // 严格类型检查（推荐开启）
     "strict": true,
     // 允许从没有默认导出的模块中导入（如 Vue 组件）
@@ -15,27 +18,43 @@
     // 路径别名（需配合 Vite 的 resolve.alias 配置）
     "paths": {
       "@/*": [
-        "src/*"
+        "./src/*"
       ]
     },
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo",
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
+    // 开启后，TypeScript 会检查未使用的局部变量（如函数内声明但未使用的变量），并在编译时报错。
+//    "noUnusedLocals": true,
+    // 开启后，TypeScript 会检查未使用的函数参数（如函数参数未使用），并在编译时报错。
+//    "noUnusedParameters": true,
+    // 指示编译器仅检查可擦除的语法（如类型断言 as、类型注解 : type），而不执行完整的类型检查。
+    // 通常用于快速验证语法是否合法（如类型注解格式），但不会检查类型逻辑错误（如 string 赋值给 number 类型变量）。
+    //    "erasableSyntaxOnly": true,
+    // 开启后，TypeScript 会检查 switch 语句是否存在未显式终止的 case 穿透（即缺少 break 或 return），并在编译时报错。
+//    "noFallthroughCasesInSwitch": true,
+    // 开启后，TypeScript 会检查导入的模块是否有未声明的副作用（即模块顶层代码是否直接修改全局变量或执行其他操作）。
+//    "noUncheckedSideEffectImports": true,
     "lib": [
-      "ES2023"
+      "ES2023", "DOM", "DOM.Iterable"
     ],
-    "skipLibCheck": true,
+    // 跳过第三方库声明文件（.d.ts）的类型检查，仅检查项目自身代码的类型。
+    // 若引入的库类型声明有问题（如 SomeLib 的类型与实际 JS 代码不匹配），开启此配置可避免编译失败，但可能隐藏潜在类型错误（需谨慎使用）。
+    //    "skipLibCheck": true,
+    // 控制 TypeScript 对模块语法的处理方式，设为 true 时禁止自动转换模块语法（如不将 import 转换为 require，不添加 __esModule 标记）。
+    // 开启此配置可避免生成冗余的 __esModule 标记，提升构建效率。
     "verbatimModuleSyntax": true,
+    // 指定 TypeScript 如何检测文件是否为模块（即是否包含 import/export 语句）。"force" 表示强制将所有文件视为模块（即使没有 import/export）。
+    // Vue 单文件组件（.vue）通常没有 import/export（但 <script> 标签内可能有），开启 force 可确保 <script> 内的代码被视为模块（避免全局变量污染）。
     "moduleDetection": "force",
-    "outDir": "./dist/types",
+    // 指定 TypeScript 编译后的输出目录（生成 .js、.d.ts 等文件的位置）。
+    // Vite 通常不需要手动配置 outDir，因为 Vite 自身处理模块加载（基于 ESM）。但此配置会影响 TypeScript 生成的类型声明文件（.d.ts）的位置，若项目需要发布类型声明（如库），需与 package.json 的 types 字段配合。
+    //    "outDir": "./dist/types",
+    // 控制 TypeScript 是否生成编译输出（如 .js、.d.ts 文件）。false 表示生成，true 表示不生成。
     "noEmit": false
   },
   // 指定需要处理的文件（覆盖默认规则）
   "include": [
     "src/**/*.ts",
+    "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
     "vite.config.ts"

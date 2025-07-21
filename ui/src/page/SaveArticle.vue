@@ -112,10 +112,10 @@
   </div>
 </template>
 
-<script setup>
+<script setup  lang="ts">
 import {ref, reactive, onMounted} from 'vue'
 import {useRouter} from 'vue-router'
-import {save} from '@/api/web/blogArticle.js'
+import {save} from '@/api/web/blogArticle.ts'
 
 const router = useRouter()
 

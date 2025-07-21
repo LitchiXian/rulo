@@ -1,6 +1,6 @@
-import request from '@/api/request';
+import request from '@/api/request.js';
 
-export function save(data) {
+export function save(data: any) {
     return request({
         url: '/blog/article/save',
         method: 'post',
@@ -8,7 +8,7 @@ export function save(data) {
     });
 }
 
-export function remove(data) {
+export function remove(data: any) {
     return request({
         url: '/blog/article/remove',
         method: 'post',
@@ -16,7 +16,7 @@ export function remove(data) {
     });
 }
 
-export function update(data) {
+export function update(data: any) {
     return request({
         url: '/blog/article/update',
         method: 'post',
@@ -31,7 +31,7 @@ export function list() {
     });
 }
 
-export function getArticle(data) {
+export function getArticle(data: any) {
     return request({
         url: '/blog/article/get',
         method: 'get',

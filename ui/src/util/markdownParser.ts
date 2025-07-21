@@ -1,4 +1,4 @@
-import markdownIt from 'markdown-it'
+import markdownIt from 'markdown-it';
 
 export default function markdownParser() {
     return markdownIt({

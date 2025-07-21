@@ -1,6 +1,6 @@
-import request from '@/api/request';
+import request from '@/api/request.js';
 
-export function login(data) {
+export function login(data: any) {
     return request({
         url: '/login/login',
         method: 'post',
@@ -8,7 +8,7 @@ export function login(data) {
     });
 }
 
-export function register(data) {
+export function register(data: any) {
     return request({
         url: '/login/register',
         method: 'post',
