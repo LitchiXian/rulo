@@ -16,3 +16,10 @@ email:
   account: demo_account
   # 邮件授权码
   password: demo_password
+  # 发件人信息
+  from-name: L2系统通知
+  from-email: l2_notify@yourdomain.com
+  # 连接超时时间（毫秒）
+  timeout: 10000
+  # 启用SSL加密
+  ssl-enable: true
