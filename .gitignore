@@ -29,6 +29,8 @@ replay_pid*
 
 **/target/
 
+application-local.yml
+
 logs/
 
 /ui/package-lock.json
