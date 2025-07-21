@@ -39,8 +39,10 @@ public class BlogArticleController {
     @GetMapping("/list")
     public AjaxResult list() {
         System.out.println("是否登录：" + StpUtil.isLogin());
-        System.out.println("当前登录用户：" + StpUtil.getLoginId());
-        System.out.println("当前登录用户：" + StpUtil.getTokenInfo());
+        if (!StpUtil.isLogin()) {
+            System.out.println("当前登录用户：" + StpUtil.getLoginId());
+            System.out.println("当前登录用户：" + StpUtil.getTokenInfo());
+        }
         return AjaxResult.success(blogArticleService.list(new LambdaQueryWrapper<BlogArticle>().orderByDesc(BlogArticle::getUpdateTime)));
     }
 
@@ -52,7 +54,7 @@ public class BlogArticleController {
     @GetMapping("/list2")
     public AjaxResult list2() {
 //        int i = 1/0;
-        throw new ServiceException(10086,"自定义异常");
+        throw new ServiceException(10086, "自定义异常");
 //        return AjaxResult.success(bBlogArticleService.listBlogArticle());
     }
 }
