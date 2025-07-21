@@ -21,8 +21,8 @@
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^24.0.10",
-    "@types/vue": "^1.0.31",
     "@vitejs/plugin-vue": "^6.0.0",
+    "typescript": "^5.8.3",
     "unplugin-auto-import": "^19.3.0",
     "unplugin-vue-setup-extend-plus": "^1.0.1",
     "vite": "^7.0.0",
