@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {getCurrentInstance, ref} from 'vue';
-import {login} from "@/api/web/login.js";
+import {login} from "@/api/web/login.ts";
 import {useRouter} from 'vue-router';
 
 const {proxy} = getCurrentInstance();

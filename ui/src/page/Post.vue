@@ -38,11 +38,11 @@
   </div>
 </template>
 
-<script setup>
+<script setup  lang="ts">
 import {ref, computed, onMounted} from 'vue'
 import {useRoute} from 'vue-router'
 import MarkdownRenderer from '@/component/MarkdownRenderer.vue'
-import {getArticle} from "@/api/web/blogArticle.js";
+import {getArticle} from "@/api/web/blogArticle.ts";
 
 const route = useRoute()
 const currentPost = ref(null)

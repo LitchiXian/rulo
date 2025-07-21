@@ -2,7 +2,7 @@
   <div class="markdown-body" v-html="htmlContent"></div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { defineProps, ref, onMounted } from 'vue'
 import markdownParser from '@/util/markdownParser'
 import '@/style/markdown.css'

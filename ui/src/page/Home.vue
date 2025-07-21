@@ -21,10 +21,10 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import {list} from "@/api/web/blogArticle.js";
+import {list} from "@/api/web/blogArticle.ts";
 
 const router = useRouter()
 const featuredPosts = ref([])
