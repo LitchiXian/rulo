@@ -80,10 +80,12 @@ const openApiDoc = () => {
 
   // 添加点击反馈效果
   const apiLink = document.querySelector('.api-link');
-  apiLink.style.transform = 'scale(0.95)';
-  setTimeout(() => {
-    apiLink.style.transform = '';
-  }, 300);
+  if (apiLink && 'style' in apiLink) {
+    apiLink.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      apiLink.style.transform = '';
+    }, 300);
+  }
 };
 
 const checkLogin = () => {
@@ -99,7 +101,7 @@ const checkLogin = () => {
 // 根据文章内容生成目录项的逻辑可以放在这里
 // 或者在文章页面加载时设置
 defineExpose({
-  setTocItems: (items) => {
+  setTocItems: (items: any) => {
     tocItems.value = items;
     showToc.value = items.length > 0;
   }

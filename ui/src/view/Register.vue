@@ -5,11 +5,6 @@ import {useRouter} from "vue-router";
 import {register} from "@/api/web/login";
 
 const {proxy} = getCurrentInstance();
-const $msg = ref();
-
-onMounted(() => {
-  $msg.value = proxy.$msg
-})
 
 /*--------------- 响应式状态声明 ---------------*/
 const userName = ref<string>('');       // 用户名输入值
@@ -58,13 +53,13 @@ const handleSubmit = async (e: Event) => {
     if (res.code === 200) {
       // 注册成功
       console.log('注册成功');
-      $msg.success('注册成功');
+      proxy.$msg.success('注册成功');
       // 跳转到首页
       router.push('/login');
     } else {
       // 注册失败
       console.log('注册失败');
-      $msg.error(res.request.msg);
+      proxy.$msg.error(res.request.msg);
     }
   } finally {
     loading.value = false;

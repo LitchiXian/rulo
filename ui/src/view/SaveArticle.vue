@@ -132,7 +132,7 @@ const form = reactive({
 
 // 状态数据
 const loading = ref(false)
-const error = ref(null)
+const error = ref<string>('')
 const categories = ref([
   {id: 1, name: '前端开发'},
   {id: 2, name: '后端技术'},
@@ -155,7 +155,7 @@ const submitForm = async () => {
 
   try {
     loading.value = true
-    error.value = null
+    error.value = ''
 
     // 格式化数据
     const tagsArray = form.tags
@@ -186,7 +186,7 @@ const submitForm = async () => {
 }
 
 const retrySubmit = () => {
-  error.value = null
+  error.value = ''
   submitForm()
 }
 

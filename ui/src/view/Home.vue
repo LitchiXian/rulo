@@ -29,7 +29,7 @@ import {list} from "@/api/web/blogArticle.ts";
 const router = useRouter()
 const featuredPosts = ref([])
 const loading = ref(true)
-const error = ref(null)
+const error = ref<string>('')
 
 // onMounted(() => {
 //   featuredPosts.value = posts.slice(0, 5)
@@ -59,7 +59,7 @@ onMounted(async () => {
  * @param {number} timestamp - 时间戳（毫秒）
  * @returns {string} 格式化后的时间字符串
  */
-const smartFormatDate = (timestamp) => {
+const smartFormatDate = (timestamp: number) => {
   const now = new Date();
   const date = new Date(timestamp);
 

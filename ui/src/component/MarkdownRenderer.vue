@@ -18,15 +18,13 @@ const emit = defineEmits(['toc-generated'])
 const htmlContent = ref('')
 
 onMounted(() => {
-  const md = markdownParser({
-    // 配置生成锚点链接
+  const md = (markdownParser as (options: any) => any)({
     anchorOptions: {
       permalink: true,
       permalinkBefore: true,
       permalinkSymbol: '#'
     }
-  })
-
+  });
   htmlContent.value = md.render(props.content)
 
   // 提取标题生成目录

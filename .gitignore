@@ -30,3 +30,5 @@ replay_pid*
 **/target/
 
 logs/
+
+/ui/package-lock.json
