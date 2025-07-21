@@ -20,8 +20,8 @@ public class LoginController {
 
     @PostMapping("/login")
     public AjaxResult login(@RequestBody UserDto userDto) {
-        int i = sysUserService.login(userDto);
-        return AjaxResult.success();
+        String token = sysUserService.login(userDto);
+        return AjaxResult.success(token);
     }
 
     @PostMapping("/register")

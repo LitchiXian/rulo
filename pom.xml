@@ -26,6 +26,7 @@
         <hutool.version>5.8.24</hutool.version>
         <minio.version>8.5.17</minio.version>
         <jbcrypt.version>0.4</jbcrypt.version>
+        <sa-token.version>1.44.0</sa-token.version>
     </properties>
 
     <dependencyManagement>
@@ -86,6 +87,12 @@
                 <groupId>org.mindrot</groupId>
                 <artifactId>jbcrypt</artifactId>
                 <version>${jbcrypt.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-spring-boot3-starter</artifactId>
+                <version>${sa-token.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

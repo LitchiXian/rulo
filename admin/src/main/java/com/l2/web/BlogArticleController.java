@@ -1,5 +1,6 @@
 package com.l2.web;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.l2.domain.BlogArticle;
 import com.l2.domain.dto.IdDto;
@@ -37,6 +38,9 @@ public class BlogArticleController {
 
     @GetMapping("/list")
     public AjaxResult list() {
+        System.out.println("是否登录：" + StpUtil.isLogin());
+        System.out.println("当前登录用户：" + StpUtil.getLoginId());
+        System.out.println("当前登录用户：" + StpUtil.getTokenInfo());
         return AjaxResult.success(blogArticleService.list(new LambdaQueryWrapper<BlogArticle>().orderByDesc(BlogArticle::getUpdateTime)));
     }
 

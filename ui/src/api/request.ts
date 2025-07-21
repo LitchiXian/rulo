@@ -13,6 +13,10 @@ const service = axios.create({
 service.interceptors.request.use(
     config => {
         // 这里可以添加 token 等认证信息
+        const tokenValue = localStorage.getItem('satoken');
+        if (tokenValue) {
+            config.headers['satoken'] = tokenValue;
+        }
         return config
     },
     error => {
