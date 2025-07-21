@@ -7,6 +7,27 @@ spring:
     url: jdbc:mysql://localhost:3306/l2?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&allowPublicKeyRetrieval=true
     username: l2
     password: 123456
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 1
+      # 连接超时
+      connect-timeout: 5s
+      # 读取超时
+      timeout: 5s
+      # Lettuce 客户端的配置
+      lettuce:
+        # 连接池配置
+        pool:
+          # 最小空闲连接
+          min-idle: 0
+          # 最大空闲连接
+          max-idle: 8
+          # 最大活跃连接
+          max-active: 8
+          # 从连接池获取连接 最大超时时间，小于等于0则表示不会超时
+          max-wait: -1ms
 
 # https://baomidou.com/reference/
 mybatis-plus:
