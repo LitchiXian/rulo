@@ -3,6 +3,8 @@ package com.l2.service.impl;
 import java.util.Collections;
 import java.util.Date;
 
+import cn.dev33.satoken.stp.SaTokenInfo;
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -31,7 +33,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
     private final SnowflakeConfig snowflakeConfig;
 
     @Override
-    public int login(UserDto loginUser) {
+    public String login(UserDto loginUser) {
         if (StringUtils.isEmpty(loginUser.getUserName()) || StringUtils.isEmpty(loginUser.getPassword())) {
             throw new ServiceException("用户名或密码不能为空");
         }
@@ -48,7 +50,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
             throw new RuntimeException("密码错误");
         }
 
-        return 1;
+        StpUtil.login(user.getId());
+
+        String token = StpUtil.getTokenInfo().getTokenValue();
+        return token;
     }
 
     @Override

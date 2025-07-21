@@ -43,6 +43,17 @@ const handleSubmit = async (e: Event) => {
       // 登录成功
       console.log('登录成功');
       proxy.$msg.success('登录成功');
+
+      if (res.result.data) {
+        // 保存到 localStorage（可根据需求改为 sessionStorage）
+        localStorage.setItem('satoken', res.result.data);
+
+        // 可选：同时保存到内存（方便后续直接使用）
+        // （例如：将 tokenValue 存入 Vue 的响应式变量或全局状态）
+      } else {
+        console.warn('登录成功，但未获取到有效的 Token 信息');
+      }
+
       // 跳转到首页
       router.push('/');
     } else {
