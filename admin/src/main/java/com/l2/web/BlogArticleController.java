@@ -39,7 +39,7 @@ public class BlogArticleController {
     @GetMapping("/list")
     public AjaxResult list() {
         System.out.println("是否登录：" + StpUtil.isLogin());
-        if (!StpUtil.isLogin()) {
+        if (StpUtil.isLogin()) {
             System.out.println("当前登录用户：" + StpUtil.getLoginId());
             System.out.println("当前登录用户：" + StpUtil.getTokenInfo());
         }
