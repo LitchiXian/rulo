@@ -41,8 +41,8 @@ onMounted(async () => {
     const response = await list()
 
     // 从响应中提取data字段
-    if (response.result.data && Array.isArray(response.result.data)) {
-      featuredPosts.value = response.result.data
+    if (response.data.data && Array.isArray(response.data.data)) {
+      featuredPosts.value = response.data.data
     } else {
       throw new Error('Invalid response format')
     }

@@ -21,18 +21,6 @@ const countdown = ref<number>(0);              // 倒计时秒数
 const timer = ref<NodeJS.Timeout | null>(null); // 倒计时定时器
 const agreeTerms = ref<boolean>(false);       // 是否同意条款
 
-const sliderPosition = ref(0);
-const sliderPercentage = ref(0);
-const sliderComplete = ref(false);
-const errorMessage = ref('');
-
-
-// 是否正在拖动
-const isDragging = ref(false);
-const dragStartX = ref(0);
-const dragStartLeft = ref(0);
-const maxLeft = ref(0);
-
 const router = useRouter()
 const loginButtonRef = ref<HTMLButtonElement | null>(null);
 const loading = ref<boolean>(false);
@@ -73,11 +61,11 @@ const getVerificationCode = async () => {
 
   try {
     const res = await getRegisterCode({email: email.value});
-    if (res.code === 200) {
+    if (res.data.code === 200) {
       showMessage('验证码已发送', 'success');
       startCountdown();
     } else {
-      showMessage(res.result.msg || '验证码发送失败', 'error');
+      showMessage(res.data.msg || '验证码发送失败', 'error');
     }
   } catch (error) {
     showMessage('验证码发送失败', 'error');
@@ -121,7 +109,7 @@ const handleSubmit = async (e: Event) => {
       code: code.value
     });
 
-    if (res.code === 200) {
+    if (res.data.code === '200') {
       // 注册成功
       console.log('注册成功');
       showMessage('注册成功', 'success');
@@ -130,7 +118,7 @@ const handleSubmit = async (e: Event) => {
     } else {
       // 注册失败
       console.log('注册失败');
-      showMessage(res.result.msg, 'error');
+      showMessage(res.data.msg, 'error');
 
     }
   } finally {

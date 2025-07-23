@@ -51,7 +51,7 @@ public class AjaxResult {
     /**
      * 获取结果映射
      */
-    public Map<String, Object> getResult() {
+    public Map<String, Object> getData() {
         return data;
     }
 
@@ -125,7 +125,7 @@ public class AjaxResult {
         map.put(MSG_KEY, message);
         return new AjaxResult(Status.SUCCESS, message, null) {
             @Override
-            public Map<String, Object> getResult() {
+            public Map<String, Object> getData() {
                 return Collections.unmodifiableMap(map);
             }
         };

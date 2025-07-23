@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {getCurrentInstance, ref} from 'vue';
 import {login} from "@/api/web/login.ts";
-import {useRouter} from 'vue-router';
+import {useRouter,useRoute } from 'vue-router';
 import {showMessage} from "@/util/message.ts";
 
 // const {proxy} = getCurrentInstance();
@@ -14,7 +14,8 @@ const password = ref<string>('');
 // 密码可见状态
 const isPasswordVisible = ref<boolean>(false);
 
-const router = useRouter()
+const router = useRouter();
+const route = useRoute();
 const loginButtonRef = ref<HTMLButtonElement | null>(null);
 const loading = ref<boolean>(false);
 
@@ -40,14 +41,14 @@ const handleSubmit = async (e: Event) => {
       password: password.value
     });
 
-    if (res.code === 200) {
+    if (res.data.code === '200') {
       // 登录成功
       console.log('登录成功');
       showMessage('登录成功', 'success');
 
-      if (res.result.data) {
+      if (res.data.data) {
         // 保存到 localStorage（可根据需求改为 sessionStorage）
-        localStorage.setItem('satoken', res.result.data);
+        localStorage.setItem('satoken', res.data.data);
 
         // 可选：同时保存到内存（方便后续直接使用）
         // （例如：将 tokenValue 存入 Vue 的响应式变量或全局状态）
@@ -56,11 +57,12 @@ const handleSubmit = async (e: Event) => {
       }
 
       // 跳转到首页
-      router.push('/');
+      const returnUrl = route.query.redirect as string  || '/';
+      router.push(returnUrl);
     } else {
       // 登录失败
       console.log('登录失败');
-      showMessage(res.result.msg, 'error');
+      showMessage(res.data.msg, 'error');
 
       // proxy.$msg.error(res.result.msg);
     }
