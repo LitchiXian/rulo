@@ -1,5 +1,6 @@
 package com.l2.exception;
 
+import cn.dev33.satoken.exception.NotLoginException;
 import com.l2.util.AjaxResult;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -41,6 +42,12 @@ public class GlobalExceptionHandler {
         log.error(e.getMessage(), e);
         Integer code = e.getCode();
         return code != null ? AjaxResult.error(code, e.getMessage()) : AjaxResult.error(e.getMessage());
+    }
+
+    @ExceptionHandler(NotLoginException.class)
+    public AjaxResult handleNotLoginException(NotLoginException e, HttpServletRequest request) {
+        log.error("用户未登录，请先登录", e);
+        return AjaxResult.error(403, e.getMessage());
     }
 
     /**

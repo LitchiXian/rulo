@@ -27,7 +27,7 @@ public class AjaxResult {
     public static final String DATA_KEY = "data";
 
     // 使用不可变Map封装结果
-    private final Map<String, Object> result;
+    private final Map<String, Object> data;
 
     /**
      * 构造结果对象
@@ -44,21 +44,21 @@ public class AjaxResult {
         if (data != null) {
             map.put(DATA_KEY, data);
         }
-        this.result = Collections.unmodifiableMap(map);
+        this.data = Collections.unmodifiableMap(map);
     }
 
     /**
      * 获取结果映射
      */
     public Map<String, Object> getResult() {
-        return result;
+        return data;
     }
 
     /**
      * 获取状态码
      */
     public int getCode() {
-        return (int) result.get(CODE_KEY);
+        return (int) data.get(CODE_KEY);
     }
 
     /**
@@ -98,7 +98,7 @@ public class AjaxResult {
      * 失败响应（默认消息）
      */
     public static AjaxResult error() {
-        return new AjaxResult(Status.ERROR, "操作失败", null);
+        return error(Status.ERROR.getCode(), "操作失败");
     }
 
     /**
@@ -106,7 +106,7 @@ public class AjaxResult {
      * @param message 错误提示
      */
     public static AjaxResult error(String message) {
-        return new AjaxResult(Status.ERROR, message, null);
+        return error(Status.ERROR.getCode(), message);
     }
 
     /**
@@ -118,7 +118,7 @@ public class AjaxResult {
         Map<String, Object> map = new HashMap<>(3);
         map.put(CODE_KEY, code);
         map.put(MSG_KEY, message);
-        return new AjaxResult(Status.ERROR, message, null) {
+        return new AjaxResult(Status.SUCCESS, message, null) {
             @Override
             public Map<String, Object> getResult() {
                 return Collections.unmodifiableMap(map);

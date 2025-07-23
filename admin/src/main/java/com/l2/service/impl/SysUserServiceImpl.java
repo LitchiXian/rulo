@@ -91,6 +91,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
             throw new ServiceException("用户名已存在");
         }
 
+        if (CollectionUtil.isNotEmpty(baseMapper.selectList(new LambdaQueryWrapper<>(SysUser.class)
+                .eq(SysUser::getEmail, userDto.getEmail())
+                .eq(SysUser::getIsDeleted, 0)))) {
+            throw new ServiceException("该邮箱已注册");
+        }
+
         // 校验密码长度（基础安全策略）
         if (userDto.getPassword().length() < 3) {
             throw new ServiceException("密码长度至少3位");
@@ -137,6 +143,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
         if (!userDto.getEmail().matches(EMAIL_REGEX)) {
             throw new ServiceException("邮箱格式不正确");
+        }
+
+        if (CollectionUtil.isNotEmpty(baseMapper.selectList(new LambdaQueryWrapper<>(SysUser.class)
+                .eq(SysUser::getEmail, userDto.getEmail())
+                .eq(SysUser::getIsDeleted, 0)))) {
+            throw new ServiceException("该邮箱已注册");
         }
 
         long id = snowflakeConfig.snowflakeId();

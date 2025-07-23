@@ -562,8 +562,7 @@ const handleSubmit = async (e: Event) => {
 /* 验证码按钮样式 */
 .get-code-btn {
   position: absolute;
-  right: 10px;
-  top: 50%;
+  right: 30px;
   transform: translateY(-50%);
   height: 30px;
   width: 90px;
