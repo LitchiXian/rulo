@@ -9,6 +9,7 @@ import com.l2.config.SnowflakeConfig;
 import com.l2.constant.RedisConstant;
 import com.l2.domain.SysUser;
 import com.l2.domain.dto.UserDto;
+import com.l2.exception.ErrorCode;
 import com.l2.exception.ServiceException;
 import com.l2.mapper.SysUserMapper;
 import com.l2.service.SysUserService;
@@ -81,7 +82,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
 
         if (!userDto.getEmail().matches(EMAIL_REGEX)) {
-            throw new ServiceException("邮箱格式不正确");
+            throw new ServiceException(ErrorCode.User.EMAIL_FORMAT_ERROR);
         }
 
         // 校验用户名是否已存在

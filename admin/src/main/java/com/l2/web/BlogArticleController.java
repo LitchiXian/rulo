@@ -54,7 +54,7 @@ public class BlogArticleController {
     @GetMapping("/list2")
     public AjaxResult list2() {
 //        int i = 1/0;
-        throw new ServiceException(10086, "自定义异常");
+        throw new ServiceException("10086", "自定义异常");
 //        return AjaxResult.success(bBlogArticleService.listBlogArticle());
     }
 }

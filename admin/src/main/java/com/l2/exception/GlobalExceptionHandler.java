@@ -40,14 +40,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ServiceException.class)
     public AjaxResult handleServiceException(ServiceException e, HttpServletRequest request) {
         log.error(e.getMessage(), e);
-        Integer code = e.getCode();
+        String code = e.getCode();
         return code != null ? AjaxResult.error(code, e.getMessage()) : AjaxResult.error(e.getMessage());
     }
 
     @ExceptionHandler(NotLoginException.class)
     public AjaxResult handleNotLoginException(NotLoginException e, HttpServletRequest request) {
         log.error("用户未登录，请先登录", e);
-        return AjaxResult.error(403, e.getMessage());
+        return AjaxResult.error(ErrorCode.User.LOGIN_EXPIRED);
     }
 
     /**

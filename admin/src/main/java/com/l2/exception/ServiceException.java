@@ -11,7 +11,7 @@ public class ServiceException extends RuntimeException{
     /**
      * 错误码
      */
-    private Integer code;
+    private String code;
 
     /**
      * 错误信息
@@ -20,16 +20,16 @@ public class ServiceException extends RuntimeException{
 
     public ServiceException(){}
 
-    public ServiceException(String message){
-        this.message = message;
+    public ServiceException(String code){
+        this.code = code;
     }
 
-    public ServiceException(Integer code, String message){
+    public ServiceException(String code, String message){
         this.code = code;
         this.message = message;
     }
 
-    public Integer getCode() {
+    public String getCode() {
         return code;
     }
 

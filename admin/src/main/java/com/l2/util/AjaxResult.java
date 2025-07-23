@@ -7,16 +7,16 @@ import java.util.Map;
 public class AjaxResult {
     // 使用枚举定义状态类型
     public enum Status {
-        SUCCESS(200),
-        ERROR(500);
+        SUCCESS("200"),
+        ERROR("500");
 
-        private final int code;
+        private final String code;
 
-        Status(int code) {
+        Status(String code) {
             this.code = code;
         }
 
-        public int getCode() {
+        public String getCode() {
             return code;
         }
     }
@@ -31,9 +31,10 @@ public class AjaxResult {
 
     /**
      * 构造结果对象
-     * @param status 状态枚举
+     *
+     * @param status  状态枚举
      * @param message 提示消息
-     * @param data 业务数据
+     * @param data    业务数据
      */
     private AjaxResult(Status status, String message, Object data) {
         Map<String, Object> map = new HashMap<>(3);
@@ -57,15 +58,15 @@ public class AjaxResult {
     /**
      * 获取状态码
      */
-    public int getCode() {
-        return (int) data.get(CODE_KEY);
+    public String getCode() {
+        return (String) data.get(CODE_KEY);
     }
 
     /**
      * 判断是否成功
      */
     public boolean isSuccess() {
-        return getCode() == Status.SUCCESS.getCode();
+        return getCode().equals(Status.SUCCESS.getCode());
     }
 
     // ================= 工厂方法 =================
@@ -79,6 +80,7 @@ public class AjaxResult {
 
     /**
      * 成功响应（无消息有数据）
+     *
      * @param data 需要返回的数据
      */
     public static AjaxResult success(Object data) {
@@ -87,8 +89,9 @@ public class AjaxResult {
 
     /**
      * 成功响应（有消息有数据）
+     *
      * @param message 提示消息
-     * @param data 需要返回的数据
+     * @param data    需要返回的数据
      */
     public static AjaxResult success(String message, Object data) {
         return new AjaxResult(Status.SUCCESS, message, data);
@@ -103,6 +106,7 @@ public class AjaxResult {
 
     /**
      * 失败响应（自定义消息）
+     *
      * @param message 错误提示
      */
     public static AjaxResult error(String message) {
@@ -111,10 +115,11 @@ public class AjaxResult {
 
     /**
      * 失败响应（自定义错误码+消息）
-     * @param code 自定义错误码
+     *
+     * @param code    自定义错误码
      * @param message 错误提示
      */
-    public static AjaxResult error(int code, String message) {
+    public static AjaxResult error(String code, String message) {
         Map<String, Object> map = new HashMap<>(3);
         map.put(CODE_KEY, code);
         map.put(MSG_KEY, message);
