@@ -15,3 +15,19 @@ export function register(data: any) {
         data: data
     });
 }
+
+export function logout(data: any) {
+    return request({
+        url: '/login/logout',
+        method: 'post',
+        data: data
+    });
+}
+
+export function getRegisterCode(data: any) {
+    return request({
+        url: '/login/getRegisterCode',
+        method: 'get',
+        params: data
+    });
+}

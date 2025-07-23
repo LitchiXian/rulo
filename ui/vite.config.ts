@@ -17,7 +17,7 @@ export default defineConfig(({ mode, command }) =>{
     },
     plugins: createVitePlugins(env, command === 'build'),
     server: {
-      port: 10086,
+      port: 80,
       // 允许访问的域名
       host: '0.0.0.0',
       // 若端口被占用，直接退出

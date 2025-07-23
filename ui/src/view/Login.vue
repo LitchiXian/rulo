@@ -2,8 +2,9 @@
 import {getCurrentInstance, ref} from 'vue';
 import {login} from "@/api/web/login.ts";
 import {useRouter} from 'vue-router';
+import {showMessage} from "@/util/message.ts";
 
-const {proxy} = getCurrentInstance();
+// const {proxy} = getCurrentInstance();
 
 /*--------------- 响应式状态声明 ---------------*/
 // 邮箱输入值
@@ -42,7 +43,7 @@ const handleSubmit = async (e: Event) => {
     if (res.code === 200) {
       // 登录成功
       console.log('登录成功');
-      proxy.$msg.success('登录成功');
+      showMessage('登录成功', 'success');
 
       if (res.result.data) {
         // 保存到 localStorage（可根据需求改为 sessionStorage）
@@ -59,7 +60,9 @@ const handleSubmit = async (e: Event) => {
     } else {
       // 登录失败
       console.log('登录失败');
-      proxy.$msg.error(res.result.msg);
+      showMessage(res.result.msg, 'error');
+
+      // proxy.$msg.error(res.result.msg);
     }
   } finally {
     loading.value = false;
