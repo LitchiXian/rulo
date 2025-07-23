@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotLoginException.class)
     public AjaxResult handleNotLoginException(NotLoginException e, HttpServletRequest request) {
         log.error("用户未登录，请先登录", e);
-        return AjaxResult.error(ErrorCode.User.LOGIN_EXPIRED);
+        return AjaxResult.error(ErrorCodeEnum.LOGIN_EXPIRED.getCode(), ErrorCodeEnum.LOGIN_EXPIRED.getMessage());
     }
 
     /**
