@@ -14,4 +14,8 @@ public interface SysUserService extends IService<SysUser> {
     String login(UserDto userDto);
 
     int register(UserDto userDto);
+
+    int logout();
+
+    int getRegisterCode(UserDto userDto);
 }
