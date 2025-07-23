@@ -43,12 +43,19 @@ public class BlogArticleController {
             System.out.println("当前登录用户：" + StpUtil.getLoginId());
             System.out.println("当前登录用户：" + StpUtil.getTokenInfo());
         }
-        return AjaxResult.success(blogArticleService.list(new LambdaQueryWrapper<BlogArticle>().orderByDesc(BlogArticle::getUpdateTime)));
+        return AjaxResult.success(blogArticleService.list(
+                        new LambdaQueryWrapper<BlogArticle>()
+                                .eq(BlogArticle::getIsDeleted, 0)
+                                .eq(BlogArticle::getIsPublished, 1)
+                                .orderByDesc(BlogArticle::getUpdateTime)
+                )
+        );
     }
 
     @GetMapping("/get")
     public AjaxResult get(IdDto idDto) {
-        return AjaxResult.success(blogArticleService.getById(idDto.getId()));
+        BlogArticle article = blogArticleService.getById(idDto.getId());
+        return AjaxResult.success(article);
     }
 
     @GetMapping("/list2")

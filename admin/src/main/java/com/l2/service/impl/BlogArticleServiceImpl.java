@@ -1,15 +1,18 @@
 package com.l2.service.impl;
 
-import java.util.Date;
-import java.util.List;
-
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.l2.domain.BlogArticle;
 import com.l2.domain.dto.SaveBlogArticleDto;
-import com.l2.service.BlogArticleService;
+import com.l2.exception.ErrorCodeEnum;
+import com.l2.exception.ServiceException;
 import com.l2.mapper.BlogArticleMapper;
+import com.l2.service.BlogArticleService;
+import com.l2.util.SaTokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author Administrator
@@ -47,6 +50,27 @@ public class BlogArticleServiceImpl extends ServiceImpl<BlogArticleMapper, BlogA
     @Override
     public List<BlogArticle> listBlogArticle() {
         return baseMapper.listBlogArticle();
+    }
+
+    @Override
+    public BlogArticle getById(Long id) {
+        BlogArticle blogArticle = baseMapper.selectById(id);
+        // 文章不存在时直接返回null
+        if (blogArticle == null) {
+            return null;
+        }
+
+        // 只处理未发布的文章（isPublished=0表示未发布）
+        if (blogArticle.getIsPublished() == 0) {
+            // 获取当前登录用户ID（未登录时SaToken会自动抛出异常）
+            Long loginId = SaTokenUtil.getLoginId();
+
+            // 权限校验：当前用户必须为文章作者
+            if (!loginId.equals(blogArticle.getUserId())) {
+                throw new ServiceException(ErrorCodeEnum.UNAUTHORIZED_ACCESS);
+            }
+        }
+        return blogArticle;
     }
 }
 

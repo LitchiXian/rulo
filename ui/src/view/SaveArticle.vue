@@ -20,6 +20,16 @@
         />
       </div>
 
+      <div class="form-group">
+        是否公开: <el-switch
+            v-model="form.isPublished"
+            style="margin-left: 24px;--el-switch-on-color: #4abbb5;"
+            inline-prompt
+            :active-icon="Check"
+            :inactive-icon="Close"
+        />
+      </div>
+
       <!-- 内容输入 -->
       <div class="form-group">
         <label for="article-content">内容 (Markdown格式)</label>
@@ -113,9 +123,10 @@
 </template>
 
 <script setup  lang="ts">
-import {ref, reactive, onMounted} from 'vue'
-import {useRouter} from 'vue-router'
-import {save} from '@/api/web/blogArticle.ts'
+import {ref, reactive, onMounted} from 'vue';
+import { Check, Close } from '@element-plus/icons-vue';
+import {useRouter} from 'vue-router';
+import {save} from '@/api/web/blogArticle.ts';
 
 const router = useRouter()
 
@@ -127,7 +138,7 @@ const form = reactive({
   tags: '',
   excerpt: '',
   isPublished: true,
-  isFeatured: false
+  isFeatured: false,
 })
 
 // 状态数据

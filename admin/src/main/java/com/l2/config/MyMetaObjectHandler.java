@@ -1,12 +1,16 @@
 package com.l2.config;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import com.l2.util.SaTokenUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class MyMetaObjectHandler implements MetaObjectHandler {
@@ -19,9 +23,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
      * 获取当前操作用户ID（需要根据实际项目实现）
      */
     private Long getCurrentUserId() {
-        // 实际项目中：从线程安全的方式获取当前登录用户ID
-        // 例如：SecurityContextHolder.getContext().getAuthentication().getName()
-        return snowflakeConfig.snowflakeId();
+        return SaTokenUtil.getLoginId();
     }
 
     @Override
@@ -32,7 +34,6 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         // 插入操作时自动填充
         this.strictInsertFill(metaObject, "id", Long.class, snowflakeConfig.snowflakeId());
         this.strictInsertFill(metaObject, "isDeleted", Integer.class, UN_DELETED_FLAG);
-        this.strictInsertFill(metaObject, "isDeleted2", Integer.class, UN_DELETED_FLAG);
         this.strictInsertFill(metaObject, "createId", Long.class, userId);
         this.strictInsertFill(metaObject, "createTime", Date.class, now);
         this.strictInsertFill(metaObject, "updateId", Long.class, userId);
