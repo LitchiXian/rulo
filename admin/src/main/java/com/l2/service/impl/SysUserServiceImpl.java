@@ -111,7 +111,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         user.setUserName(userDto.getUserName());
         user.setNickName(userDto.getUserName());
         user.setPassword(passwordHash);
-        user.setEmail("");
+        user.setEmail(userDto.getEmail());
         user.setRemark("");
         user.setCreateId(id);
         user.setUpdateId(id);
