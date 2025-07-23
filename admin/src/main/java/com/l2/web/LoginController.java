@@ -29,4 +29,16 @@ public class LoginController {
         int i = sysUserService.register(userDto);
         return AjaxResult.success();
     }
+
+    @PostMapping("/logout")
+    public AjaxResult logout() {
+        int i = sysUserService.logout();
+        return AjaxResult.success();
+    }
+
+    @GetMapping("/getRegisterCode")
+    public AjaxResult getRegisterCode(@ModelAttribute UserDto userDto) {
+        sysUserService.getRegisterCode(userDto);
+        return AjaxResult.success();
+    }
 }
