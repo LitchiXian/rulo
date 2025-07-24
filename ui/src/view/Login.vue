@@ -2,6 +2,7 @@
 import {ref} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
 import {useUserStore} from "@/store/user.ts";
+import {showMessage} from "@/util/message.ts";
 
 // const {proxy} = getCurrentInstance();
 
@@ -34,19 +35,22 @@ const handleSubmit = async (e: Event) => {
     loginButtonRef.value.textContent = '登录中...';
   }
 
+  try {
     const userStore = useUserStore();
     await userStore.login({
       userName: email.value,
-      password: password.value
+      password: password.value,
+      redirect: route.query.redirect as string
     })
-
+    showMessage('登录成功', 'success');
+  }finally {
     loading.value = false;
     if (loginButtonRef.value) {
       loginButtonRef.value.disabled = false;
       loginButtonRef.value.textContent = 'Login';
     }
+  }
 
-  // 这里添加实际登录逻辑（如调用API）
 };
 </script>
 

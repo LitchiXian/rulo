@@ -3,7 +3,7 @@
     <!-- 左侧导航栏 -->
     <div class="left-sidebar">
       <div class="author-info">
-        <img src="@/asset/avatar.png" alt="博主头像" class="author-avatar" />
+        <img src="@/asset/avatar.png" alt="博主头像" class="author-avatar"/>
         <h2 class="author-name">Litchi 的博客</h2>
       </div>
 
@@ -34,7 +34,7 @@
 
     <!-- 中间内容区域 -->
     <div class="content-area">
-      <router-view />
+      <router-view/>
     </div>
 
     <!-- 右侧目录栏 -->
@@ -54,9 +54,10 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-import { ref } from 'vue';
+import {useRouter} from 'vue-router'
+import {ref} from 'vue';
 import {logout} from "@/api/web/login.ts";
+import {useUserStore} from "@/store/user.ts";
 
 const darkMode = ref(true);
 const showToc = ref(true);
@@ -71,7 +72,7 @@ const toggleDarkMode = () => {
 const scrollToAnchor = (id) => {
   const el = document.getElementById(id);
   if (el) {
-    el.scrollIntoView({ behavior: 'smooth' });
+    el.scrollIntoView({behavior: 'smooth'});
   }
 };
 
@@ -94,7 +95,7 @@ const checkLogin = () => {
     // 跳转到登录页，并记录来源页面
     router.push({
       path: '/login',
-      query: { redirect: router.currentRoute.value.fullPath }
+      query: {redirect: router.currentRoute.value.fullPath}
     })
   }
 }
@@ -102,26 +103,11 @@ const checkLogin = () => {
 const handleLogoutClick = async () => {
   try {
     // 调用登出API（假设logout是异步函数）
-    const res = await logout();
-
-    // 成功响应处理
-    if (res.data.code === '200') {
-      // 清理前端认证信息（根据实际token存储方式调整）
-      localStorage.removeItem('satoken');
-
-      router.push('/');
-    } else {
-      // API返回非200状态码处理
-      console.error('登出失败:', res.data.message);
-      alert(`登出失败: ${res.data.message || '未知错误'}`);
-    }
-  } catch (error) {
-    // 网络错误或异常处理
-    console.error('登出请求异常:', error);
-    alert('登出请求发送失败，请检查网络');
-
-    // 强制清理本地token（即使API调用失败）
+    const userStore = useUserStore();
+    await userStore.logout();
+  } finally {
     localStorage.removeItem('satoken');
+    sessionStorage.removeItem('satoken');
   }
 };
 
@@ -218,10 +204,10 @@ defineExpose({
   width: 43%;
   margin: 50px 0 0 24%; /* 上右下左边距匹配侧边栏宽度 */
   padding: 10px;
-  background-color: var(--card-bg-color);/*  66,66,66 - 内容背景色 */
+  background-color: var(--card-bg-color); /*  66,66,66 - 内容背景色 */
   color: #ece2c0; /* 236,226,192 - 字体颜色 */
-  border-top-left-radius: 10px;     /* 左上角圆角 */
-  border-top-right-radius: 10px;    /* 右上角圆角 */
+  border-top-left-radius: 10px; /* 左上角圆角 */
+  border-top-right-radius: 10px; /* 右上角圆角 */
 }
 
 .right-sidebar {
