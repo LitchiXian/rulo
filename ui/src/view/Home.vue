@@ -39,7 +39,7 @@ onMounted(async () => {
     // 类型转换和验证
     const data = Array.isArray(response) ? response : [];
     featuredPosts.value = data.map(item => ({
-      id: Number(item.id) || 0,
+      id: item.id,
       title: item.title || '',
       content: '',
       createTime: Number(item.createTime) || Date.now(),
