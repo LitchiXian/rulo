@@ -1,9 +1,8 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import {defineStore} from 'pinia';
+import {computed, ref} from 'vue';
 import router from '@/router';
-import { login as loginApi, logout as logoutApi, getLoginInfo } from '@/api/web/login';
-import type { UserInfo, LoginDto } from '@/type/user';
-import {useRoute} from "vue-router";
+import {getLoginInfo, login as loginApi, logout as logoutApi} from '@/api/web/login';
+import type {LoginDto, UserInfo} from '@/type/user';
 
 export const useUserStore = defineStore('user', () => {
     // 状态
@@ -20,12 +19,12 @@ export const useUserStore = defineStore('user', () => {
 
     // 登录方法
     const login = async (credentials: LoginDto) => {
+
         try {
             loading.value = true;
             error.value = null;
 
-            const response = await loginApi(credentials);
-            token.value = response.data;
+            token.value = ((await loginApi(credentials)) as unknown) as string;
 
             // 持久化存储
             if (credentials.remember) {
@@ -33,9 +32,8 @@ export const useUserStore = defineStore('user', () => {
             } else {
                 sessionStorage.setItem('satoken', token.value);
             }
-            const route = useRoute();
-            const redirectPath = route.query.redirect?.toString() || '/';
-            router.push(redirectPath);
+
+            router.push(credentials.redirect || '/');
         } catch (err: any) {
             error.value = err.response?.data?.msg || '登录失败';
             throw err;
@@ -47,6 +45,8 @@ export const useUserStore = defineStore('user', () => {
     // 登出方法
     const logout = async () => {
         try {
+            console.log('login', isLoggedIn.value)
+            console.log('login', token.value)
             if (isLoggedIn.value) {
                 await logoutApi();
             }
@@ -71,7 +71,7 @@ export const useUserStore = defineStore('user', () => {
             token.value = savedToken;
             try {
                 const response = await getLoginInfo();
-                console.log( response)
+                console.log(response)
                 userInfo.value = response.data;
             } catch (err) {
                 // token失效时清理数据
