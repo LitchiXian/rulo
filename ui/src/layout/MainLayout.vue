@@ -14,9 +14,9 @@
         <a href="#" @click.prevent="checkLogin" class="api-link">
           <span class="icon">🏷️</span> Login
         </a>
-        <router-link to="/">
-          <span class="icon">👤</span> About
-        </router-link>
+        <a href="#" @click="handleLogoutClick" class="api-link">
+          <span class="icon">👤</span> Logout
+        </a>
         <!-- 修改 API 链接 -->
         <a href="#" @click="openApiDoc" class="api-link">
           <span class="icon">🔗</span> API
@@ -56,6 +56,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { ref } from 'vue';
+import {logout} from "@/api/web/login.ts";
 
 const darkMode = ref(true);
 const showToc = ref(true);
@@ -97,6 +98,32 @@ const checkLogin = () => {
     })
   }
 }
+
+const handleLogoutClick = async () => {
+  try {
+    // 调用登出API（假设logout是异步函数）
+    const res = await logout();
+
+    // 成功响应处理
+    if (res.data.code === '200') {
+      // 清理前端认证信息（根据实际token存储方式调整）
+      localStorage.removeItem('satoken');
+
+      router.push('/');
+    } else {
+      // API返回非200状态码处理
+      console.error('登出失败:', res.data.message);
+      alert(`登出失败: ${res.data.message || '未知错误'}`);
+    }
+  } catch (error) {
+    // 网络错误或异常处理
+    console.error('登出请求异常:', error);
+    alert('登出请求发送失败，请检查网络');
+
+    // 强制清理本地token（即使API调用失败）
+    localStorage.removeItem('satoken');
+  }
+};
 
 // 根据文章内容生成目录项的逻辑可以放在这里
 // 或者在文章页面加载时设置

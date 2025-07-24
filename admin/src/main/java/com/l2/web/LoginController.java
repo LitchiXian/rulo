@@ -3,6 +3,7 @@ package com.l2.web;
 import com.l2.domain.dto.UserDto;
 import com.l2.service.SysUserService;
 import com.l2.util.AjaxResult;
+import com.l2.util.SaTokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,7 +31,7 @@ public class LoginController {
         return AjaxResult.success();
     }
 
-    @PostMapping("/logout")
+    @GetMapping("/logout")
     public AjaxResult logout() {
         int i = sysUserService.logout();
         return AjaxResult.success();
@@ -40,5 +41,10 @@ public class LoginController {
     public AjaxResult getRegisterCode(@ModelAttribute UserDto userDto) {
         sysUserService.getRegisterCode(userDto);
         return AjaxResult.success();
+    }
+
+    @GetMapping("/getLoginInfo")
+    public AjaxResult getLoginInfo() {
+        return AjaxResult.success(sysUserService.getById(SaTokenUtil.getLoginId()));
     }
 }

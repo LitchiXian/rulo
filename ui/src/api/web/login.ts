@@ -16,11 +16,10 @@ export function register(data: any) {
     });
 }
 
-export function logout(data: any) {
+export function logout() {
     return request({
         url: '/login/logout',
-        method: 'post',
-        data: data
+        method: 'get',
     });
 }
 
@@ -29,5 +28,12 @@ export function getRegisterCode(data: any) {
         url: '/login/getRegisterCode',
         method: 'get',
         params: data
+    });
+}
+
+export function getLoginInfo() {
+    return request({
+        url: '/login/getLoginInfo',
+        method: 'get'
     });
 }

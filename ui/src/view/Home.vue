@@ -14,7 +14,7 @@
           <h3>{{ post.title }}</h3>
         </router-link>
         <div class="meta">
-          <span class="date">{{  smartFormatDate(post.createTime) }}</span>
+          <span class="date">{{ smartFormatDate(post.createTime) }}</span>
         </div>
       </div>
     </section>
@@ -22,37 +22,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import {ref, onMounted} from 'vue'
+import {useRouter} from 'vue-router'
 import {list} from "@/api/web/blogArticle.ts";
+import type  {Article} from "@/type/article";
 
 const router = useRouter()
-const featuredPosts = ref([])
+const featuredPosts = ref<Article[]>([])
 const loading = ref(true)
 const error = ref<string>('')
 
-// onMounted(() => {
-//   featuredPosts.value = posts.slice(0, 5)
-// })
-
 onMounted(async () => {
   try {
-    // 调用API获取文章列表
-    const response = await list()
+    const response = await list();
 
-    // 从响应中提取data字段
-    if (response.data.data && Array.isArray(response.data.data)) {
-      featuredPosts.value = response.data.data
-    } else {
-      throw new Error('Invalid response format')
-    }
+    // 类型转换和验证
+    const data = Array.isArray(response) ? response : [];
+    featuredPosts.value = data.map(item => ({
+      id: Number(item.id) || 0,
+      title: item.title || '',
+      content: '',
+      createTime: Number(item.createTime) || Date.now(),
+    })).slice(0, 5); // 取前5条作为特色文章
+
   } catch (err) {
-    console.error('Error fetching posts:', err)
-    error.value = 'Failed to load posts. Please try again later.'
+    console.error('Error fetching posts:', err);
+    error.value = 'Failed to load posts. Please try again later.';
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-})
+});
 
 /**
  * 智能格式化时间戳为易读格式
@@ -64,12 +63,10 @@ const smartFormatDate = (timestamp: number) => {
   const date = new Date(timestamp);
 
   // 计算今天的开始时间（0点0分0秒）
-  const todayStart = new Date(now);
-  todayStart.setHours(0, 0, 0, 0);
+  const todayStart = new Date(now).setHours(0, 0, 0, 0);
 
   // 计算目标日期的开始时间（0点0分0秒）
-  const targetDateStart = new Date(date);
-  targetDateStart.setHours(0, 0, 0, 0);
+  const targetDateStart = new Date(date).setHours(0, 0, 0, 0);
 
   // 计算日历天数差（基于天数的计算，而不是24小时周期）
   const dayDiff = Math.round((todayStart - targetDateStart) / (1000 * 60 * 60 * 24));

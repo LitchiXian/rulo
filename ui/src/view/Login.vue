@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import {getCurrentInstance, ref} from 'vue';
-import {login} from "@/api/web/login.ts";
-import {useRouter,useRoute } from 'vue-router';
-import {showMessage} from "@/util/message.ts";
+import {ref} from 'vue';
+import {useRoute, useRouter} from 'vue-router';
+import {useUserStore} from "@/store/user.ts";
 
 // const {proxy} = getCurrentInstance();
 
@@ -35,44 +34,17 @@ const handleSubmit = async (e: Event) => {
     loginButtonRef.value.textContent = '登录中...';
   }
 
-  try {
-    const res = await login({
+    const userStore = useUserStore();
+    await userStore.login({
       userName: email.value,
       password: password.value
-    });
+    })
 
-    if (res.data.code === '200') {
-      // 登录成功
-      console.log('登录成功');
-      showMessage('登录成功', 'success');
-
-      if (res.data.data) {
-        // 保存到 localStorage（可根据需求改为 sessionStorage）
-        localStorage.setItem('satoken', res.data.data);
-
-        // 可选：同时保存到内存（方便后续直接使用）
-        // （例如：将 tokenValue 存入 Vue 的响应式变量或全局状态）
-      } else {
-        console.warn('登录成功，但未获取到有效的 Token 信息');
-      }
-
-      // 跳转到首页
-      const returnUrl = route.query.redirect as string  || '/';
-      router.push(returnUrl);
-    } else {
-      // 登录失败
-      console.log('登录失败');
-      showMessage(res.data.msg, 'error');
-
-      // proxy.$msg.error(res.result.msg);
-    }
-  } finally {
     loading.value = false;
     if (loginButtonRef.value) {
       loginButtonRef.value.disabled = false;
       loginButtonRef.value.textContent = 'Login';
     }
-  }
 
   // 这里添加实际登录逻辑（如调用API）
 };

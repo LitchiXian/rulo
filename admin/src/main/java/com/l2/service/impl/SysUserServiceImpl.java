@@ -89,7 +89,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         if (CollectionUtil.isNotEmpty(baseMapper.selectList(new LambdaQueryWrapper<>(SysUser.class)
                 .eq(SysUser::getUserName, userDto.getUserName())
                 .eq(SysUser::getIsDeleted, 0)))) {
-            throw new ServiceException("用户名已存在");
+            throw new ServiceException(ErrorCodeEnum.USERNAME_EXISTS);
         }
 
         if (CollectionUtil.isNotEmpty(baseMapper.selectList(new LambdaQueryWrapper<>(SysUser.class)

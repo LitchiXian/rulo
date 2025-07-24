@@ -32,14 +32,28 @@ service.interceptors.request.use(
 service.interceptors.response.use(
     (response) => {
         const res = response.data;
+        const businessCode = res.data?.code;
 
         console.log('API Response', res);
         // 检查业务错误码
-        if (res.data.code === 'A0230') { // 登录过期
+        if (businessCode === 'A0230') { // 登录过期
             return handleSessionExpired(response.config);
         }
 
-        return res;
+        // 业务处理成功：直接返回data数据
+        if (businessCode === '200') {
+            return res.data.data;
+        }
+
+        /* 业务处理失败 */
+        // 获取错误信息（优先使用data.message，其次是data.msg）
+        const errorMessage = res.data?.msg || '操作失败';
+
+        // 显示错误提示
+        ElMessage.error(errorMessage);
+
+        // 返回拒绝的Promise防止进入then()
+        return Promise.reject(new Error(errorMessage));
     },
     (error) => {
         // 统一处理错误
@@ -51,7 +65,7 @@ service.interceptors.response.use(
         }
 
         // 显示错误消息
-        const errorMessage = error.response?.data?.message || error.message || '请求失败';
+        const errorMessage = error.response?.data?.msg || error.message || '请求失败';
         ElMessage.error(errorMessage);
 
         return Promise.reject(error);

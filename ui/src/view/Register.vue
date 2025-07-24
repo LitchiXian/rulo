@@ -59,17 +59,10 @@ const getVerificationCode = async () => {
     return;
   }
 
-  try {
-    const res = await getRegisterCode({email: email.value});
-    if (res.data.code === 200) {
-      showMessage('验证码已发送', 'success');
-      startCountdown();
-    } else {
-      showMessage(res.data.msg || '验证码发送失败', 'error');
-    }
-  } catch (error) {
-    showMessage('验证码发送失败', 'error');
-  }
+  await getRegisterCode({email: email.value})
+
+  showMessage('验证码已发送', 'success');
+  startCountdown();
 };
 
 // 开始倒计时
@@ -102,31 +95,26 @@ const handleSubmit = async (e: Event) => {
   }
 
   try {
-    const res = await register({
+    await register({
       userName: userName.value,
       email: email.value,
       password: password.value,
       code: code.value
     });
 
-    if (res.data.code === '200') {
-      // 注册成功
-      console.log('注册成功');
-      showMessage('注册成功', 'success');
-      // 跳转到首页
-      router.push('/login');
-    } else {
-      // 注册失败
-      console.log('注册失败');
-      showMessage(res.data.msg, 'error');
+    console.log('注册成功');
+    showMessage('注册成功', 'success');
+    // 跳转到首页
+    router.push('/login');
 
-    }
-  } finally {
-    loading.value = false;
-    if (loginButtonRef.value) {
-      loginButtonRef.value.disabled = false;
-      loginButtonRef.value.textContent = 'Register';
-    }
+  } catch (e) {
+    console.log(e)
+  }
+
+  loading.value = false;
+  if (loginButtonRef.value) {
+    loginButtonRef.value.disabled = false;
+    loginButtonRef.value.textContent = 'Register';
   }
 };
 </script>

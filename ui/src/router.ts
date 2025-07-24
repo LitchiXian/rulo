@@ -15,16 +15,19 @@ export const constantRoutes: RouteRecordRaw[] = [
     },
     {
         path: '/login',
+        name: 'Login',
         component: () => import('@/view/Login.vue'),
         meta: {noLayout: true}
     },
     {
         path: '/register',
+        name: 'Register',
         component: () => import('@/view/Register.vue'),
         meta: {noLayout: true}
     },
     {
         path: '/:pathMatch(.*)*',
+        name: 'NotFound',
         component: () => import('@/view/NotFound.vue'),
         meta: {noLayout: true}
     },
@@ -36,4 +39,22 @@ const router = createRouter({
     routes: constantRoutes
 })
 
-export default router
+// 全局路由守卫
+router.beforeEach(async (to, from) => {
+    const {useUserStore} = await import("@/store/user.ts");
+
+    const userStore = useUserStore();
+    if (!userStore.userInfo && userStore.isLoggedIn) {
+        await userStore.initUser();
+    }
+
+    if (to.meta.requiresAuth && !userStore.isLoggedIn) {
+        return {name: 'Login', query: {redirect: to.fullPath}}
+    }
+
+    if (to.name === 'Login' && userStore.isLoggedIn) {
+        return from.path || '/'
+    }
+})
+
+export default router;
