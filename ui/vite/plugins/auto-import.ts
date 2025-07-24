@@ -7,6 +7,8 @@ export default (path: any) => {
             'vue-router',
             'pinia'
         ],
-        dts: path.resolve(path.resolve(__dirname, '../../src'), 'types', 'auto-import.d.ts'),
+        // 关闭类型文件生成
+        dts: false
+        // dts: path.resolve(path.resolve(__dirname, '../../src'), 'types', 'auto-import.d.ts'),
     })
 }
