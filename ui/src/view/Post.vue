@@ -38,14 +38,15 @@
   </div>
 </template>
 
-<script setup  lang="ts">
-import {ref, computed, onMounted} from 'vue'
+<script setup lang="ts">
+import {onMounted, ref} from 'vue'
 import {useRoute} from 'vue-router'
 import MarkdownRenderer from '@/component/MarkdownRenderer.vue'
 import {getArticle} from "@/api/web/blogArticle.ts";
+import type {Article} from "@/type/article.ts";
 
 const route = useRoute()
-const currentPost = ref(null)
+const currentPost = ref<Article>()
 const loading = ref(true)
 const error = ref(null)
 
@@ -56,23 +57,14 @@ const fetchArticle = async () => {
     error.value = null
 
     // 调用API接口获取数据
-    const response = await getArticle({id: route.params.id})
+    currentPost.value = await getArticle({id: route.params.id});
 
-    // 检查返回的数据结构
-    if (response.result.data && response.result.data.id) {
-      currentPost.value = response.result.data
-    } else {
-      throw new Error('文章数据格式错误')
-    }
-  } catch (err) {
-    console.error('获取文章详情失败:', err)
-    error.value = '加载文章失败，请稍后再试'
   } finally {
     loading.value = false
   }
 }
 
-const handleTocGenerated = (items) => {
+const handleTocGenerated = (items: any) => {
   // 设置TOC目录项
   window.dispatchEvent(new CustomEvent('set-toc', {detail: items}));
 }
@@ -82,7 +74,7 @@ const handleTocGenerated = (items) => {
  * @param {number} timestamp - 时间戳（毫秒）
  * @returns {string} 格式化后的日期时间字符串
  */
-const formatDate = (timestamp) => {
+const formatDate = (timestamp: number) => {
   // 创建日期对象
   const date = new Date(timestamp);
 
@@ -184,8 +176,12 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error-container {
