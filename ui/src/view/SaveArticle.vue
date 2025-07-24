@@ -188,9 +188,6 @@ const submitForm = async () => {
 
     // 保存成功，返回首页
     router.push('/')
-  } catch (err) {
-    console.error('保存文章失败:', err)
-    error.value = '保存失败: ' + (err.response?.data?.message || '服务器错误')
   } finally {
     loading.value = false
   }
