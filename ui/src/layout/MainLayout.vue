@@ -3,7 +3,11 @@
     <!-- 左侧导航栏 -->
     <div class="left-sidebar">
       <div class="author-info">
-        <img src="@/asset/avatar.png" alt="博主头像" class="author-avatar"/>
+        <div v-if="!userStore.isLoggedIn" class="login-prompt" @click.prevent="goToLogin">
+          去登录
+        </div>
+        <img v-else src="@/asset/avatar.png" alt="博主头像" class="author-avatar"/>
+        <!--        <img src="@/asset/avatar.png" alt="博主头像" class="author-avatar"/>-->
         <h2 class="author-name">Litchi 的博客</h2>
       </div>
 
@@ -11,17 +15,17 @@
         <router-link to="/">
           <span class="icon">🏠</span> Home
         </router-link>
-        <a href="#" @click.prevent="checkLogin" class="api-link">
+        <a v-if="!userStore.isLoggedIn" href="#" @click.prevent="goToLogin" class="api-link">
           <span class="icon">🏷️</span> Login
         </a>
-        <a href="#" @click="handleLogoutClick" class="api-link">
+        <a v-if="userStore.isLoggedIn" href="#" @click="handleLogoutClick" class="api-link">
           <span class="icon">👤</span> Logout
         </a>
         <!-- 修改 API 链接 -->
         <a href="#" @click="openApiDoc" class="api-link">
           <span class="icon">🔗</span> API
         </a>
-        <router-link to="/saveArticle">
+        <router-link v-if="userStore.isLoggedIn" to="/saveArticle">
           <span class="icon">🛠️</span> 新增
         </router-link>
 
@@ -55,14 +59,18 @@
 
 <script setup lang="ts">
 import {useRouter} from 'vue-router'
-import {ref} from 'vue';
-import {logout} from "@/api/web/login.ts";
+import {onMounted, ref} from 'vue';
 import {useUserStore} from "@/store/user.ts";
 
+const userStore = useUserStore();
 const darkMode = ref(true);
 const showToc = ref(true);
 const router = useRouter();
 const tocItems = ref([]); // 从文章内容提取的目录项
+
+onMounted(() => {
+  userStore.initUser();
+})
 
 const toggleDarkMode = () => {
   darkMode.value = !darkMode.value;
@@ -90,20 +98,17 @@ const openApiDoc = () => {
   }
 };
 
-const checkLogin = () => {
-  if (true) { // 替换为你的登录状态检查
+const goToLogin  = () => {
     // 跳转到登录页，并记录来源页面
     router.push({
       path: '/login',
       query: {redirect: router.currentRoute.value.fullPath}
     })
-  }
 }
 
 const handleLogoutClick = async () => {
   try {
     // 调用登出API（假设logout是异步函数）
-    const userStore = useUserStore();
     await userStore.logout();
   } finally {
     localStorage.removeItem('satoken');
@@ -145,6 +150,22 @@ defineExpose({
 .author-info {
   text-align: center;
   margin-bottom: 30px;
+}
+
+.login-prompt {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: #4abbb5; /* 青色背景 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 15px;
 }
 
 .author-avatar {
