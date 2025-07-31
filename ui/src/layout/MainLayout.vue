@@ -6,8 +6,8 @@
         <div v-if="!userStore.isLoggedIn" class="login-prompt" @click.prevent="goToLogin">
           去登录
         </div>
-        <img v-else src="@/asset/avatar.png" alt="博主头像" class="author-avatar"/>
-        <!--        <img src="@/asset/avatar.png" alt="博主头像" class="author-avatar"/>-->
+        <img v-else src="@/asset/avatar.jpg" alt="博主头像" class="author-avatar"/>
+        <!--        <img src="@/asset/avatar.jpg" alt="博主头像" class="author-avatar"/>-->
         <h2 class="author-name">Litchi 的博客</h2>
       </div>
 
