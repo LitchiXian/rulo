@@ -1,4 +1,4 @@
-import request from '@/api/request.js';
+import request from '@/util/request.ts';
 import type {Article} from "@/type/article.ts";
 
 export function save(data: any) {

@@ -23,13 +23,13 @@ export default defineConfig(({ mode, command }) =>{
       // 若端口被占用，直接退出
       strictPort: true,
       // 配置正向代理，用于处理跨域
-      proxy: {
-        '/api': {
-          target: 'http://localhost:8090',
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
-        },
-      },
+      // proxy: {
+      //   '/api': {
+      //     target: 'http://localhost:8090',
+      //     changeOrigin: true,
+      //     rewrite: (path) => path.replace(/^\/api/, ''),
+      //   },
+      // },
     },
   }
 });

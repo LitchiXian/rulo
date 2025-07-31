@@ -7,18 +7,26 @@ import router from "./router";
 import './style/base.css';
 import pinia from "@/store";
 // import {msg} from './util/message.ts';
+import { loadEnvConfig } from '@/util/envConfig'
+import request from "@/util/request.ts";
 
-const app = createApp(App);
+async function initApp(){
+    await loadEnvConfig().then(r => {});
 
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-    app.component(key, component);
-}
+    const app = createApp(App);
 
-app.use(ElementPlus);
-app.use(pinia);
-app.use(router);
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+        app.component(key, component);
+    }
+
+    app.use(ElementPlus);
+    app.use(pinia);
+    app.use(router);
 
 // app.config.globalProperties.$msg = msg;
 // console.log('全局挂载的 $msg:', app.config.globalProperties.$msg);
 
-app.mount('#app');
+    app.mount('#app');
+}
+
+initApp().then(r => {});

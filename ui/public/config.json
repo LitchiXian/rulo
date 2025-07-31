@@ -1,0 +1,10 @@
+{
+  "dev": {
+    "apiBaseUrl": "http://127.0.0.1:8090/",
+    "debugMode": true
+  },
+  "prod": {
+    "apiBaseUrl": "https://api.yourdomain.com/api",
+    "debugMode": false
+  }
+}
