@@ -1,16 +1,19 @@
 import axios from 'axios';
-import router from '@/router'; // 引入路由实例
+import router from '@/router.ts'; // 引入路由实例
 import { ElMessage } from 'element-plus'; // 引入消息提示组件
+import envConfig from "@/util/envConfig.ts";
 
 // 创建 axios 实例
 const service = axios.create({
-    baseURL: '/api',
+    baseURL: envConfig.service.apiBaseUrl,
     timeout: 7000,
+    headers: { 'Content-Type': 'application/json' },
 });
 
 // 请求拦截器
 service.interceptors.request.use(
     (config) => {
+        console.log("envConfig", envConfig);
         // 保存当前路由路径用于登录后跳回
         if (!config.url?.includes('/login') && !(config as any)._isRetry) {
             (config as any)._returnUrl = window.location.pathname + window.location.search;

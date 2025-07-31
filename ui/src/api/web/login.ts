@@ -1,4 +1,4 @@
-import request from '@/api/request.js';
+import request from '@/util/request.ts';
 
 export function login(data: any) {
     return request({

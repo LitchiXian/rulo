@@ -1,4 +1,4 @@
-import request from '../request.js';
+import request from '../../util/request.ts';
 
 export function test1() {
   return request({
