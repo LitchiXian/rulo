@@ -1,5 +1,6 @@
 package com.l2.framework.config;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
  * @Date: 2025/7/21 19:23
  * @Desc: EmailConfig
  */
+@Data
 @Component
 @ConfigurationProperties(prefix = "email")
 public class EmailConfig {
@@ -36,95 +38,10 @@ public class EmailConfig {
     private String fromEmail;
     // 高级配置
     private boolean debug;
-    private int timeout;         // 连接超时
-    private int connectionTimeout; // 读取超时
+    // 连接超时
+    private int timeout;
+    // 读取超时
+    private int connectionTimeout;
     private boolean sslEnable;
 
-    public String getProtocol() {
-        return protocol;
-    }
-
-    public void setProtocol(String protocol) {
-        this.protocol = protocol;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public String getPort() {
-        return port;
-    }
-
-    public void setPort(String port) {
-        this.port = port;
-    }
-
-    public String getAccount() {
-        return account;
-    }
-
-    public void setAccount(String account) {
-        this.account = account;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getFromName() {
-        return fromName;
-    }
-
-    public void setFromName(String fromName) {
-        this.fromName = fromName;
-    }
-
-    public String getFromEmail() {
-        return fromEmail;
-    }
-
-    public void setFromEmail(String fromEmail) {
-        this.fromEmail = fromEmail;
-    }
-
-    public boolean isDebug() {
-        return debug;
-    }
-
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
-
-    public int getTimeout() {
-        return timeout;
-    }
-
-    public void setTimeout(int timeout) {
-        this.timeout = timeout;
-    }
-
-    public int getConnectionTimeout() {
-        return connectionTimeout;
-    }
-
-    public void setConnectionTimeout(int connectionTimeout) {
-        this.connectionTimeout = connectionTimeout;
-    }
-
-    public boolean isSslEnable() {
-        return sslEnable;
-    }
-
-    public void setSslEnable(boolean sslEnable) {
-        this.sslEnable = sslEnable;
-    }
 }

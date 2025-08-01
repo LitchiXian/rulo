@@ -2,6 +2,7 @@ package com.l2.framework.config;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.l2.framework.util.SaTokenUtil;
+import com.l2.framework.util.SnowflakeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
@@ -14,7 +15,7 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class MyMetaObjectHandler implements MetaObjectHandler {
 
-    private final SnowflakeConfig snowflakeConfig;
+    private final SnowflakeUtil snowflakeUtil;
 
     private static final Integer UN_DELETED_FLAG = 0;
 
@@ -31,7 +32,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         Date now = new Date();
 
         // 插入操作时自动填充
-        this.strictInsertFill(metaObject, "id", Long.class, snowflakeConfig.snowflakeId());
+        this.strictInsertFill(metaObject, "id", Long.class, snowflakeUtil.snowflakeId());
         this.strictInsertFill(metaObject, "isDeleted", Integer.class, UN_DELETED_FLAG);
         this.strictInsertFill(metaObject, "createId", Long.class, userId);
         this.strictInsertFill(metaObject, "createTime", Date.class, now);

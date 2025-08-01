@@ -18,13 +18,13 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * @Author: Linzx
+ * @Author: LitchiXian
  * @Date: 2025/7/21 19:41
  * @Desc: MailUtil
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class MailUtil {
     private final EmailConfig config;
 

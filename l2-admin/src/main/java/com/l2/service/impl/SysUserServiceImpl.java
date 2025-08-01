@@ -5,7 +5,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.l2.framework.config.JsonRedisTemplate;
-import com.l2.framework.config.SnowflakeConfig;
+import com.l2.framework.util.SnowflakeUtil;
 import com.l2.common.constant.RedisConstant;
 import com.l2.domain.SysUser;
 import com.l2.domain.dto.UserDto;
@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
         implements SysUserService {
 
-    private final SnowflakeConfig snowflakeConfig;
+    private final SnowflakeUtil snowflakeUtil;
 
     private final JsonRedisTemplate redisTemplate;
 
@@ -113,7 +113,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
         // 创建用户并保存
         SysUser user = new SysUser();
-        long id = snowflakeConfig.snowflakeId();
+        long id = snowflakeUtil.snowflakeId();
         user.setId(id);
         user.setUserName(userDto.getUserName());
         user.setNickName(userDto.getUserName());
@@ -152,7 +152,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
             throw new ServiceException("该邮箱已注册");
         }
 
-        long id = snowflakeConfig.snowflakeId();
+        long id = snowflakeUtil.snowflakeId();
         long salt = ThreadLocalRandom.current().nextLong(1000);
         String code = String.format("%06d", Math.abs(id ^ salt) % 1_000_000);
 
