@@ -1,8 +1,7 @@
-package com.l2.config;
+package com.l2.framework.config;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
-import com.l2.util.SaTokenUtil;
+import com.l2.framework.util.SaTokenUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;

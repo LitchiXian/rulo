@@ -1,4 +1,4 @@
-package com.l2.config;
+package com.l2.framework.config;
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.data.redis.connection.RedisConnectionFactory;

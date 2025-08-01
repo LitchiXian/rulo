@@ -1,4 +1,4 @@
-package com.l2.config;
+package com.l2.framework.config;
 
 import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.net.NetUtil;

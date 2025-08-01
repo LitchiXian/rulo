@@ -1,9 +1,9 @@
-package com.l2.util;
+package com.l2.framework.util;
 
-import com.l2.config.EmailConfig;
+import cn.hutool.core.collection.CollUtil;
+import com.l2.framework.config.EmailConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.mail.*;
@@ -50,7 +50,7 @@ public class MailUtil {
      * 核心邮件发送方法
      */
     private boolean sendEmail(Set<String> toUsers, String subject, String content, boolean isHtml) {
-        if (CollectionUtils.isEmpty(toUsers)) {
+        if (CollUtil.isEmpty(toUsers)) {
             log.warn("收件人列表为空，取消邮件发送");
             return false;
         }

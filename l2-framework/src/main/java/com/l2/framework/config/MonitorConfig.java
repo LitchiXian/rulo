@@ -1,6 +1,6 @@
-package com.l2.config;
+package com.l2.framework.config;
 
-import com.l2.monitor.BeanMonitorProcessor;
+import com.l2.framework.monitor.BeanMonitorProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;

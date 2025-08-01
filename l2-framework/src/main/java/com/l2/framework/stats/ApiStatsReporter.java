@@ -1,4 +1,4 @@
-package com.l2.stats;
+package com.l2.framework.stats;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

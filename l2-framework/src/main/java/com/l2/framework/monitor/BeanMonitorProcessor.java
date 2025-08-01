@@ -1,7 +1,7 @@
-package com.l2.monitor;
+package com.l2.framework.monitor;
 
 import com.baomidou.mybatisplus.core.mapper.Mapper;
-import com.l2.stats.BeanStats;
+import com.l2.framework.stats.BeanStats;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
 import java.util.concurrent.ConcurrentHashMap;

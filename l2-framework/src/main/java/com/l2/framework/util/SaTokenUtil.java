@@ -1,4 +1,4 @@
-package com.l2.util;
+package com.l2.framework.util;
 
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.StpUtil;

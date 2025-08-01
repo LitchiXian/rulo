@@ -1,4 +1,4 @@
-package com.l2.config;
+package com.l2.framework.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

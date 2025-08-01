@@ -7,7 +7,7 @@ import com.l2.common.exception.ErrorCodeEnum;
 import com.l2.common.exception.ServiceException;
 import com.l2.mapper.BlogArticleMapper;
 import com.l2.service.BlogArticleService;
-import com.l2.util.SaTokenUtil;
+import com.l2.framework.util.SaTokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

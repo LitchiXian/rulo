@@ -1,4 +1,4 @@
-package com.l2.config;
+package com.l2.framework.config;
 
 import io.minio.MinioClient;
 import org.jetbrains.annotations.NotNull;

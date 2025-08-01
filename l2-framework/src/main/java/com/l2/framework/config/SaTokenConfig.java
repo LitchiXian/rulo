@@ -1,4 +1,4 @@
-package com.l2.config;
+package com.l2.framework.config;
 
 import cn.dev33.satoken.interceptor.SaInterceptor;
 import cn.dev33.satoken.stp.StpUtil;
@@ -12,7 +12,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @Desc: SaTokenConfigure
  */
 @Configuration
-public class SaTokenConfigure implements WebMvcConfigurer {
+public class SaTokenConfig implements WebMvcConfigurer {
     // 注册拦截器
     @Override
     public void addInterceptors(InterceptorRegistry registry) {

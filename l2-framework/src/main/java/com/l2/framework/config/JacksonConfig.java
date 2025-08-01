@@ -1,4 +1,4 @@
-package com.l2.config;
+package com.l2.framework.config;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

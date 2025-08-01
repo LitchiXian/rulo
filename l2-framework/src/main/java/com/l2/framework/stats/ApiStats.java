@@ -1,4 +1,4 @@
-package com.l2.stats;
+package com.l2.framework.stats;
 
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 

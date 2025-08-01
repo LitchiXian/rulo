@@ -1,6 +1,6 @@
 package com.l2.web;
 
-import com.l2.stats.ApiStats;
+import com.l2.framework.stats.ApiStats;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.TimeUnit;

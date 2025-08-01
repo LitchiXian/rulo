@@ -1,6 +1,6 @@
-package com.l2.aspect;
+package com.l2.framework.aspect;
 
-import com.l2.stats.ApiStats;
+import com.l2.framework.stats.ApiStats;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;

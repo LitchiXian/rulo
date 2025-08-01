@@ -1,4 +1,4 @@
-package com.l2.stats;
+package com.l2.framework.stats;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

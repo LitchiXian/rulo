@@ -3,7 +3,7 @@ package com.l2.web;
 import com.l2.common.domain.AjaxResult;
 import com.l2.domain.dto.UserDto;
 import com.l2.service.SysUserService;
-import com.l2.util.SaTokenUtil;
+import com.l2.framework.util.SaTokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
