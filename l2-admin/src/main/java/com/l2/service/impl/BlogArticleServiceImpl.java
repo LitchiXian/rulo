@@ -32,7 +32,7 @@ public class BlogArticleServiceImpl extends ServiceImpl<BlogArticleMapper, BlogA
 //        bBlogArticle.setId(snowflakeConfig.snowflakeId());
         blogArticle.setTitle(dto.getTitle());
         blogArticle.setContent(dto.getContent());
-        blogArticle.setUserId(1L);
+        blogArticle.setUserId(SaTokenUtil.getLoginId());
         blogArticle.setUserName(dto.getUserName());
         Date date = new Date();
         blogArticle.setPublishedTime(date);

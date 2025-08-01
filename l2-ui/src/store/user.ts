@@ -1,7 +1,7 @@
 import {defineStore} from 'pinia';
 import {computed, ref} from 'vue';
-import router from '@/router';
-import {getLoginInfo, login as loginApi, logout as logoutApi} from '@/api/web/login';
+import router from '@/router/router.ts';
+import authApi from '@/api/web/auth.ts';
 import type {LoginDto, UserInfo} from '@/type/user';
 
 export const useUserStore = defineStore('user', () => {
@@ -24,7 +24,7 @@ export const useUserStore = defineStore('user', () => {
             loading.value = true;
             error.value = null;
 
-            token.value = ((await loginApi(credentials)) as unknown) as string;
+            token.value = ((await authApi.login(credentials)) as unknown) as string;
 
             // 持久化存储
             if (credentials.remember) {
@@ -48,7 +48,7 @@ export const useUserStore = defineStore('user', () => {
             console.log('login', isLoggedIn.value)
             console.log('login', token.value)
             if (isLoggedIn.value) {
-                await logoutApi();
+                await authApi.logout();
             }
         } finally {
             clearUserData();
@@ -70,7 +70,7 @@ export const useUserStore = defineStore('user', () => {
         if (savedToken) {
             token.value = savedToken;
             try {
-                const response = await getLoginInfo();
+                const response = await authApi.getLoginInfo();
                 console.log(response)
                 userInfo.value = response.data;
             } catch (err) {

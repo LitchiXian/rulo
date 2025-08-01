@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import {ref, onMounted} from 'vue'
 import {useRouter} from 'vue-router'
-import {list} from "@/api/web/blogArticle.ts";
+import blogArticleApi from "@/api/web/blogArticle.ts";
 import type  {Article} from "@/type/article";
 
 const router = useRouter()
@@ -34,7 +34,7 @@ const error = ref<string>('')
 
 onMounted(async () => {
   try {
-    const response = await list();
+    const response = await blogArticleApi.list();
 
     // 类型转换和验证
     const data = Array.isArray(response) ? response : [];

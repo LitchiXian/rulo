@@ -42,7 +42,7 @@
 import {onMounted, ref} from 'vue'
 import {useRoute} from 'vue-router'
 import MarkdownRenderer from '@/component/MarkdownRenderer.vue'
-import {getArticle} from "@/api/web/blogArticle.ts";
+import blogArticleApi from "@/api/web/blogArticle.ts";
 import type {Article} from "@/type/article.ts";
 
 const route = useRoute()
@@ -57,7 +57,7 @@ const fetchArticle = async () => {
     error.value = null
 
     // 调用API接口获取数据
-    currentPost.value = await getArticle({id: route.params.id});
+    currentPost.value = await blogArticleApi.get(route.params.id);
 
   } finally {
     loading.value = false

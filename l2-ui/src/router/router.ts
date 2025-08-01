@@ -10,6 +10,7 @@ export const constantRoutes: RouteRecordRaw[] = [
             {path: '', name: 'Home', component: () => import('@/view/Home.vue')},
             {path: 'post/:id', name: 'Post', component: () => import('@/view/Post.vue')},
             {path: 'saveArticle', name: 'SaveArticle', component: () => import('@/view/SaveArticle.vue')},
+            {path: 'user/:id', name: 'User', component: () => import('@/view/User.vue')},
         ],
         meta: {noLayout: false}
     },
