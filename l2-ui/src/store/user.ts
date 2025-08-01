@@ -66,7 +66,7 @@ export const useUserStore = defineStore('user', () => {
 
     // 初始化用户数据
     const initUser = async () => {
-        const savedToken = localStorage.getItem('satoken') || sessionStorage.getItem('satoken');
+        const savedToken = sessionStorage.getItem('satoken') || localStorage.getItem('satoken');
         if (savedToken) {
             token.value = savedToken;
             try {
