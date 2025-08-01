@@ -1,5 +1,7 @@
 package com.l2.common.domain;
 
+import com.l2.common.exception.ErrorCodeEnum;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -102,6 +104,13 @@ public class AjaxResult {
      */
     public static AjaxResult error() {
         return error(Status.ERROR.getCode(), "操作失败");
+    }
+
+    /**
+     * 失败响应（默认消息）
+     */
+    public static AjaxResult error(ErrorCodeEnum errorCode) {
+        return error(errorCode.getCode(), errorCode.getMessage());
     }
 
     /**
