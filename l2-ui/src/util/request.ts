@@ -20,7 +20,7 @@ service.interceptors.request.use(
         }
 
         // 添加 token 认证信息
-        const tokenValue = localStorage.getItem('satoken');
+        const tokenValue = sessionStorage.getItem('satoken') || localStorage.getItem('satoken');
         if (tokenValue && config.headers) {
             config.headers['satoken'] = tokenValue;
         }

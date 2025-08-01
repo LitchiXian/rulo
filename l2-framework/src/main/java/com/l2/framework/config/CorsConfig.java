@@ -29,8 +29,12 @@ public class CorsConfig {
                         .allowedMethods("GET", "POST")
                         // 允许的请求头
                         .allowedHeaders("*")
+                        // 暴露自定义Token头
+//                        .exposedHeaders("Sotoken")
                         // 是否允许携带凭证（如cookies）
-                        .allowCredentials(true);
+                        .allowCredentials(true)
+                        // 跨域允许时间
+                        .maxAge(3600L);
             }
         };
     }
