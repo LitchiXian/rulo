@@ -1,33 +1,61 @@
 package com.l2.web;
 
+import cn.hutool.core.util.StrUtil;
+import com.l2.common.domain.AjaxResult;
+import com.l2.common.exception.ErrorCodeEnum;
+import com.l2.framework.config.MinIOConfig;
+import com.l2.framework.util.MinIOUtil;
 import io.minio.GetObjectArgs;
 import io.minio.GetObjectResponse;
 import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
-@RequiredArgsConstructor // 构造器注入注解
+// 构造器注入注解
+@RequiredArgsConstructor
 @RestController
-@RequestMapping("/minio")
+@RequestMapping("/minioTest")
 public class MinioController {
 
-    private final MinioClient minioClient;
+    private final MinIOConfig minIOConfig;
 
-    @RequestMapping("/getObject")
-    public void testGetObject() throws Exception {
-        String path = "l2path/";
+    @GetMapping("/getObject")
+    public void getObject(String objectName) throws Exception {
 
-        GetObjectArgs getObjectArgs = GetObjectArgs.builder()
-                .bucket("l2bucket")
-                .object(path + "翻身叩背.jpg")
-                .build();
+        MinIOUtil.getObject(minIOConfig.getBucketName(), objectName);
 
-        GetObjectResponse getObjectResponse = minioClient.getObject(getObjectArgs);
-        getObjectResponse.transferTo(System.out);
     }
 
+    @PostMapping("uploadFace")
+    public AjaxResult upload(@RequestParam MultipartFile file,
+                             String userId) throws Exception {
+
+        if (StrUtil.isBlank(userId)) {
+
+            return AjaxResult.error();
+        }
+
+        String filename = file.getOriginalFilename();
+
+        if (StrUtil.isBlank(filename)) {
+
+            return AjaxResult.error(ErrorCodeEnum.FILE_UPLOAD_ERROR);
+        }
+
+        filename = "face" +  "/" + userId + "/" + filename;
+
+        MinIOUtil.uploadFile(minIOConfig.getBucketName(), filename, file.getInputStream());
+
+        String faceUrl = minIOConfig.getFileHost()
+                + "/"
+                + minIOConfig.getBucketName()
+                + "/"
+                + filename;
+
+        return AjaxResult.success(faceUrl);
+    }
 }
