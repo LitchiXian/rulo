@@ -1,5 +1,5 @@
 import axios from 'axios';
-import router from '@/router.ts'; // 引入路由实例
+import router from '@/router/router.ts'; // 引入路由实例
 import { ElMessage } from 'element-plus'; // 引入消息提示组件
 import envConfig from "@/util/envConfig.ts";
 

@@ -126,7 +126,7 @@
 import {ref, reactive, onMounted} from 'vue';
 import { Check, Close } from '@element-plus/icons-vue';
 import {useRouter} from 'vue-router';
-import {save} from '@/api/web/blogArticle.ts';
+import blogArticleApi from '@/api/web/blogArticle.ts';
 
 const router = useRouter()
 
@@ -184,7 +184,7 @@ const submitForm = async () => {
     }
 
     // 调用API保存
-    await save(data)
+    await blogArticleApi.save(data)
 
     // 保存成功，返回首页
     router.push('/')

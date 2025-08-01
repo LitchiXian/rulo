@@ -2,7 +2,7 @@
 import {ref} from 'vue';
 import {Hide, View} from '@element-plus/icons-vue';
 import {useRouter} from "vue-router";
-import {getRegisterCode, register} from "@/api/web/login";
+import {getRegisterCode, register} from "@/api/web/auth.ts";
 import {showMessage} from "@/util/message.ts";
 
 /*--------------- 响应式状态声明 ---------------*/

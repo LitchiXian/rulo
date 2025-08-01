@@ -3,7 +3,7 @@ import App from './App.vue';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
-import router from "./router";
+import router from "./router/router.ts";
 import './style/base.css';
 import pinia from "@/store";
 // import {msg} from './util/message.ts';
