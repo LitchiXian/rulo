@@ -11,6 +11,8 @@ import com.l2.common.domain.AjaxResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/blog/article")
 @RequiredArgsConstructor
@@ -63,5 +65,11 @@ public class BlogArticleController {
 //        int i = 1/0;
         throw new ServiceException("10086", "自定义异常");
 //        return AjaxResult.success(bBlogArticleService.listBlogArticle());
+    }
+
+    @GetMapping("/getUserArticleList")
+    public AjaxResult getUserArticleList(IdDto idDto) {
+        List<BlogArticle> userArticleList = blogArticleService.getUserArticleList(idDto.getId());
+        return AjaxResult.success(userArticleList);
     }
 }

@@ -18,4 +18,6 @@ public interface BlogArticleService extends IService<BlogArticle> {
     List<BlogArticle> listBlogArticle();
 
     BlogArticle getById(Long id);
+
+    List<BlogArticle> getUserArticleList(long userId);
 }

@@ -1,5 +1,6 @@
 package com.l2.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.l2.domain.BlogArticle;
 import com.l2.domain.dto.SaveBlogArticleDto;
@@ -71,6 +72,18 @@ public class BlogArticleServiceImpl extends ServiceImpl<BlogArticleMapper, BlogA
             }
         }
         return blogArticle;
+    }
+
+    @Override
+    public List<BlogArticle> getUserArticleList(long userId) {
+        Long loginId = SaTokenUtil.getLoginId();
+        LambdaQueryWrapper<BlogArticle> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(!loginId.equals(userId), BlogArticle::getIsPublished, 1);
+        queryWrapper.eq(BlogArticle::getUserId, userId);
+        queryWrapper.eq(BlogArticle::getIsDeleted, 0);
+        queryWrapper.orderByDesc(BlogArticle::getUpdateTime);
+
+        return baseMapper.selectList(queryWrapper);
     }
 }
 

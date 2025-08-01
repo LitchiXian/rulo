@@ -57,7 +57,9 @@ const fetchArticle = async () => {
     error.value = null
 
     // 调用API接口获取数据
-    currentPost.value = await blogArticleApi.get(route.params.id);
+    const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
+    currentPost.value = await blogArticleApi.getInfo({id});
+    // currentPost.value = await blogArticleApi.get(route.params.id);
 
   } finally {
     loading.value = false

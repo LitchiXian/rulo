@@ -53,13 +53,25 @@ const blogArticleApi = {
      * 获取单篇文章详情
      * @param params 包含文章ID的参数
      */
-    get(params: { id: string }): Promise<Article> {
+    getInfo(params: { id: string }): Promise<Article> {
         return request({
             url: '/blog/article/get',
             method: 'get',
             params: params
         });
-    }
+    },
+
+    /**
+     * 获取用户文章列表
+     * @param params 获取用户文章列表的参数
+     */
+    getUserArticleList(params: { id: string }) {
+        return request({
+            url: '/blog/article/getUserArticleList',
+            method: 'get',
+            params: params
+        });
+    },
 };
 
 // 统一导出 API 对象
