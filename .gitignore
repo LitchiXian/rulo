@@ -33,6 +33,6 @@ application-local.yml
 
 logs/
 
-/ui/package-lock.json
+/l2-ui/package-lock.json
 
 **/test/

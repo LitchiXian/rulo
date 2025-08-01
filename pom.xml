@@ -101,11 +101,25 @@
                 <artifactId>sa-token-redis-template</artifactId>
                 <version>${sa-token.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>com.l2</groupId>
+                <artifactId>l2-common</artifactId>
+                <version>${l2.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.l2</groupId>
+                <artifactId>l2-framework</artifactId>
+                <version>${l2.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <modules>
-        <module>admin</module>
+        <module>l2-admin</module>
+        <module>l2-common</module>
+        <module>l2-framework</module>
     </modules>
     <packaging>pom</packaging>
 
