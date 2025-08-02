@@ -1,6 +1,6 @@
 package com.l2.service;
 
-import com.l2.domain.SysUser;
+import com.l2.framework.domain.SysUser;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.l2.domain.dto.UserDto;
 

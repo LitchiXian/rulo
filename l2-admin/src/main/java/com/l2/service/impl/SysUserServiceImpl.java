@@ -4,16 +4,18 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.l2.framework.config.JsonRedisTemplate;
-import com.l2.framework.util.SnowflakeUtil;
 import com.l2.common.constant.RedisConstant;
-import com.l2.domain.SysUser;
-import com.l2.domain.dto.UserDto;
 import com.l2.common.exception.ErrorCodeEnum;
 import com.l2.common.exception.ServiceException;
+import com.l2.domain.dto.UserDto;
+import com.l2.framework.domain.SysUser;
+import com.l2.framework.domain.UserFullInfo;
+import com.l2.framework.util.MailUtil;
+import com.l2.framework.util.RedisCache;
+import com.l2.framework.util.SaTokenUtil;
+import com.l2.framework.util.SnowflakeUtil;
 import com.l2.mapper.SysUserMapper;
 import com.l2.service.SysUserService;
-import com.l2.framework.util.MailUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.mindrot.jbcrypt.BCrypt;
@@ -35,7 +37,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
 
     private final SnowflakeUtil snowflakeUtil;
 
-    private final JsonRedisTemplate redisTemplate;
+    private final RedisCache redisCache;
 
     private final MailUtil mailUtil;
 
@@ -52,15 +54,22 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
                 .eq(SysUser::getUserName, loginUser.getUserName())
                 .eq(SysUser::getIsDeleted, 0));
         if (user == null) {
-            throw new RuntimeException("用户名不存在或未激活");
+            throw new ServiceException("用户名不存在或未激活");
         }
 
         // 验证密码（bcrypt 自动比对盐值和计算成本）
         if (!BCrypt.checkpw(loginUser.getPassword(), user.getPassword())) {
-            throw new RuntimeException("密码错误");
+            throw new ServiceException(ErrorCodeEnum.PASSWORD_VALIDATION_FAILED);
+        }
+
+        // 检查用户是否异常
+        if (user.getIsActive() == 1) {
+            throw new ServiceException(ErrorCodeEnum.ACCOUNT_FROZEN);
         }
 
         StpUtil.login(user.getId());
+
+        saveUserFullInfoToCache(user);
 
         String token = StpUtil.getTokenInfo().getTokenValue();
         return token;
@@ -103,7 +112,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
             throw new ServiceException("密码长度至少3位");
         }
 
-        String code = (String) redisTemplate.opsForValue().get(RedisConstant.REGISTER_CODE + userDto.getEmail());
+        String code = redisCache.getCacheObject(RedisConstant.REGISTER_CODE + userDto.getEmail());
         if (!userDto.getCode().equals(code)) {
             throw new ServiceException("验证码错误");
         }
@@ -163,9 +172,15 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>
             throw new ServiceException("发送验证码失败，请稍后重试");
         }
 
-        redisTemplate.opsForValue().set(RedisConstant.REGISTER_CODE + userDto.getEmail(), code, 5, TimeUnit.MINUTES);
+        redisCache.setCacheObject(RedisConstant.REGISTER_CODE + userDto.getEmail(), code, 5, TimeUnit.MINUTES);
 
         return 1;
+    }
+
+    private void saveUserFullInfoToCache(SysUser user) {
+        UserFullInfo userFullInfo = new UserFullInfo();
+        userFullInfo.setSysUser(user);
+        SaTokenUtil.setUserFullInfo(userFullInfo);
     }
 }
 

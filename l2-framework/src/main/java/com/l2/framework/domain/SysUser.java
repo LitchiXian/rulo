@@ -1,4 +1,4 @@
-package com.l2.domain;
+package com.l2.framework.domain;
 
 import java.io.Serializable;
 import java.util.Date;

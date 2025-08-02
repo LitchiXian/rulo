@@ -34,7 +34,7 @@ public class BlogArticleServiceImpl extends ServiceImpl<BlogArticleMapper, BlogA
         blogArticle.setTitle(dto.getTitle());
         blogArticle.setContent(dto.getContent());
         blogArticle.setUserId(SaTokenUtil.getLoginId());
-        blogArticle.setUserName(dto.getUserName());
+        blogArticle.setUserName(SaTokenUtil.getLoginUserFullInfo().getSysUser().getNickName());
         Date date = new Date();
         blogArticle.setPublishedTime(date);
         blogArticle.setIsPublished(dto.getIsPublished());
