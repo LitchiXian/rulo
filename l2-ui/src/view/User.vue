@@ -1,8 +1,7 @@
 <template>
   <div class="home-content">
     <section class="hero">
-      <h1>Welcome to User Blog</h1>
-      <p>User Blog is a platform where users can create and share their blog posts.</p>
+      <h1>自嗨小角落</h1>
     </section>
 
     <hr>

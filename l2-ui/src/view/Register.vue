@@ -2,7 +2,7 @@
 import {ref} from 'vue';
 import {Hide, View} from '@element-plus/icons-vue';
 import {useRouter} from "vue-router";
-import {getRegisterCode, register} from "@/api/web/auth.ts";
+import authApi from "@/api/web/auth.ts";
 import {showMessage} from "@/util/message.ts";
 
 /*--------------- 响应式状态声明 ---------------*/
@@ -59,7 +59,7 @@ const getVerificationCode = async () => {
     return;
   }
 
-  await getRegisterCode({email: email.value})
+  await authApi.getRegisterCode({email: email.value})
 
   showMessage('验证码已发送', 'success');
   startCountdown();
@@ -95,7 +95,7 @@ const handleSubmit = async (e: Event) => {
   }
 
   try {
-    await register({
+    await authApi.register({
       userName: userName.value,
       email: email.value,
       password: password.value,
@@ -125,7 +125,7 @@ const handleSubmit = async (e: Event) => {
     <img src="@/asset/image/login-bg.png" alt="登录背景" class="login-bg">
 
     <form @submit="handleSubmit" class="login-form">
-      <h1 class="login-title">Register</h1>
+      <h1 class="login-title">注册</h1>
 
       <div class="login-content">
         <!-- 用户名输入框 -->
@@ -140,7 +140,7 @@ const handleSubmit = async (e: Event) => {
                 placeholder=" "
                 v-model="userName"
             >
-            <label for="register-username" class="login-label">UserName</label>
+            <label for="register-username" class="login-label">账号</label>
           </div>
         </div>
 
@@ -156,7 +156,7 @@ const handleSubmit = async (e: Event) => {
                 placeholder=" "
                 v-model="email"
             >
-            <label for="register-email" class="login-label">Email</label>
+            <label for="register-email" class="login-label">邮箱</label>
           </div>
         </div>
 
@@ -172,7 +172,7 @@ const handleSubmit = async (e: Event) => {
                 placeholder=" "
                 v-model="password"
             >
-            <label for="register-pass" class="login-label">Password</label>
+            <label for="register-pass" class="login-label">密码</label>
             <!-- 密码可见切换图标 -->
             <el-icon
                 :class="['login-eye']"
@@ -196,7 +196,7 @@ const handleSubmit = async (e: Event) => {
                 placeholder=" "
                 v-model="confirmPassword"
             >
-            <label for="register-confirm-pass" class="login-label">Confirm Password</label>
+            <label for="register-confirm-pass" class="login-label">确认密码</label>
             <!-- 密码可见切换图标 -->
             <el-icon
                 :class="['login-eye']"
@@ -221,7 +221,7 @@ const handleSubmit = async (e: Event) => {
               placeholder=" "
               v-model="code"
           >
-          <label for="register-code" class="login-label">Verification Code</label>
+          <label for="register-code" class="login-label">验证码</label>
         </div>
         <button
             type="button"
@@ -229,23 +229,23 @@ const handleSubmit = async (e: Event) => {
             :disabled="countdown > 0"
             @click="openCaptchaDialog"
         >
-          {{ countdown > 0 ? `${countdown}s` : 'Get Code' }}
+          {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
         </button>
       </div>
 
       <div class="login-check">
         <div class="login-check-group">
           <input type="checkbox" class="login-check-input" id="register-check">
-          <label for="register-check" class="login-check-label">I agree to the terms and conditions</label>
+          <label for="register-check" class="login-check-label">我已阅读并同意该条款</label>
         </div>
       </div>
 
-      <button type="submit" class="login-button">Register</button>
+      <button type="submit" class="login-button">注册</button>
 
       <!-- 添加登录链接，与登录页保持一致 -->
       <p class="login-register">
-        Already have an account?
-        <router-link to="/login" class="login-register-link">Login</router-link>
+        已有账号?
+        <router-link to="/login" class="login-register-link">登录</router-link>
       </p>
     </form>
 

@@ -60,7 +60,7 @@ const handleSubmit = async (e: Event) => {
     <img src="@/asset/image/login-bg.png" alt="登录背景" class="login-bg">
 
     <form @submit="handleSubmit" class="login-form">
-      <h1 class="login-title">Login</h1>
+      <h1 class="login-title">登录</h1>
 
       <div class="login-content">
         <!-- 邮箱输入框 -->
@@ -75,7 +75,7 @@ const handleSubmit = async (e: Event) => {
                 placeholder=" "
                 v-model="email"
             >
-            <label for="login-email" class="login-label">Email</label>
+            <label for="login-email" class="login-label">账号</label>
           </div>
         </div>
 
@@ -91,7 +91,7 @@ const handleSubmit = async (e: Event) => {
                 placeholder=" "
                 v-model="password"
             >
-            <label for="login-pass" class="login-label">Password</label>
+            <label for="login-pass" class="login-label">密码</label>
             <!-- 密码可见切换图标 -->
             <el-icon
                 :class="['login-eye']"
@@ -107,16 +107,16 @@ const handleSubmit = async (e: Event) => {
       <div class="login-check">
         <div class="login-check-group">
           <input type="checkbox" class="login-check-input" id="login-check">
-          <label for="login-check" class="login-check-label">Remember me</label>
+          <label for="login-check" class="login-check-label">记住我</label>
         </div>
         <!--        <a href="#" class="login-forgot">Forgot Password?</a>-->
       </div>
 
-      <button type="submit" class="login-button">Login</button>
+      <button type="submit" class="login-button">登录</button>
 
       <p class="login-register">
-        Don't have an account?
-        <router-link to="/register" class="login-register-link">Register</router-link>
+        没有账号?
+        <router-link to="/register" class="login-register-link">注册</router-link>
         <!--        <a href="#" class="login-register-link">Register</a>-->
       </p>
     </form>

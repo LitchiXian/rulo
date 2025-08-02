@@ -1,8 +1,7 @@
 <template>
   <div class="home-content">
     <section class="hero">
-      <h1>Welcome to Vue Blog</h1>
-      <p>A simple markdown-based blog built with Vue 3 + Vite</p>
+      <h1>乐图</h1>
     </section>
 
     <hr>

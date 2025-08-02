@@ -18,10 +18,10 @@
           <span class="icon">🏠</span> Home
         </router-link>
         <a v-if="!userStore.isLoggedIn" href="#" @click.prevent="goToLogin" class="api-link">
-          <span class="icon">🏷️</span> Login
+          <span class="icon">🏷️</span> 登录
         </a>
         <a v-if="userStore.isLoggedIn" href="#" @click="handleLogoutClick" class="api-link">
-          <span class="icon">👤</span> Logout
+          <span class="icon">👤</span> 注销
         </a>
         <!-- 修改 API 链接 -->
         <a href="#" @click="openApiDoc" class="api-link">
