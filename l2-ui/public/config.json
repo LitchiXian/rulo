@@ -4,7 +4,7 @@
     "debugMode": true
   },
   "prod": {
-    "apiBaseUrl": "https://api.yourdomain.com/api",
+    "apiBaseUrl": "https://sosdan.cn/api",
     "debugMode": false
   }
 }
