@@ -14,7 +14,7 @@
           <h3>{{ post.title }}</h3>
         </router-link>
         <div class="meta">
-          <span class="date">{{ smartFormatDate(post.createTime) }}</span>
+          <span class="name" @click="goToUser(post.userId)">By {{ post.userName }}</span><span class="date">{{ smartFormatDate(post.createTime) }}</span>
         </div>
       </div>
     </section>
@@ -34,16 +34,16 @@ const error = ref<string>('')
 
 onMounted(async () => {
   try {
-    const response = await blogArticleApi.list();
+    featuredPosts.value = await blogArticleApi.list();
 
-    // 类型转换和验证
-    const data = Array.isArray(response) ? response : [];
-    featuredPosts.value = data.map(item => ({
-      id: item.id,
-      title: item.title || '',
-      content: '',
-      createTime: Number(item.createTime) || Date.now(),
-    })).slice(0, 5); // 取前5条作为特色文章
+    // // 类型转换和验证
+    // const data = Array.isArray(response) ? response : [];
+    // featuredPosts.value = data.map(item => ({
+    //   id: item.id,
+    //   title: item.title || '',
+    //   content: '',
+    //   createTime: Number(item.createTime) || Date.now(),
+    // })).slice(0, 5); // 取前5条作为特色文章
 
   } catch (err) {
     console.error('Error fetching posts:', err);
@@ -52,6 +52,15 @@ onMounted(async () => {
     loading.value = false;
   }
 });
+
+const goToUser = (id?:string) => {
+  if (!id) {
+    // 处理ID缺失的情况
+    console.warn("跳转用户页失败：缺少用户ID");
+    return;
+  }
+  router.push('/user/' + id);
+}
 
 /**
  * 智能格式化时间戳为易读格式
@@ -152,6 +161,7 @@ const smartFormatDate = (timestamp: number) => {
 }
 
 .date {
+  margin-left: 10px;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -159,6 +169,17 @@ const smartFormatDate = (timestamp: number) => {
 
 .date::before {
   content: '📅';
+  margin-right: 0.3rem;
+}
+
+.name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.name::before {
+  content: '👤';
   margin-right: 0.3rem;
 }
 </style>

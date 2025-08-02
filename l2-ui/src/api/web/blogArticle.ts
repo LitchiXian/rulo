@@ -42,8 +42,8 @@ const blogArticleApi = {
     /**
      * 获取文章列表
      */
-    list() {
-        return request<Article[]>({
+    list(): Promise<Article[]> {
+        return request({
             url: '/blog/article/list',
             method: 'get'
         });
@@ -65,7 +65,7 @@ const blogArticleApi = {
      * 获取用户文章列表
      * @param params 获取用户文章列表的参数
      */
-    getUserArticleList(params: { id: string }) {
+    getUserArticleList(params: { id: string }): Promise<Article[]> {
         return request({
             url: '/blog/article/getUserArticleList',
             method: 'get',
