@@ -6,7 +6,9 @@
         <div v-if="!userStore.isLoggedIn" class="login-prompt" @click.prevent="goToLogin">
           去登录
         </div>
-        <img v-else src="@/asset/avatar.jpg" alt="博主头像" class="author-avatar"/>
+        <div v-else @click.prevent="goToUser(userStore.userInfo?.id)">
+          <img src="@/asset/avatar.jpg" alt="博主头像" class="author-avatar"/>
+        </div>
         <!--        <img src="@/asset/avatar.jpg" alt="博主头像" class="author-avatar"/>-->
         <h2 class="author-name">Litchi 的博客</h2>
       </div>
@@ -115,6 +117,15 @@ const handleLogoutClick = async () => {
     sessionStorage.removeItem('satoken');
   }
 };
+
+const goToUser = (id?:string) => {
+  if (!id) {
+    // 处理ID缺失的情况
+    console.warn("跳转用户页失败：缺少用户ID");
+    return;
+  }
+  router.push('/user/' + id);
+}
 
 // 根据文章内容生成目录项的逻辑可以放在这里
 // 或者在文章页面加载时设置

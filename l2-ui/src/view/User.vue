@@ -1,8 +1,8 @@
 <template>
   <div class="home-content">
     <section class="hero">
-      <h1>Welcome to Vue Blog</h1>
-      <p>A simple markdown-based blog built with Vue 3 + Vite</p>
+      <h1>Welcome to User Blog</h1>
+      <p>User Blog is a platform where users can create and share their blog posts.</p>
     </section>
 
     <hr>
@@ -14,7 +14,7 @@
           <h3>{{ post.title }}</h3>
         </router-link>
         <div class="meta">
-          <span class="date">{{ smartFormatDate(post.createTime) }}</span>
+          <span class="name">By {{ post.userName }}</span><span class="date">{{ smartFormatDate(post.createTime) }}</span>
         </div>
       </div>
     </section>
@@ -46,16 +46,7 @@ const getList = async () => {
     const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
     // currentPost.value = await blogArticleApi.get({id});
 
-    const response = await blogArticleApi.getUserArticleList({id});
-
-    // 类型转换和验证
-    const data = Array.isArray(response) ? response : [];
-    featuredPosts.value = data.map(item => ({
-      id: item.id,
-      title: item.title || '',
-      content: '',
-      createTime: Number(item.createTime) || Date.now(),
-    })).slice(0, 5); // 取前5条作为特色文章
+    featuredPosts.value = await blogArticleApi.getUserArticleList({id});
 
   } catch (err) {
     console.error('Error fetching posts:', err);
@@ -164,6 +155,7 @@ const smartFormatDate = (timestamp: number) => {
 }
 
 .date {
+  margin-left: 10px;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -171,6 +163,17 @@ const smartFormatDate = (timestamp: number) => {
 
 .date::before {
   content: '📅';
+  margin-right: 0.3rem;
+}
+
+.name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.name::before {
+  content: '👤';
   margin-right: 0.3rem;
 }
 </style>

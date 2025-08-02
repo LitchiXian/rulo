@@ -45,8 +45,6 @@ export const useUserStore = defineStore('user', () => {
     // 登出方法
     const logout = async () => {
         try {
-            console.log('login', isLoggedIn.value)
-            console.log('login', token.value)
             if (isLoggedIn.value) {
                 await authApi.logout();
             }
@@ -70,9 +68,8 @@ export const useUserStore = defineStore('user', () => {
         if (savedToken) {
             token.value = savedToken;
             try {
-                const response = await authApi.getLoginInfo();
-                console.log(response)
-                userInfo.value = response.data;
+                userInfo.value = await authApi.getLoginInfo();
+                console.log("用户信息",userInfo.value)
             } catch (err) {
                 // token失效时清理数据
                 clearUserData();

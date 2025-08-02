@@ -1,4 +1,5 @@
 import request from '@/util/request.ts';
+import type {UserInfo} from "@/type/user.ts";
 
 // 定义请求参数类型
 // interface LoginParams {
@@ -76,8 +77,7 @@ const authApi = {
      * 获取当前登录用户信息
      */
     // 指定返回类型
-    // getLoginInfo(): Promise<LoginInfoResponse> {
-    getLoginInfo() {
+    getLoginInfo(): Promise<UserInfo> {
         return request({
             url: '/login/getLoginInfo',
             method: 'get'
