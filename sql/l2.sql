@@ -60,5 +60,31 @@ CREATE TABLE `sys_user`
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户信息表' ROW_FORMAT = Dynamic;
 
+CREATE TABLE `b_tag`
+(
+    `id`          bigint(20) UNSIGNED NOT NULL COMMENT '标签ID，雪花算法生成的非负唯一ID',               -- 核心ID，非负雪花ID
+    `name`        varchar(50) NOT NULL COMMENT '标签名称',                                              -- 核心属性，需唯一
+    `remark`      varchar(500)         DEFAULT NULL COMMENT '标签描述',                                 -- 可选扩展信息
+    `status`      tinyint(1) UNSIGNED NOT NULL DEFAULT '1' COMMENT '状态（0-禁用，1-启用）',               -- 可选：状态管理
+    `create_id`   bigint(20) UNSIGNED NOT NULL COMMENT '创建者用户ID',                                  -- 符合要求
+    `create_time` datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',                    -- 符合要求，自动记录时间
+    `update_id`   bigint(20) UNSIGNED          DEFAULT NULL COMMENT '最后更新者用户ID',                 -- 符合要求
+    `update_time` datetime             DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间', -- 符合要求，更新时自动刷新
+    PRIMARY KEY (`id`),                                                                                 -- 主键
+    UNIQUE KEY `uniq_name` (`name`)                                                                     -- 绝对要求：确保标签名唯一性！核心约束。
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_0900_ai_ci COMMENT ='标签主表';
+
+
+CREATE TABLE `b_article_tag`
+(
+    `article_id` bigint(20) UNSIGNED NOT NULL COMMENT '文章ID，关联文章表主键', -- 核心外键1
+    `tag_id`     bigint(20) UNSIGNED NOT NULL COMMENT '标签ID，关联标签表主键', -- 核心外键2
+    PRIMARY KEY (`article_id`, `tag_id`)                                       -- 核心1：联合主键，保证唯一性、高效按文章查标签
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_0900_ai_ci COMMENT ='文章与标签关联关系表';
+
 SET
 FOREIGN_KEY_CHECKS = 1;
