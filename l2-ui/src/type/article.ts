@@ -6,3 +6,8 @@ export interface Article {
     content: string;
     createTime: number;
 }
+
+export interface Tag {
+    id: string;
+    name: string;
+}

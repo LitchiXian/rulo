@@ -13,7 +13,7 @@ const service = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
     (config) => {
-        console.log("envConfig", envConfig);
+        // console.log("envConfig", envConfig);
         // 保存当前路由路径用于登录后跳回
         if (!config.url?.includes('/login') && !(config as any)._isRetry) {
             (config as any)._returnUrl = window.location.pathname + window.location.search;
@@ -37,7 +37,7 @@ service.interceptors.response.use(
         const res = response.data;
         const businessCode = res.data?.code;
 
-        console.log('API Response', res);
+        // console.log('API Response', res);
         // 检查业务错误码
         if (businessCode === 'A0230') { // 登录过期
             return handleSessionExpired(response.config);

@@ -43,32 +43,60 @@
         ></textarea>
       </div>
 
-      <!-- 分类和标签 -->
-      <!--      <div class="form-row">-->
-      <!--        <div class="form-group form-half">-->
-      <!--          <label for="article-category">分类</label>-->
-      <!--          <select-->
-      <!--              id="article-category"-->
-      <!--              v-model="form.category"-->
-      <!--              class="form-select"-->
-      <!--          >-->
-      <!--            <option v-for="cat in categories" :key="cat.id" :value="cat.id">-->
-      <!--              {{ cat.name }}-->
-      <!--            </option>-->
-      <!--          </select>-->
-      <!--        </div>-->
+      <!-- 标签选择 -->
+      <div class="form-group">
+        <label for="article-tags">标签</label>
+        <div 
+          class="tag-selector-container"
+          @click="showTagSelector = true"
+        >
+          <!-- 选中的标签 -->
+          <div class="selected-tags">
+            <el-tag
+              v-for="selectedTag in selectedTagsObj"
+              :key="selectedTag.id"
+              closable
+              :disable-transitions="false"
+              @close.stop="removeTag(selectedTag.id)"
+              size="small"
+              class="selected-tag"
+            >
+              {{ selectedTag.name }}
+            </el-tag>
+          </div>
+          <!-- 占位文本 -->
+          <div v-if="selectedTagsObj.length === 0" class="placeholder-text">
+            点击选择标签
+          </div>
+          <!-- 下拉箭头 -->
+          <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
+        </div>
+      </div>
 
-      <!--        <div class="form-group form-half">-->
-      <!--          <label for="article-tags">标签（多个用逗号分隔）</label>-->
-      <!--          <input-->
-      <!--              id="article-tags"-->
-      <!--              type="text"-->
-      <!--              v-model="form.tags"-->
-      <!--              placeholder="例如: Vue,前端,JavaScript"-->
-      <!--              class="form-input"-->
-      <!--          />-->
-      <!--        </div>-->
-      <!--      </div>-->
+      <!-- 标签选择弹窗 -->
+      <el-popover
+        v-model:visible="showTagSelector"
+        placement="bottom"
+        trigger="manual"
+        class="tag-selector-popover"
+        :teleported="true"
+      >
+        <div class="tag-selector-content">
+          <div v-for="tag in tags" :key="tag.id" class="tag-option">
+            <el-checkbox
+              :label="tag.id"
+              :checked="selectedTags.includes(tag.id)"
+              @change="(checked) => handleTagCheck(tag.id, checked)"
+            >
+              {{ tag.name }}
+            </el-checkbox>
+          </div>
+          <div class="tag-selector-footer">
+            <el-button size="small" @click="showTagSelector = false">取消</el-button>
+            <el-button size="small" type="primary" @click="confirmTagSelection">确认</el-button>
+          </div>
+        </div>
+      </el-popover>
 
       <!-- 摘要和状态 -->
       <!--      <div class="form-group">-->
@@ -123,19 +151,54 @@
 </template>
 
 <script setup  lang="ts">
-import {ref, reactive, onMounted} from 'vue';
-import { Check, Close } from '@element-plus/icons-vue';
+import {ref, reactive, onMounted, computed} from 'vue';
+import { Check, Close, ArrowDown } from '@element-plus/icons-vue';
 import {useRouter} from 'vue-router';
 import blogArticleApi from '@/api/web/blogArticle.ts';
+import {blogTagApi} from "@/api/web/blogTag.ts";
+import type {Tag} from "@/type/article.ts";
 
 const router = useRouter()
+
+// 标签列表
+const tags = ref<Tag[]>([])
+
+// 选中的标签ID
+const selectedTags = ref<string[]>([])
+
+// 是否显示标签选择器
+const showTagSelector = ref(false)
+
+// 选中的标签对象
+const selectedTagsObj = computed(() => {
+  return tags.value.filter(tag => selectedTags.value.includes(tag.id))
+})
+
+// 处理标签勾选
+const handleTagCheck = (tagId: string, checked: boolean) => {
+  if (checked) {
+    if (!selectedTags.value.includes(tagId)) {
+      selectedTags.value.push(tagId)
+    }
+  } else {
+    selectedTags.value = selectedTags.value.filter(id => id !== tagId)
+  }
+}
+
+// 移除标签
+const removeTag = (tagId: string) => {
+  selectedTags.value = selectedTags.value.filter(id => id !== tagId)
+}
+
+// 确认标签选择
+const confirmTagSelection = () => {
+  showTagSelector.value = false
+}
 
 // 表单数据模型
 const form = reactive({
   title: '',
   content: '',
-  category: 1,
-  tags: '',
   excerpt: '',
   isPublished: true,
   isFeatured: false,
@@ -169,15 +232,10 @@ const submitForm = async () => {
     error.value = ''
 
     // 格式化数据
-    const tagsArray = form.tags
-        ? form.tags.split(',').map(tag => tag.trim())
-        : []
-
     const data = {
       title: form.title,
       content: form.content,
-      categoryId: form.category,
-      tags: tagsArray,
+      tags: selectedTags.value,
       excerpt: form.excerpt || null,
       isPublished: form.isPublished ? 1 : 0,
       isFeatured: form.isFeatured
@@ -198,9 +256,16 @@ const retrySubmit = () => {
   submitForm()
 }
 
+// 获取标签列表
+const getTagList =() =>{
+  blogTagApi.list().then(res => {
+    tags.value = res
+  })
+}
+
 // 初始化分类选项
 onMounted(() => {
-  form.category = categories.value[0].id
+  getTagList();
 })
 </script>
 
@@ -210,6 +275,142 @@ onMounted(() => {
   padding: 40px 20px;
   color: #ece2c0;
 
+}
+
+.tag-selector-container {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 15px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background-color: #303030;
+  color: #ece2c0;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s;
+  margin-top: 8px;
+}
+
+.tag-selector-container:hover {
+  border-color: #4abbb5;
+  box-shadow: 0 0 0 3px rgba(74, 187, 181, 0.2);
+}
+
+.selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  padding-right: 24px;
+}
+
+.placeholder-text {
+  color: #888;
+  font-style: italic;
+  margin-left: 10px;
+}
+
+.dropdown-icon {
+  color: #ece2c0;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: color 0.2s;
+}
+
+.tag-selector-container:hover .dropdown-icon {
+  color: #4abbb5;
+}
+
+.selected-tag {
+  background-color: #4abbb5;
+  color: #000;
+  border: none;
+  transition: all 0.2s;
+}
+
+.selected-tag:hover {
+  background-color: #5cd6cf;
+}
+
+.tag-selector-popover {
+  width: 300px;
+  background-color: #303030;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tag-selector-content {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.tag-selector-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tag-selector-content::-webkit-scrollbar-track {
+  background: #444;
+  border-radius: 4px;
+}
+
+.tag-selector-content::-webkit-scrollbar-thumb {
+  background: #666;
+  border-radius: 4px;
+}
+
+.tag-selector-content::-webkit-scrollbar-thumb:hover {
+  background: #4abbb5;
+}
+
+.tag-option {
+  padding: 5px 0;
+}
+
+.tag-option .el-checkbox__label {
+  color: #ece2c0;
+}
+
+.tag-option .el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: #4abbb5;
+  border-color: #4abbb5;
+}
+
+.tag-selector-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #555;
+}
+
+.tag-selector-footer .el-button {
+  background-color: #444;
+  border-color: #555;
+  color: #ece2c0;
+}
+
+.tag-selector-footer .el-button:hover {
+  background-color: #555;
+  border-color: #666;
+}
+
+.tag-selector-footer .el-button--primary {
+  background-color: #4abbb5;
+  border-color: #4abbb5;
+  color: #000;
+}
+
+.tag-selector-footer .el-button--primary:hover {
+  background-color: #5cd6cf;
+  border-color: #5cd6cf;
 }
 
 .form-title {
@@ -224,6 +425,7 @@ onMounted(() => {
   margin-bottom: 25px;
 }
 
+/* 保留原有的其他样式 */
 .form-half {
   flex: 1;
 }
