@@ -2,11 +2,11 @@ package com.l2.web;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.l2.domain.BlogArticle;
+import com.l2.domain.Article;
 import com.l2.common.domain.dto.IdDto;
-import com.l2.domain.dto.SaveBlogArticleDto;
+import com.l2.domain.dto.SaveArticleDto;
 import com.l2.common.exception.ServiceException;
-import com.l2.service.BlogArticleService;
+import com.l2.service.ArticleService;
 import com.l2.common.domain.AjaxResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,25 +16,25 @@ import java.util.List;
 @RestController
 @RequestMapping("/blog/article")
 @RequiredArgsConstructor
-public class BlogArticleController {
+public class ArticleController {
 
-    private final BlogArticleService blogArticleService;
+    private final ArticleService articleService;
 
     @PostMapping("/save")
-    public AjaxResult save(@RequestBody SaveBlogArticleDto dto) {
-        blogArticleService.save(dto);
+    public AjaxResult save(@RequestBody SaveArticleDto dto) {
+        articleService.save(dto);
         return AjaxResult.success();
     }
 
     @PostMapping("/remove")
     public AjaxResult remove(@RequestBody IdDto idDto) {
-        blogArticleService.removeById(idDto.getId());
+        articleService.removeById(idDto.getId());
         return AjaxResult.success();
     }
 
     @PostMapping("/update")
-    public AjaxResult update(@RequestBody BlogArticle blogArticle) {
-        blogArticleService.updateById(blogArticle);
+    public AjaxResult update(@RequestBody Article article) {
+        articleService.updateById(article);
         return AjaxResult.success();
     }
 
@@ -45,18 +45,18 @@ public class BlogArticleController {
             System.out.println("当前登录用户：" + StpUtil.getLoginId());
             System.out.println("当前登录用户：" + StpUtil.getTokenInfo());
         }
-        return AjaxResult.success(blogArticleService.list(
-                        new LambdaQueryWrapper<BlogArticle>()
-                                .eq(BlogArticle::getIsDeleted, 0)
-                                .eq(BlogArticle::getIsPublished, 1)
-                                .orderByDesc(BlogArticle::getUpdateTime)
+        return AjaxResult.success(articleService.list(
+                        new LambdaQueryWrapper<Article>()
+                                .eq(Article::getIsDeleted, 0)
+                                .eq(Article::getIsPublished, 1)
+                                .orderByDesc(Article::getUpdateTime)
                 )
         );
     }
 
     @GetMapping("/get")
     public AjaxResult get(IdDto idDto) {
-        BlogArticle article = blogArticleService.getById(idDto.getId());
+        Article article = articleService.getById(idDto.getId());
         return AjaxResult.success(article);
     }
 
@@ -69,7 +69,7 @@ public class BlogArticleController {
 
     @GetMapping("/getUserArticleList")
     public AjaxResult getUserArticleList(IdDto idDto) {
-        List<BlogArticle> userArticleList = blogArticleService.getUserArticleList(idDto.getId());
+        List<Article> userArticleList = articleService.getUserArticleList(idDto.getId());
         return AjaxResult.success(userArticleList);
     }
 }

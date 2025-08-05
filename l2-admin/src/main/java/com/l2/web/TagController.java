@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
  * @Desc: TagController
  */
 @RestController
-@RequestMapping("/tag")
+@RequestMapping("/blog/tag")
 @RequiredArgsConstructor
 public class TagController {
     private final TagService tagService;

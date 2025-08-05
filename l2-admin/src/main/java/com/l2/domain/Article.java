@@ -11,11 +11,11 @@ import lombok.Data;
 /**
  * 博客文章核心表
  *
- * @TableName b_blog_article
+ * @TableName b_article
  */
 @Data
-@TableName("b_blog_article")
-public class BlogArticle implements Serializable {
+@TableName("b_article")
+public class Article implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -96,7 +96,7 @@ public class BlogArticle implements Serializable {
         if (getClass() != that.getClass()) {
             return false;
         }
-        BlogArticle other = (BlogArticle) that;
+        Article other = (Article) that;
         return (this.getId() == null ? other.getId() == null : this.getId().equals(other.getId()))
                 && (this.getTitle() == null ? other.getTitle() == null : this.getTitle().equals(other.getTitle()))
                 && (this.getContent() == null ? other.getContent() == null : this.getContent().equals(other.getContent()))
