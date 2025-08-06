@@ -13,7 +13,13 @@
           <h3>{{ post.title }}</h3>
         </router-link>
         <div class="meta">
-          <span class="name" @click="goToUser(post.userId)">By {{ post.userName }}</span><span class="date">{{ smartFormatDate(post.createTime) }}</span>
+          <span class="name" @click="goToUser(post.userId)">By {{ post.userName }}</span><span
+            class="date">{{ smartFormatDate(post.createTime) }}</span>
+        </div>
+        <!-- 标签展示 -->
+        <div class="tags">
+          <span v-for="tag in getPostTags(post.tags).slice(0, 5)" :key="tag.id" class="tag">{{ tag.name }}</span>
+          <span v-if="getPostTags(post.tags).length > 5" class="tag ellipsis">...</span>
         </div>
       </div>
     </section>
@@ -24,16 +30,19 @@
 import {ref, onMounted} from 'vue'
 import {useRouter} from 'vue-router'
 import blogArticleApi from "@/api/web/blogArticle.ts";
-import type  {Article} from "@/type/article";
+import type {Article, Tag} from "@/type/article";
+import {blogTagApi} from "@/api/web/blogTag.ts";
 
 const router = useRouter()
 const featuredPosts = ref<Article[]>([])
 const loading = ref(true)
 const error = ref<string>('')
+const tags = ref<Tag[]>([])
 
 onMounted(async () => {
   try {
-    featuredPosts.value = await blogArticleApi.list();
+    await getList();
+    await getTagList();
 
     // // 类型转换和验证
     // const data = Array.isArray(response) ? response : [];
@@ -52,7 +61,22 @@ onMounted(async () => {
   }
 });
 
-const goToUser = (id?:string) => {
+const getList = async () => {
+  featuredPosts.value = await blogArticleApi.list();
+}
+
+const getTagList = async () => {
+  tags.value = await blogTagApi.list();
+}
+
+// 根据文章的标签ID字符串获取标签对象
+const getPostTags = (tagIds: string) => {
+  if (!tagIds) return [];
+  const idArray = tagIds.split(',');
+  return tags.value.filter(tag => idArray.includes(tag.id)); // 获取所有匹配标签
+}
+
+const goToUser = (id?: string) => {
   if (!id) {
     // 处理ID缺失的情况
     console.warn("跳转用户页失败：缺少用户ID");
@@ -169,6 +193,38 @@ const smartFormatDate = (timestamp: number) => {
 .date::before {
   content: '📅';
   margin-right: 0.3rem;
+}
+
+.tags {
+  margin-top: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  background-color: rgba(74, 187, 181, 0.15);
+  color: #4abbb5;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.tag:hover {
+  background-color: rgba(74, 187, 181, 0.3);
+  transform: translateY(-2px);
+}
+
+.tag.ellipsis {
+  background-color: rgba(150, 150, 150, 0.15);
+  color: #969696;
+  cursor: default;
+}
+
+.tag.ellipsis:hover {
+  background-color: rgba(150, 150, 150, 0.15);
+  transform: none;
 }
 
 .name {

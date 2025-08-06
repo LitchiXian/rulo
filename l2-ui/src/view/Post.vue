@@ -27,6 +27,9 @@
           />
         </div>
       </article>
+      <div class="tags">
+        <span v-for="tag in getPostTags(currentPost.tags)" :key="tag.id" class="tag">{{ tag.name }}</span>
+      </div>
     </div>
 
     <!-- 文章不存在 -->
@@ -43,12 +46,14 @@ import {onMounted, ref} from 'vue'
 import {useRoute} from 'vue-router'
 import MarkdownRenderer from '@/component/MarkdownRenderer.vue'
 import blogArticleApi from "@/api/web/blogArticle.ts";
-import type {Article} from "@/type/article.ts";
+import type {Article, Tag} from "@/type/article.ts";
+import {blogTagApi} from "@/api/web/blogTag.ts";
 
 const route = useRoute()
 const currentPost = ref<Article>()
 const loading = ref(true)
 const error = ref(null)
+const tags = ref<Tag[]>([])
 
 // 获取文章详情数据
 const fetchArticle = async () => {
@@ -59,6 +64,7 @@ const fetchArticle = async () => {
     // 调用API接口获取数据
     const id = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
     currentPost.value = await blogArticleApi.getInfo({id});
+    console.log('currentPost', currentPost);
     // currentPost.value = await blogArticleApi.get(route.params.id);
 
   } finally {
@@ -101,9 +107,10 @@ const retryFetch = () => {
   fetchArticle()
 }
 
-onMounted(() => {
+onMounted(async () => {
 
-  fetchArticle()
+  await fetchArticle();
+  await getTagList();
 
   // 监听设置TOC事件
   window.addEventListener('set-toc', (event) => {
@@ -117,6 +124,16 @@ onMounted(() => {
     window.$mainLayout = null;
   }
 });
+
+const getTagList = async () => {
+  tags.value = await blogTagApi.list();
+}
+
+const getPostTags = (tagIds: string) => {
+  if (!tagIds) return [];
+  const idArray = tagIds.split(',');
+  return tags.value.filter(tag => idArray.includes(tag.id));
+}
 </script>
 
 <style scoped>
@@ -226,5 +243,26 @@ onMounted(() => {
 
 .not-found a:hover {
   text-decoration: underline;
+}
+
+.tags {
+  margin-top: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  background-color: rgba(74, 187, 181, 0.15);
+  color: #4abbb5;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.tag:hover {
+  background-color: rgba(74, 187, 181, 0.3);
+  transform: translateY(-2px);
 }
 </style>

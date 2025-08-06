@@ -5,6 +5,7 @@ export interface Article {
     userName: string;
     content: string;
     createTime: number;
+    tags: string;
 }
 
 export interface Tag {

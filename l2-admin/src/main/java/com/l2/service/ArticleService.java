@@ -17,6 +17,9 @@ public interface ArticleService extends IService<Article> {
 
     List<Article> listBlogArticle();
 
+    @Override
+    List<Article> list();
+
     Article getById(Long id);
 
     List<Article> getUserArticleList(long userId);

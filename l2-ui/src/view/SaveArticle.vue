@@ -43,41 +43,11 @@
         ></textarea>
       </div>
 
-      <!-- 标签选择 -->
-      <div class="form-group">
-        <label for="article-tags">标签</label>
-        <div 
-          class="tag-selector-container"
-          @click="showTagSelector = true"
-        >
-          <!-- 选中的标签 -->
-          <div class="selected-tags">
-            <el-tag
-              v-for="selectedTag in selectedTagsObj"
-              :key="selectedTag.id"
-              closable
-              :disable-transitions="false"
-              @close.stop="removeTag(selectedTag.id)"
-              size="small"
-              class="selected-tag"
-            >
-              {{ selectedTag.name }}
-            </el-tag>
-          </div>
-          <!-- 占位文本 -->
-          <div v-if="selectedTagsObj.length === 0" class="placeholder-text">
-            点击选择标签
-          </div>
-          <!-- 下拉箭头 -->
-          <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
-        </div>
-      </div>
-
       <!-- 标签选择弹窗 -->
       <el-popover
         v-model:visible="showTagSelector"
         placement="bottom"
-        trigger="manual"
+        trigger="click"
         class="tag-selector-popover"
         :teleported="true"
       >
@@ -86,7 +56,7 @@
             <el-checkbox
               :label="tag.id"
               :checked="selectedTags.includes(tag.id)"
-              @change="(checked) => handleTagCheck(tag.id, checked)"
+              @change="(checked:boolean) => handleTagCheck(tag.id, checked)"
             >
               {{ tag.name }}
             </el-checkbox>
@@ -96,44 +66,36 @@
             <el-button size="small" type="primary" @click="confirmTagSelection">确认</el-button>
           </div>
         </div>
+        <template #reference>
+          <div class="form-group">
+            <label for="article-tags">标签</label>
+            <div
+                class="tag-selector-container"
+            >
+              <!-- 选中的标签 -->
+              <div class="selected-tags">
+                <el-tag
+                    v-for="selectedTag in selectedTagsObj"
+                    :key="selectedTag.id"
+                    closable
+                    :disable-transitions="false"
+                    @close.stop="removeTag(selectedTag.id)"
+                    size="small"
+                    class="selected-tag"
+                >
+                  {{ selectedTag.name }}
+                </el-tag>
+              </div>
+              <!-- 占位文本 -->
+              <div v-if="selectedTagsObj.length === 0" class="placeholder-text">
+                点击选择标签
+              </div>
+              <!-- 下拉箭头 -->
+              <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
+            </div>
+          </div>
+        </template>
       </el-popover>
-
-      <!-- 摘要和状态 -->
-      <!--      <div class="form-group">-->
-      <!--        <label for="article-excerpt">文章摘要</label>-->
-      <!--        <textarea-->
-      <!--            id="article-excerpt"-->
-      <!--            v-model="form.excerpt"-->
-      <!--            placeholder="输入简要说明，可选"-->
-      <!--            rows="3"-->
-      <!--            class="form-textarea"-->
-      <!--        ></textarea>-->
-      <!--      </div>-->
-
-      <!-- 状态控制 -->
-      <!--      <div class="form-group">-->
-      <!--        <div class="status-row">-->
-      <!--          <div>-->
-      <!--            <input-->
-      <!--                type="checkbox"-->
-      <!--                id="publish-now"-->
-      <!--                v-model="form.isPublished"-->
-      <!--                class="status-checkbox"-->
-      <!--            />-->
-      <!--            <label for="publish-now">立即发布</label>-->
-      <!--          </div>-->
-
-      <!--          <div>-->
-      <!--            <input-->
-      <!--                type="checkbox"-->
-      <!--                id="featured-article"-->
-      <!--                v-model="form.isFeatured"-->
-      <!--                class="status-checkbox"-->
-      <!--            />-->
-      <!--            <label for="featured-article">设为特色文章</label>-->
-      <!--          </div>-->
-      <!--        </div>-->
-      <!--      </div>-->
 
       <!-- 按钮区域 -->
       <div class="form-actions">
@@ -235,7 +197,7 @@ const submitForm = async () => {
     const data = {
       title: form.title,
       content: form.content,
-      tags: selectedTags.value,
+      tags: selectedTags.value.join(','),
       excerpt: form.excerpt || null,
       isPublished: form.isPublished ? 1 : 0,
       isFeatured: form.isFeatured
@@ -425,11 +387,6 @@ onMounted(() => {
   margin-bottom: 25px;
 }
 
-/* 保留原有的其他样式 */
-.form-half {
-  flex: 1;
-}
-
 label {
   display: block;
   margin-bottom: 8px;
@@ -437,7 +394,7 @@ label {
   color: #e2e2ec;
 }
 
-.form-input, .form-select, .form-textarea {
+.form-input, .form-textarea {
   width: 100%;
   padding: 12px 15px;
   border: 1px solid #555;
@@ -457,38 +414,6 @@ label {
 .form-textarea {
   min-height: 150px;
   resize: vertical;
-}
-
-.form-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ece2c0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px;
-  cursor: pointer;
-}
-
-.form-row {
-  display: flex;
-  gap: 20px;
-}
-
-.status-row {
-  display: flex;
-  gap: 25px;
-  margin-top: 15px;
-}
-
-.status-row div {
-  display: flex;
-  align-items: center;
-}
-
-.status-checkbox {
-  margin-right: 8px;
-  width: 18px;
-  height: 18px;
-  accent-color: #4abbb5;
 }
 
 .form-actions {

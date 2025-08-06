@@ -28,4 +28,9 @@ public class SaveArticleDto implements Serializable {
      */
     private Integer isPublished;
 
+    /**
+     * 标签名称（多个标签用逗号分隔）
+     */
+    private String tags;
+
 }
