@@ -40,18 +40,8 @@ public class ArticleController {
 
     @GetMapping("/list")
     public AjaxResult list() {
-        System.out.println("是否登录：" + StpUtil.isLogin());
-        if (StpUtil.isLogin()) {
-            System.out.println("当前登录用户：" + StpUtil.getLoginId());
-            System.out.println("当前登录用户：" + StpUtil.getTokenInfo());
-        }
-        return AjaxResult.success(articleService.list(
-                        new LambdaQueryWrapper<Article>()
-                                .eq(Article::getIsDeleted, 0)
-                                .eq(Article::getIsPublished, 1)
-                                .orderByDesc(Article::getUpdateTime)
-                )
-        );
+        List<Article> list = articleService.list();
+        return AjaxResult.success(list);
     }
 
     @GetMapping("/get")
