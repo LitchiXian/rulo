@@ -6,6 +6,7 @@
     <groupId>com.l2</groupId>
     <artifactId>l2</artifactId>
     <version>0.0.4</version>
+    <packaging>pom</packaging>
 
     <name>L2</name>
     <url>http://www.sosdan.cn</url>
@@ -135,7 +136,6 @@
         <module>l2-common</module>
         <module>l2-framework</module>
     </modules>
-    <packaging>pom</packaging>
 
     <build>
         <plugins>
