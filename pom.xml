@@ -16,7 +16,7 @@
         <l2.version>0.0.4</l2.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>17</java.version>
+        <java.version>21</java.version>
 <!--        <spring-boot.version>3.5.3</spring-boot.version>-->
         <spring-boot.version>3.3.13</spring-boot.version>
         <commons-collections4.version>4.4</commons-collections4.version>

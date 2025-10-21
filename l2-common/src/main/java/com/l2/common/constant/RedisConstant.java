@@ -1,7 +1,7 @@
 package com.l2.common.constant;
 
 /**
- * @Author: Linzx
+ * @Author: LitchiXian
  * @Date: 2025/7/23 9:13
  * @Desc: RedisConstant
  */

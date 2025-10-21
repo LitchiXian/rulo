@@ -11,7 +11,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * @Author: Linzx
+ * @Author: LitchiXian
  * @Date: 2025/7/23 14:41
  * @Desc: SaTokenConfigure
  */

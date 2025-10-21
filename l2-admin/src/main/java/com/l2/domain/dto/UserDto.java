@@ -5,7 +5,7 @@ import lombok.Data;
 import java.io.Serializable;
 
 /**
- * @Author: Linzx
+ * @Author: LitchiXian
  * @Date: 2025/7/17 20:12
  * @Desc: UserDto
  */

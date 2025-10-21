@@ -12,7 +12,7 @@ import com.l2.common.constant.RedisConstant;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @Author: Linzx
+ * @Author: LitchiXian
  * @Date: 2025/7/23 17:15
  * @Desc: SaTokenUtil
  */

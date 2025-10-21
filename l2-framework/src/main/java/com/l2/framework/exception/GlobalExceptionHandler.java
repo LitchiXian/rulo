@@ -15,7 +15,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 
 /**
- * @Author Linzx
+ * @Author LitchiXian
  * @Date 2025/7/15 12:18
  * @Desc GlobalExceptionHandler
  * @Note ControllerAdviceBean 与 SpringDoc 冲突。如果 SpringBoot 版本高于 3.3.13，接口文档就失效。

@@ -1,7 +1,7 @@
 package com.l2.common.exception;
 
 /**
- * @Author Linzx
+ * @Author LitchiXian
  * @Date 2025/7/15 12:13
  * @Desc ServiceException
  */

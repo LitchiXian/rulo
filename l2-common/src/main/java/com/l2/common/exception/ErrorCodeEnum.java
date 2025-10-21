@@ -1,7 +1,7 @@
 package com.l2.common.exception;
 
 /**
- * @Author: Linzx
+ * @Author: LitchiXian
  * @Date: 2025/7/23 15:09
  * @Desc: 错误码枚举
  * 参考《Java开发手册（黄山版）》错误码规范
