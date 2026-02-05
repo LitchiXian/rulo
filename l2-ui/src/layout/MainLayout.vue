@@ -83,13 +83,48 @@ const showToc = ref(true);
 const router = useRouter();
 const tocItems = ref<TocItem[]>([]);
 
+// 主题相关常量
+const THEME_KEY = 'l2-theme';
+const THEME_DARK = 'dark';
+const THEME_LIGHT = 'light';
+
 onMounted(() => {
   userStore.initUser();
+  initTheme();
 });
 
+// 初始化主题
+const initTheme = () => {
+  const savedTheme = localStorage.getItem(THEME_KEY);
+  
+  if (savedTheme === THEME_LIGHT) {
+    darkMode.value = false;
+    document.documentElement.classList.add('light-mode');
+  } else if (savedTheme === THEME_DARK) {
+    darkMode.value = true;
+    document.documentElement.classList.remove('light-mode');
+  } else {
+    // 首次访问，检测系统偏好
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    darkMode.value = prefersDark;
+    if (!prefersDark) {
+      document.documentElement.classList.add('light-mode');
+    }
+    localStorage.setItem(THEME_KEY, prefersDark ? THEME_DARK : THEME_LIGHT);
+  }
+};
+
+// 切换主题
 const toggleDarkMode = () => {
   darkMode.value = !darkMode.value;
-  document.body.classList.toggle('dark-mode', darkMode.value);
+  
+  if (darkMode.value) {
+    document.documentElement.classList.remove('light-mode');
+    localStorage.setItem(THEME_KEY, THEME_DARK);
+  } else {
+    document.documentElement.classList.add('light-mode');
+    localStorage.setItem(THEME_KEY, THEME_LIGHT);
+  }
 };
 
 const scrollToAnchor = (id: string) => {
