@@ -1,6 +1,6 @@
 {
   "dev": {
-    "apiBaseUrl": "http://127.0.0.1:8090/",
+    "apiBaseUrl": "http://127.0.0.1:3000/",
     "debugMode": true
   },
   "prod": {

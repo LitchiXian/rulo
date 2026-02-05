@@ -5,13 +5,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Tag {
-    pub id: u64,
+    pub id: i64,
     pub name: String,
     pub remark: Option<String>,
-    pub status: u8,
-    pub create_id: u64,
+    pub status: bool,
+    pub create_id: i64,
     pub create_time: DateTime<Utc>,
-    pub update_id: Option<u64>,
+    pub update_id: Option<i64>,
     pub update_time: Option<DateTime<Utc>>,
 }
 

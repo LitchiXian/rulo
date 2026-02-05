@@ -5,11 +5,11 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use sqlx::MySqlPool;
+use sqlx::PgPool;
 use tower_http::cors::{Any, CorsLayer};
 
 // 创建所有路由
-pub fn create_routes(db_pool: MySqlPool) -> Router {
+pub fn create_routes(db_pool: PgPool) -> Router {
     // 创建服务
     let auth_service = AuthService::new(db_pool.clone());
     let blog_service = BlogService::new(db_pool.clone());

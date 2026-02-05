@@ -1,16 +1,17 @@
 use crate::models::tag::{Tag, TagError};
-use sqlx::{Error as SqlxError, MySqlPool, Row};
+use chrono::Utc;
+use sqlx::{Error as SqlxError, PgPool, Row};
 use std::sync::Arc;
 
 // 标签服务结构体
 #[derive(Clone)]
 pub struct TagService {
-    pub db_pool: MySqlPool,
+    pub db_pool: PgPool,
 }
 
 impl TagService {
     // 创建新的标签服务
-    pub fn new(db_pool: MySqlPool) -> Arc<Self> {
+    pub fn new(db_pool: PgPool) -> Arc<Self> {
         Arc::new(Self { db_pool })
     }
 
@@ -19,7 +20,7 @@ impl TagService {
         let tags = sqlx::query(
             "SELECT id, name, remark, status, create_id, create_time, update_id, update_time \
              FROM b_tag \
-             WHERE status = 1 \
+             WHERE status = TRUE \
              ORDER BY create_time DESC"
         )
         .fetch_all(&self.db_pool)
@@ -42,11 +43,11 @@ impl TagService {
     }
 
     // 根据ID获取标签
-    pub async fn get_by_id(&self, id: u64) -> Result<Tag, TagError> {
+    pub async fn get_by_id(&self, id: i64) -> Result<Tag, TagError> {
         let row = sqlx::query(
             "SELECT id, name, remark, status, create_id, create_time, update_id, update_time \
              FROM b_tag \
-             WHERE id = ?"
+             WHERE id = $1"
         )
         .bind(id)
         .fetch_one(&self.db_pool)
@@ -69,9 +70,9 @@ impl TagService {
     }
 
     // 保存标签
-    pub async fn save(&self, name: String, remark: Option<String>, create_id: u64) -> Result<u64, TagError> {
+    pub async fn save(&self, name: String, remark: Option<String>, create_id: i64) -> Result<i64, TagError> {
         // 检查标签名是否已存在
-        if let Ok(_) = sqlx::query("SELECT id FROM b_tag WHERE name = ?")
+        if let Ok(_) = sqlx::query("SELECT id FROM b_tag WHERE name = $1")
             .bind(&name)
             .fetch_one(&self.db_pool)
             .await
@@ -80,19 +81,21 @@ impl TagService {
         }
 
         // 生成ID
-        let id: u64 = std::time::SystemTime::now()
+        let id: i64 = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
-            .as_millis() as u64;
+            .as_millis() as i64;
 
+        let now = Utc::now();
         sqlx::query(
             "INSERT INTO b_tag (id, name, remark, status, create_id, create_time) \
-             VALUES (?, ?, ?, 1, ?, NOW())"
+             VALUES ($1, $2, $3, TRUE, $4, $5)"
         )
         .bind(id)
         .bind(&name)
         .bind(remark)
         .bind(create_id)
+        .bind(&now)
         .execute(&self.db_pool)
         .await
         .map_err(|e| TagError::DatabaseError(e.to_string()))?;
@@ -101,13 +104,15 @@ impl TagService {
     }
 
     // 更新标签
-    pub async fn update(&self, id: u64, name: String, remark: Option<String>, update_id: u64) -> Result<(), TagError> {
+    pub async fn update(&self, id: i64, name: String, remark: Option<String>, update_id: i64) -> Result<(), TagError> {
+        let now = Utc::now();
         let result = sqlx::query(
-            "UPDATE b_tag SET name = ?, remark = ?, update_id = ?, update_time = NOW() WHERE id = ?"
+            "UPDATE b_tag SET name = $1, remark = $2, update_id = $3, update_time = $4 WHERE id = $5"
         )
         .bind(&name)
         .bind(remark)
         .bind(update_id)
+        .bind(&now)
         .bind(id)
         .execute(&self.db_pool)
         .await
@@ -121,8 +126,8 @@ impl TagService {
     }
 
     // 删除标签
-    pub async fn remove(&self, id: u64) -> Result<(), TagError> {
-        let result = sqlx::query("DELETE FROM b_tag WHERE id = ?")
+    pub async fn remove(&self, id: i64) -> Result<(), TagError> {
+        let result = sqlx::query("DELETE FROM b_tag WHERE id = $1")
             .bind(id)
             .execute(&self.db_pool)
             .await

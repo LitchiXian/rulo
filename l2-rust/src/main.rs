@@ -29,7 +29,7 @@ async fn main() {
     let app = utils::routes::create_routes(db_pool);
 
     // 设置监听地址
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8090));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     log::info!("服务启动，监听地址: {}", addr);
 
     // 启动服务器

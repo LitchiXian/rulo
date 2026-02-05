@@ -4,17 +4,17 @@ use serde::{Deserialize, Serialize};
 // 用户模型结构体
 #[derive(Debug, Deserialize, Serialize)]
 pub struct User {
-    pub id: u64,
+    pub id: i64,
     pub user_name: String,
     pub nick_name: String,
     pub password: String,
     pub email: Option<String>,
-    pub is_active: u8,
-    pub is_deleted: u8,
+    pub is_active: bool,
+    pub is_deleted: bool,
     pub remark: Option<String>,
-    pub create_id: u64,
+    pub create_id: i64,
     pub create_time: DateTime<Utc>,
-    pub update_id: u64,
+    pub update_id: i64,
     pub update_time: Option<DateTime<Utc>>,
 }
 

@@ -2,21 +2,21 @@ use crate::models::user::{User, UserError, UserInfo};
 use bcrypt::{hash, verify, DEFAULT_COST};
 use chrono::Utc;
 use rand::{distributions::Alphanumeric, Rng};
-use sqlx::{Error as SqlxError, MySqlPool, Row};
+use sqlx::{Error as SqlxError, PgPool, Row};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 // 认证服务结构体
 #[derive(Clone)]
 pub struct AuthService {
-    pub db_pool: MySqlPool,
+    pub db_pool: PgPool,
     // 简单的token存储（生产环境应使用Redis）
-    pub token_store: Arc<RwLock<HashMap<String, u64>>>,
+    pub token_store: Arc<RwLock<HashMap<String, i64>>>,
 }
 
 impl AuthService {
     // 创建新的认证服务
-    pub fn new(db_pool: MySqlPool) -> Arc<Self> {
+    pub fn new(db_pool: PgPool) -> Arc<Self> {
         Arc::new(Self {
             db_pool,
             token_store: Arc::new(RwLock::new(HashMap::new())),
@@ -30,7 +30,7 @@ impl AuthService {
         password: String,
     ) -> Result<(User, String), UserError> {
         // 查询用户 - 修正字段名为 user_name
-        let user = match sqlx::query("SELECT id, user_name, nick_name, email, password, is_active, is_deleted, remark, create_id, create_time, update_id, update_time FROM sys_user WHERE user_name = ? AND is_deleted = 0")
+        let user = match sqlx::query("SELECT id, user_name, nick_name, email, password, is_active, is_deleted, remark, create_id, create_time, update_id, update_time FROM sys_user WHERE user_name = $1 AND is_deleted = FALSE")
             .bind(&username)
             .fetch_one(&self.db_pool)
             .await {
@@ -86,7 +86,7 @@ impl AuthService {
         let user_id = user_id.ok_or(UserError::UserNotFound)?;
 
         // 查询用户信息
-        let row = sqlx::query("SELECT id, user_name, nick_name, email, remark, create_time, update_time FROM sys_user WHERE id = ? AND is_deleted = 0")
+        let row = sqlx::query("SELECT id, user_name, nick_name, email, remark, create_time, update_time FROM sys_user WHERE id = $1 AND is_deleted = FALSE")
             .bind(user_id)
             .fetch_one(&self.db_pool)
             .await
@@ -96,7 +96,7 @@ impl AuthService {
             })?;
 
         Ok(UserInfo {
-            id: row.get::<u64, _>("id").to_string(),
+            id: row.get::<i64, _>("id").to_string(),
             user_name: row.get("user_name"),
             nick_name: row.get("nick_name"),
             avatar: String::new(), // 表中没有avatar字段
@@ -114,7 +114,7 @@ impl AuthService {
         verification_code: String,
     ) -> Result<(), UserError> {
         // 检查用户名是否存在
-        if let Ok(_) = sqlx::query("SELECT id FROM sys_user WHERE user_name = ? AND is_deleted = 0")
+        if let Ok(_) = sqlx::query("SELECT id FROM sys_user WHERE user_name = $1 AND is_deleted = FALSE")
             .bind(&user_name)
             .fetch_one(&self.db_pool)
             .await
@@ -123,7 +123,7 @@ impl AuthService {
         }
 
         // 检查邮箱是否存在
-        if let Ok(_) = sqlx::query("SELECT id FROM sys_user WHERE email = ? AND is_deleted = 0")
+        if let Ok(_) = sqlx::query("SELECT id FROM sys_user WHERE email = $1 AND is_deleted = FALSE")
             .bind(&email)
             .fetch_one(&self.db_pool)
             .await
@@ -144,14 +144,14 @@ impl AuthService {
         };
 
         // 生成雪花ID（简化处理，实际应用雪花算法）
-        let id: u64 = std::time::SystemTime::now()
+        let id: i64 = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
-            .as_millis() as u64;
+            .as_millis() as i64;
 
         // 创建用户
         let now = Utc::now();
-        match sqlx::query("INSERT INTO sys_user (id, user_name, nick_name, password, email, is_active, is_deleted, create_id, create_time, update_id, update_time) VALUES (?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?)")
+        match sqlx::query("INSERT INTO sys_user (id, user_name, nick_name, password, email, is_active, is_deleted, create_id, create_time, update_id, update_time) VALUES ($1, $2, $3, $4, $5, FALSE, FALSE, $6, $7, $8, $9)")
             .bind(id)
             .bind(&user_name)
             .bind(&user_name) // nick_name默认为user_name

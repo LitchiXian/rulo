@@ -17,14 +17,14 @@ pub struct SaveTagRequest {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateTagRequest {
-    pub id: u64,
+    pub id: i64,
     pub name: String,
     pub remark: Option<String>,
 }
 
 #[derive(Deserialize)]
 pub struct IdQuery {
-    pub id: u64,
+    pub id: i64,
 }
 
 // 获取标签列表
@@ -54,7 +54,7 @@ pub async fn save_tag_handler(
     Json(payload): Json<SaveTagRequest>,
 ) -> impl IntoResponse {
     // 简化处理，使用固定的 create_id，实际应从 token 获取
-    let create_id = 1u64;
+    let create_id = 1i64;
     
     match tag_service.save(payload.name, payload.remark, create_id).await {
         Ok(_) => AjaxResult::success(None),
@@ -68,7 +68,7 @@ pub async fn update_tag_handler(
     Json(payload): Json<UpdateTagRequest>,
 ) -> impl IntoResponse {
     // 简化处理，使用固定的 update_id，实际应从 token 获取
-    let update_id = 1u64;
+    let update_id = 1i64;
     
     match tag_service.update(payload.id, payload.name, payload.remark, update_id).await {
         Ok(_) => AjaxResult::success(None),
