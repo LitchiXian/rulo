@@ -1,5 +1,5 @@
-use crate::handlers::auth_handler::AjaxResult;
 use crate::services::tag_service::TagService;
+use crate::utils::ApiResponse;
 use axum::extract::{Query, State};
 use axum::response::IntoResponse;
 use axum::Json;
@@ -32,8 +32,8 @@ pub async fn list_tags_handler(
     State(tag_service): State<Arc<TagService>>,
 ) -> impl IntoResponse {
     match tag_service.list().await {
-        Ok(tags) => AjaxResult::success(Some(serde_json::to_value(tags).unwrap())),
-        Err(e) => AjaxResult::error(&e.to_string()),
+        Ok(tags) => ApiResponse::success_with_data(tags),
+        Err(e) => ApiResponse::error(e.to_string()),
     }
 }
 
@@ -43,8 +43,8 @@ pub async fn get_tag_handler(
     Query(params): Query<IdQuery>,
 ) -> impl IntoResponse {
     match tag_service.get_by_id(params.id).await {
-        Ok(tag) => AjaxResult::success(Some(serde_json::to_value(tag).unwrap())),
-        Err(e) => AjaxResult::error(&e.to_string()),
+        Ok(tag) => ApiResponse::success_with_data(tag),
+        Err(e) => ApiResponse::error(e.to_string()),
     }
 }
 
@@ -57,8 +57,8 @@ pub async fn save_tag_handler(
     let create_id = 1i64;
     
     match tag_service.save(payload.name, payload.remark, create_id).await {
-        Ok(_) => AjaxResult::success(None),
-        Err(e) => AjaxResult::error(&e.to_string()),
+        Ok(_) => ApiResponse::success(),
+        Err(e) => ApiResponse::error(e.to_string()),
     }
 }
 
@@ -71,8 +71,8 @@ pub async fn update_tag_handler(
     let update_id = 1i64;
     
     match tag_service.update(payload.id, payload.name, payload.remark, update_id).await {
-        Ok(_) => AjaxResult::success(None),
-        Err(e) => AjaxResult::error(&e.to_string()),
+        Ok(_) => ApiResponse::success(),
+        Err(e) => ApiResponse::error(e.to_string()),
     }
 }
 
@@ -82,7 +82,7 @@ pub async fn remove_tag_handler(
     Json(params): Json<IdQuery>,
 ) -> impl IntoResponse {
     match tag_service.remove(params.id).await {
-        Ok(_) => AjaxResult::success(None),
-        Err(e) => AjaxResult::error(&e.to_string()),
+        Ok(_) => ApiResponse::success(),
+        Err(e) => ApiResponse::error(e.to_string()),
     }
 }
