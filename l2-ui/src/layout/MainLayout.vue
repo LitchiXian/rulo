@@ -1,50 +1,57 @@
 <template>
   <div class="layout-container">
     <!-- 左侧导航栏 -->
-    <div class="left-sidebar">
+    <aside class="left-sidebar">
       <div class="author-info">
         <div v-if="!userStore.isLoggedIn" class="login-prompt" @click.prevent="goToLogin">
           去登录
         </div>
-        <div v-else @click.prevent="goToUser(userStore.userInfo?.id)">
-          <img src="@/asset/avatar.jpg" alt="博主头像" class="author-avatar"/>
+        <div v-else @click.prevent="goToUser(userStore.userInfo?.id)" class="avatar-wrapper">
+          <img src="@/asset/avatar.jpg" alt="头像" class="author-avatar"/>
         </div>
-        <!--        <img src="@/asset/avatar.jpg" alt="博主头像" class="author-avatar"/>-->
         <h2 class="author-name">Litchi 的博客</h2>
       </div>
 
       <nav class="sidebar-nav">
-        <router-link to="/">
-          <span class="icon">🏠</span> Home
+        <router-link to="/" class="nav-item">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-text">首页</span>
         </router-link>
-        <a v-if="!userStore.isLoggedIn" href="#" @click.prevent="goToLogin" class="api-link">
-          <span class="icon">🏷️</span> 登录
+        
+        <a v-if="!userStore.isLoggedIn" href="#" @click.prevent="goToLogin" class="nav-item">
+          <span class="nav-icon">🏷️</span>
+          <span class="nav-text">登录</span>
         </a>
-        <a v-if="userStore.isLoggedIn" href="#" @click="handleLogoutClick" class="api-link">
-          <span class="icon">👤</span> 注销
+        
+        <a v-if="userStore.isLoggedIn" href="#" @click="handleLogoutClick" class="nav-item">
+          <span class="nav-icon">👤</span>
+          <span class="nav-text">注销</span>
         </a>
-        <!-- 修改 API 链接 -->
-        <a href="#" @click="openApiDoc" class="api-link">
-          <span class="icon">🔗</span> API
+        
+        <a href="#" @click="openApiDoc" class="nav-item">
+          <span class="nav-icon">🔗</span>
+          <span class="nav-text">API</span>
         </a>
-        <router-link v-if="userStore.isLoggedIn" to="/saveArticle">
-          <span class="icon">🛠️</span> 新增
+        
+        <router-link v-if="userStore.isLoggedIn" to="/saveArticle" class="nav-item">
+          <span class="nav-icon">🛠️</span>
+          <span class="nav-text">新增</span>
         </router-link>
 
-        <div class="dark-mode-toggle" @click="toggleDarkMode">
-          <span class="icon">{{ darkMode ? '🌞' : '🌙' }}</span>
-          {{ darkMode ? 'Light Mode' : 'Dark Mode' }}
+        <div class="nav-item dark-mode-toggle" @click="toggleDarkMode">
+          <span class="nav-icon">{{ darkMode ? '🌞' : '🌙' }}</span>
+          <span class="nav-text">{{ darkMode ? '浅色' : '深色' }}</span>
         </div>
       </nav>
-    </div>
+    </aside>
 
     <!-- 中间内容区域 -->
-    <div class="content-area">
+    <main class="content-area">
       <router-view/>
-    </div>
+    </main>
 
     <!-- 右侧目录栏 -->
-    <div class="right-sidebar" v-if="showToc">
+    <aside class="right-sidebar toc-sidebar" v-if="showToc && tocItems.length > 0">
       <div class="toc-container">
         <h3 class="toc-title">文章目录</h3>
         <ul class="toc-list">
@@ -55,62 +62,56 @@
           </li>
         </ul>
       </div>
-    </div>
+    </aside>
   </div>
 </template>
 
 <script setup lang="ts">
-import {useRouter} from 'vue-router'
-import {onMounted, ref} from 'vue';
-import {useUserStore} from "@/store/user.ts";
+import { useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue';
+import { useUserStore } from "@/store/user.ts";
+
+interface TocItem {
+  id: string;
+  text: string;
+  level: number;
+}
 
 const userStore = useUserStore();
 const darkMode = ref(true);
 const showToc = ref(true);
 const router = useRouter();
-const tocItems = ref([]); // 从文章内容提取的目录项
+const tocItems = ref<TocItem[]>([]);
 
 onMounted(() => {
   userStore.initUser();
-})
+});
 
 const toggleDarkMode = () => {
   darkMode.value = !darkMode.value;
   document.body.classList.toggle('dark-mode', darkMode.value);
 };
 
-const scrollToAnchor = (id) => {
+const scrollToAnchor = (id: string) => {
   const el = document.getElementById(id);
   if (el) {
-    el.scrollIntoView({behavior: 'smooth'});
+    el.scrollIntoView({ behavior: 'smooth' });
   }
 };
 
 const openApiDoc = () => {
-  // 在新窗口打开 API 文档
   window.open('http://localhost:8090/doc.html', '_blank');
-
-  // 添加点击反馈效果
-  const apiLink = document.querySelector('.api-link');
-  if (apiLink && 'style' in apiLink) {
-    apiLink.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-      apiLink.style.transform = '';
-    }, 300);
-  }
 };
 
-const goToLogin  = () => {
-    // 跳转到登录页，并记录来源页面
-    router.push({
-      path: '/login',
-      query: {redirect: router.currentRoute.value.fullPath}
-    })
-}
+const goToLogin = () => {
+  router.push({
+    path: '/login',
+    query: { redirect: router.currentRoute.value.fullPath }
+  });
+};
 
 const handleLogoutClick = async () => {
   try {
-    // 调用登出API（假设logout是异步函数）
     await userStore.logout();
   } finally {
     localStorage.removeItem('satoken');
@@ -118,19 +119,17 @@ const handleLogoutClick = async () => {
   }
 };
 
-const goToUser = (id?:string) => {
+const goToUser = (id?: string) => {
   if (!id) {
-    // 处理ID缺失的情况
     console.warn("跳转用户页失败：缺少用户ID");
     return;
   }
   router.push('/user/' + id);
-}
+};
 
-// 根据文章内容生成目录项的逻辑可以放在这里
-// 或者在文章页面加载时设置
+// 暴露方法供子组件设置目录
 defineExpose({
-  setTocItems: (items: any) => {
+  setTocItems: (items: TocItem[]) => {
     tocItems.value = items;
     showToc.value = items.length > 0;
   }
@@ -141,132 +140,146 @@ defineExpose({
 .layout-container {
   display: flex;
   min-height: 100vh;
-  background-color: var(--body-bg-color); /* 48,48,48 */
+  background-color: var(--bg-body);
 }
 
+/* ======== 左侧边栏 ======== */
 .left-sidebar {
-  width: 250px;
-  color: #e2e2ec; /* 226,226,236 - 标题颜色 */
+  width: var(--sidebar-width);
+  color: var(--text-title);
   position: fixed;
-  left: 0;
+  left: 5%;
   top: 0;
   bottom: 0;
   overflow-y: auto;
-  padding: 20px;
-  margin-left: 5%;
-  margin-top: 30px;
-  border-right: 0px solid #424242; /* 66,66,66 - 框颜色 */
+  padding: var(--spacing-lg);
+  padding-top: var(--spacing-xl);
 }
 
 .author-info {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .login-prompt {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background-color: #4abbb5; /* 青色背景 */
+  width: 100px;
+  height: 100px;
+  margin: 0 auto var(--spacing-md);
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 1.2rem;
+  color: var(--text-white);
+  font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-bottom: 15px;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.login-prompt:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(74, 187, 181, 0.4);
+}
+
+.avatar-wrapper {
+  cursor: pointer;
 }
 
 .author-avatar {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  border-radius: var(--radius-full);
   object-fit: cover;
-  margin-bottom: 15px;
+  margin: 0 auto var(--spacing-md);
+  display: block;
+  transition: transform var(--transition-fast);
+}
+
+.author-avatar:hover {
+  transform: scale(1.05);
 }
 
 .author-name {
-  font-size: 1.5rem;
-  margin-bottom: 5px;
+  font-size: 1.2rem;
+  margin: 0;
+  color: var(--text-title);
 }
 
+/* ======== 导航菜单 ======== */
 .sidebar-nav {
-  margin-left: 20%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--spacing-sm);
+  padding-left: 10%;
 }
 
-.sidebar-nav a {
+.nav-item {
   display: flex;
   align-items: center;
-  padding: 10px 15px;
-  color: #ece2c0; /* 236,226,192 - 字体颜色 */
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--text-primary);
   text-decoration: none;
-  border-radius: 5px;
-  transition: background-color 0.3s;
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast);
+  cursor: pointer;
 }
 
-.sidebar-nav a:hover {
-  background-color: #424242; /* 66,66,66 */
+.nav-item:hover {
+  background-color: var(--bg-card);
+  text-decoration: none;
 }
 
-.icon {
-  margin-right: 10px;
-  font-size: 1.2rem;
+.nav-item.router-link-active {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.nav-icon {
+  margin-right: var(--spacing-sm);
+  font-size: 1.1rem;
 }
 
 .dark-mode-toggle {
-  display: flex;
-  align-items: center;
-  padding: 10px 15px;
-  cursor: pointer;
-  border-radius: 5px;
-  margin-top: 20px;
-  transition: background-color 0.3s;
+  margin-top: var(--spacing-lg);
 }
 
-.dark-mode-toggle:hover {
-  background-color: #555;
-}
-
+/* ======== 内容区域 ======== */
 .content-area {
-  width: 43%;
-  margin: 50px 0 0 24%; /* 上右下左边距匹配侧边栏宽度 */
-  padding: 10px;
-  background-color: var(--card-bg-color); /*  66,66,66 - 内容背景色 */
-  color: #ece2c0; /* 236,226,192 - 字体颜色 */
-  border-top-left-radius: 10px; /* 左上角圆角 */
-  border-top-right-radius: 10px; /* 右上角圆角 */
+  flex: 1;
+  max-width: 800px;
+  margin: var(--spacing-xl) auto;
+  margin-left: calc(var(--sidebar-width) + 10%);
+  padding: var(--spacing-lg);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  min-height: calc(100vh - var(--spacing-xl));
 }
 
+/* ======== 右侧目录栏 ======== */
 .right-sidebar {
-  width: 350px;
-  color: #e2e2ec; /* 226,226,236 - 标题颜色 */
+  width: var(--toc-width);
+  color: var(--text-title);
   position: fixed;
-  right: 0;
-  top: 0;
-  bottom: 0;
+  right: 5%;
+  top: var(--spacing-xl);
+  max-height: calc(100vh - var(--spacing-2xl));
   overflow-y: auto;
-  padding: 20px;
-  margin-right: 200px;
-  margin-top: 30px;
-  border-left: 0px solid #424242; /* 66,66,66 - 框颜色 */
 }
 
 .toc-container {
-  background-color: #424242; /* 66,66,66 */
-  border-radius: 8px;
-  padding: 15px;
+  background-color: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
 }
 
 .toc-title {
-  font-size: 1.25rem;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #555;
+  font-size: 1rem;
+  margin: 0 0 var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-title);
 }
 
 .toc-list {
@@ -276,31 +289,89 @@ defineExpose({
 }
 
 .toc-list li {
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-xs);
   line-height: 1.4;
 }
 
 .toc-list a {
-  color: #ece2c0; /* 236,226,192 */
+  color: var(--text-secondary);
   text-decoration: none;
-  transition: color 0.3s;
+  font-size: 0.9rem;
   display: block;
-  padding: 5px 0;
+  padding: var(--spacing-xs) 0;
+  transition: color var(--transition-fast);
 }
 
 .toc-list a:hover {
-  color: #4abbb5; /* 青色高亮 */
+  color: var(--color-primary);
 }
 
-.toc-level-2 {
-  padding-left: 15px;
+.toc-level-2 { padding-left: var(--spacing-md); }
+.toc-level-3 { padding-left: calc(var(--spacing-md) * 2); }
+.toc-level-4 { padding-left: calc(var(--spacing-md) * 3); }
+
+/* ======== 响应式适配 ======== */
+@media (max-width: 1200px) {
+  .right-sidebar {
+    display: none;
+  }
+  
+  .content-area {
+    margin-right: 5%;
+  }
 }
 
-.toc-level-3 {
-  padding-left: 30px;
+@media (max-width: 900px) {
+  .left-sidebar {
+    width: var(--sidebar-collapsed);
+    left: 0;
+    padding: var(--spacing-md);
+  }
+  
+  .author-name,
+  .nav-text {
+    display: none;
+  }
+  
+  .author-info {
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .login-prompt,
+  .author-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 0.7rem;
+  }
+  
+  .sidebar-nav {
+    padding-left: 0;
+    align-items: center;
+  }
+  
+  .nav-item {
+    padding: var(--spacing-sm);
+    justify-content: center;
+  }
+  
+  .nav-icon {
+    margin-right: 0;
+  }
+  
+  .content-area {
+    margin-left: calc(var(--sidebar-collapsed) + var(--spacing-lg));
+  }
 }
 
-.toc-level-4 {
-  padding-left: 45px;
+@media (max-width: 600px) {
+  .left-sidebar {
+    display: none;
+  }
+  
+  .content-area {
+    margin: 0;
+    border-radius: 0;
+    min-height: 100vh;
+  }
 }
 </style>

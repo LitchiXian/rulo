@@ -1,31 +1,35 @@
 <script setup lang="ts">
-import {ref} from 'vue';
-import {Hide, View} from '@element-plus/icons-vue';
-import {useRouter} from "vue-router";
+import { ref, onUnmounted } from 'vue';
+import { Hide, View } from '@element-plus/icons-vue';
+import { useRouter } from "vue-router";
 import authApi from "@/api/web/auth.ts";
-import {showMessage} from "@/util/message.ts";
+import { showMessage } from "@/util/message.ts";
 
-/*--------------- 响应式状态声明 ---------------*/
-const userName = ref<string>('');       // 用户名输入值
-const email = ref<string>('');         // 邮箱输入值
-const password = ref<string>('');      // 密码输入值
-const code = ref<string>('');      // 密码输入值
-const confirmPassword = ref<string>(''); // 确认密码输入值
-const isPasswordVisible = ref<boolean>(false); // 密码可见状态
-const isConfirmPasswordVisible = ref<boolean>(false); // 确认密码可见状态
+// 表单数据
+const userName = ref('');
+const email = ref('');
+const password = ref('');
+const confirmPassword = ref('');
+const code = ref('');
+const agreeTerms = ref(false);
 
-// 验证码相关状态
-const showCaptchaDialog = ref<boolean>(false); // 控制验证码弹窗显示
-const captchaVerified = ref<boolean>(false);    // 是否通过验证码验证
-const countdown = ref<number>(0);              // 倒计时秒数
-const timer = ref<NodeJS.Timeout | null>(null); // 倒计时定时器
-const agreeTerms = ref<boolean>(false);       // 是否同意条款
+// UI状态
+const isPasswordVisible = ref(false);
+const isConfirmPasswordVisible = ref(false);
+const showCaptchaDialog = ref(false);
+const captchaVerified = ref(false);
+const countdown = ref(0);
+const loading = ref(false);
 
-const router = useRouter()
-const loginButtonRef = ref<HTMLButtonElement | null>(null);
-const loading = ref<boolean>(false);
+let timer: ReturnType<typeof setInterval> | null = null;
+const router = useRouter();
 
-/*--------------- 密码可见性切换方法 ---------------*/
+// 清理定时器
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
+});
+
+// 切换密码可见性
 const togglePasswordVisibility = () => {
   isPasswordVisible.value = !isPasswordVisible.value;
 };
@@ -34,65 +38,81 @@ const toggleConfirmPasswordVisibility = () => {
   isConfirmPasswordVisible.value = !isConfirmPasswordVisible.value;
 };
 
-/*--------------- 验证码相关方法 ---------------*/
 // 打开验证码弹窗
 const openCaptchaDialog = () => {
+  if (!email.value) {
+    showMessage('请先输入邮箱', 'warning');
+    return;
+  }
   showCaptchaDialog.value = true;
 };
 
-// 验证码拖动完成处理
+// 验证码完成处理
 const handleCaptchaComplete = () => {
   captchaVerified.value = true;
   showMessage('验证成功', 'success');
 
-  // 关闭弹窗
   setTimeout(() => {
     showCaptchaDialog.value = false;
     getVerificationCode();
-  }, 1000);
+  }, 800);
 };
 
 // 获取验证码
 const getVerificationCode = async () => {
-  if (!email.value) {
-    showMessage('请先输入邮箱', 'error');
-    return;
+  try {
+    await authApi.getRegisterCode({ email: email.value });
+    showMessage('验证码已发送', 'success');
+    startCountdown();
+  } catch (err) {
+    console.error('获取验证码失败:', err);
   }
-
-  await authApi.getRegisterCode({email: email.value})
-
-  showMessage('验证码已发送', 'success');
-  startCountdown();
 };
 
 // 开始倒计时
 const startCountdown = () => {
   countdown.value = 60;
-  timer.value = setInterval(() => {
+  timer = setInterval(() => {
     countdown.value--;
-    if (countdown.value <= 0 && timer.value) {
-      clearInterval(timer.value);
-      timer.value = null;
+    if (countdown.value <= 0 && timer) {
+      clearInterval(timer);
+      timer = null;
     }
   }, 1000);
 };
 
-/*--------------- 表单提交处理（示例） ---------------*/
+// 表单验证
+const validateForm = (): boolean => {
+  if (!userName.value.trim()) {
+    showMessage('请输入账号', 'warning');
+    return false;
+  }
+  if (!email.value.trim()) {
+    showMessage('请输入邮箱', 'warning');
+    return false;
+  }
+  if (!password.value) {
+    showMessage('请输入密码', 'warning');
+    return false;
+  }
+  if (password.value !== confirmPassword.value) {
+    showMessage('两次输入的密码不一致', 'warning');
+    return false;
+  }
+  if (!code.value.trim()) {
+    showMessage('请输入验证码', 'warning');
+    return false;
+  }
+  return true;
+};
+
+// 表单提交
 const handleSubmit = async (e: Event) => {
-  e.preventDefault(); // 阻止表单默认提交
-  console.log('注册信息:', {
-    userName: userName.value,
-    email: email.value,
-    password: password.value,
-    confirmPassword: confirmPassword.value
-  });
-  // 这里添加实际注册逻辑（如调用API）
+  e.preventDefault();
+
+  if (!validateForm()) return;
 
   loading.value = true;
-  if (loginButtonRef.value) {
-    loginButtonRef.value.disabled = true;
-    loginButtonRef.value.textContent = '注册中...';
-  }
 
   try {
     await authApi.register({
@@ -102,82 +122,73 @@ const handleSubmit = async (e: Event) => {
       code: code.value
     });
 
-    console.log('注册成功');
     showMessage('注册成功', 'success');
-    // 跳转到首页
     router.push('/login');
-
-  } catch (e) {
-    console.log(e)
-  }
-
-  loading.value = false;
-  if (loginButtonRef.value) {
-    loginButtonRef.value.disabled = false;
-    loginButtonRef.value.textContent = 'Register';
+  } catch (err) {
+    console.error('注册失败:', err);
+  } finally {
+    loading.value = false;
   }
 };
 </script>
 
 <template>
-  <div class="login-container">
-    <!-- 背景图（取消注释启用） -->
-    <img src="@/asset/image/login-bg.png" alt="登录背景" class="login-bg">
+  <div class="auth-container">
+    <img src="@/asset/image/login-bg.png" alt="背景" class="auth-bg">
 
-    <form @submit="handleSubmit" class="login-form">
-      <h1 class="login-title">注册</h1>
+    <form @submit="handleSubmit" class="auth-form">
+      <h1 class="auth-title">注册</h1>
 
-      <div class="login-content">
+      <div class="auth-content">
         <!-- 用户名输入框 -->
-        <div class="login-box">
-          <i class="ri-user-3-line login-icon"></i>
-          <div class="login-box-input">
+        <div class="auth-input-group">
+          <i class="ri-user-3-line auth-icon"></i>
+          <div class="auth-input-wrapper">
             <input
-                type="text"
-                required
-                class="login-input"
-                id="register-username"
-                placeholder=" "
-                v-model="userName"
+              type="text"
+              required
+              class="auth-input"
+              id="register-username"
+              placeholder=" "
+              v-model="userName"
+              autocomplete="username"
             >
-            <label for="register-username" class="login-label">账号</label>
+            <label for="register-username" class="auth-label">账号</label>
           </div>
         </div>
 
         <!-- 邮箱输入框 -->
-        <div class="login-box">
-          <i class="ri-user-3-line login-icon"></i>
-          <div class="login-box-input">
+        <div class="auth-input-group">
+          <i class="ri-mail-line auth-icon"></i>
+          <div class="auth-input-wrapper">
             <input
-                type="text"
-                required
-                class="login-input"
-                id="register-email"
-                placeholder=" "
-                v-model="email"
+              type="email"
+              required
+              class="auth-input"
+              id="register-email"
+              placeholder=" "
+              v-model="email"
+              autocomplete="email"
             >
-            <label for="register-email" class="login-label">邮箱</label>
+            <label for="register-email" class="auth-label">邮箱</label>
           </div>
         </div>
 
         <!-- 密码输入框 -->
-        <div class="login-box">
-          <i class="ri-lock-2-line login-icon"></i>
-          <div class="login-box-input">
+        <div class="auth-input-group">
+          <i class="ri-lock-2-line auth-icon"></i>
+          <div class="auth-input-wrapper">
             <input
-                :type="isPasswordVisible ? 'text' : 'password'"
-                required
-                class="login-input"
-                id="register-pass"
-                placeholder=" "
-                v-model="password"
+              :type="isPasswordVisible ? 'text' : 'password'"
+              required
+              class="auth-input"
+              id="register-pass"
+              placeholder=" "
+              v-model="password"
+              autocomplete="new-password"
             >
-            <label for="register-pass" class="login-label">密码</label>
-            <!-- 密码可见切换图标 -->
-            <el-icon
-                :class="['login-eye']"
-                @click="togglePasswordVisibility"
-            >
+            <label for="register-pass" class="auth-label">密码</label>
+            <el-icon class="auth-eye-btn" @click="togglePasswordVisibility">
               <Hide v-if="isPasswordVisible"/>
               <View v-else/>
             </el-icon>
@@ -185,67 +196,75 @@ const handleSubmit = async (e: Event) => {
         </div>
 
         <!-- 确认密码输入框 -->
-        <div class="login-box">
-          <i class="ri-lock-2-line login-icon"></i>
-          <div class="login-box-input">
+        <div class="auth-input-group">
+          <i class="ri-lock-2-line auth-icon"></i>
+          <div class="auth-input-wrapper">
             <input
-                :type="isConfirmPasswordVisible ? 'text' : 'password'"
-                required
-                class="login-input"
-                id="register-confirm-pass"
-                placeholder=" "
-                v-model="confirmPassword"
+              :type="isConfirmPasswordVisible ? 'text' : 'password'"
+              required
+              class="auth-input"
+              id="register-confirm"
+              placeholder=" "
+              v-model="confirmPassword"
+              autocomplete="new-password"
             >
-            <label for="register-confirm-pass" class="login-label">确认密码</label>
-            <!-- 密码可见切换图标 -->
-            <el-icon
-                :class="['login-eye']"
-                @click="toggleConfirmPasswordVisibility"
-            >
+            <label for="register-confirm" class="auth-label">确认密码</label>
+            <el-icon class="auth-eye-btn" @click="toggleConfirmPasswordVisibility">
               <Hide v-if="isConfirmPasswordVisible"/>
               <View v-else/>
             </el-icon>
           </div>
         </div>
-      </div>
 
-      <!-- 验证码输入框 -->
-      <div class="login-box">
-        <i class="ri-shield-keyhole-line login-icon"></i>
-        <div class="login-box-input">
-          <input
+        <!-- 验证码输入框 -->
+        <div class="auth-input-group with-action">
+          <i class="ri-shield-keyhole-line auth-icon"></i>
+          <div class="auth-input-wrapper">
+            <input
               type="text"
               required
-              class="login-input"
+              class="auth-input"
               id="register-code"
               placeholder=" "
               v-model="code"
-          >
-          <label for="register-code" class="login-label">验证码</label>
-        </div>
-        <button
+              autocomplete="one-time-code"
+            >
+            <label for="register-code" class="auth-label">验证码</label>
+          </div>
+          <button
             type="button"
-            class="get-code-btn"
+            class="auth-code-btn"
             :disabled="countdown > 0"
             @click="openCaptchaDialog"
-        >
-          {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
-        </button>
-      </div>
-
-      <div class="login-check">
-        <div class="login-check-group">
-          <input type="checkbox" class="login-check-input" id="register-check">
-          <label for="register-check" class="login-check-label">我已阅读并同意该条款</label>
+          >
+            {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
+          </button>
         </div>
       </div>
 
-      <button type="submit" class="login-button">注册</button>
+      <div class="auth-check">
+        <div class="auth-check-group">
+          <input 
+            type="checkbox" 
+            class="auth-check-input" 
+            id="register-terms"
+            v-model="agreeTerms"
+          >
+          <label for="register-terms" class="auth-check-label">我已阅读并同意相关条款</label>
+        </div>
+      </div>
 
-      <!-- 添加登录链接，与登录页保持一致 -->
-      <p class="login-register">
+      <button 
+        type="submit" 
+        class="auth-submit-btn"
+        :disabled="loading"
+      >
+        {{ loading ? '注册中...' : '注册' }}
+      </button>
+
+      <p class="auth-switch">
         已有账号?
-        <router-link to="/login" class="login-register-link">登录</router-link>
+        <router-link to="/login" class="auth-switch-link">登录</router-link>
       </p>
     </form>
 
@@ -254,13 +273,13 @@ const handleSubmit = async (e: Event) => {
       <div class="captcha-content">
         <div class="captcha-header">
           <h3>请完成安全验证</h3>
-          <button @click="showCaptchaDialog = false" class="captcha-close">×</button>
+          <button @click="showCaptchaDialog = false" class="captcha-close">&times;</button>
         </div>
         <div class="captcha-body">
           <p>请拖动滑块完成验证</p>
           <div class="captcha-slider" @mouseup="handleCaptchaComplete">
             <div class="slider-track"></div>
-            <div class="slider-button">→</div>
+            <div class="slider-button">&rarr;</div>
           </div>
           <div v-if="captchaVerified" class="captcha-success">
             <span>✓</span> 验证成功
@@ -272,305 +291,5 @@ const handleSubmit = async (e: Event) => {
 </template>
 
 <style scoped>
-/* 复用登录页的所有样式 */
-.login-container {
-  position: relative;
-  height: 100vh;
-  display: grid;
-  align-items: center;
-  justify-content: center;
-  /* 防止子元素溢出 */
-  overflow: hidden;
-}
-
-.login-bg {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  opacity: 0.9; /* 背景图透明度 */
-}
-
-.login-form {
-  position: relative;
-  background: rgba(255, 255, 255, 0.05); /* 半透明背景 */
-  backdrop-filter: blur(10px); /* 毛玻璃效果 */
-  border: 1px solid rgba(255, 255, 255, 0.1); /* 边框 */
-  border-radius: 15px;
-  padding: 2.5rem;
-  width: 90%;
-  max-width: 400px; /* 最大宽度 */
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  /* 限制组件内样式作用范围 */
-  z-index: 1; /* 确保表单在背景图上方 */
-}
-
-.login-title {
-  text-align: center;
-  color: #ffffff;
-  font-size: 1.8rem;
-  margin-bottom: 2rem;
-  font-weight: 500;
-}
-
-.login-content {
-  display: grid;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.login-box {
-  display: grid;
-  grid-template-columns: 30px 1fr; /* 图标固定宽度 */
-  align-items: center;
-  gap: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.login-icon {
-  color: #ffffff;
-  font-size: 1.25rem;
-}
-
-.login-input {
-  width: 100%;
-  padding: 0.8rem 0;
-  background: transparent;
-  color: #ffffff;
-  font-size: 1rem;
-  border: none;
-  outline: none;
-  transition: 0.3s;
-}
-
-.login-box-input {
-  position: relative;
-}
-
-.login-label {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  color: rgba(255, 255, 255, 0.6);
-  pointer-events: none;
-  transition: 0.3s;
-}
-
-.login-input:focus ~ .login-label,
-.login-input:not(:placeholder-shown) ~ .login-label {
-  top: -5px;
-  font-size: 0.8rem;
-  color: #ffffff;
-}
-
-.login-eye {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  color: rgba(255, 255, 255, 0.6);
-  transition: 0.3s;
-}
-
-.login-eye:hover {
-  color: #ffffff;
-}
-
-.login-check {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.login-check-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.login-check-input {
-  width: 16px;
-  height: 16px;
-  accent-color: #ffffff; /* 复选框选中颜色 */
-}
-
-.login-forgot {
-  color: rgba(255, 255, 255, 0.6);
-  transition: 0.3s;
-}
-
-.login-forgot:hover {
-  color: #ffffff;
-  text-decoration: underline;
-}
-
-.login-button {
-  width: 100%;
-  padding: 1rem;
-  background: #ffffff;
-  color: #764ba2;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.login-button:hover {
-  background: #f0f0f0;
-  transform: translateY(-2px);
-}
-
-.login-register {
-  text-align: center;
-  color: rgba(255, 255, 255, 0.6);
-  margin-top: 1rem;
-}
-
-.login-register-link {
-  color: #ffffff;
-  font-weight: 500;
-  transition: 0.3s;
-}
-
-.login-register-link:hover {
-  text-decoration: underline;
-}
-
-/* 响应式设计 */
-@media (min-width: 768px) {
-  .login-form {
-    padding: 3rem;
-    max-width: 450px;
-  }
-
-  .login-title {
-    font-size: 2rem;
-  }
-}
-
-/* 验证码相关样式 */
-.captcha-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.captcha-content {
-  background-color: white;
-  border-radius: 8px;
-  width: 350px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.captcha-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #eee;
-}
-
-.captcha-close {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #999;
-}
-
-.captcha-body {
-  padding: 20px;
-  text-align: center;
-}
-
-.captcha-slider {
-  position: relative;
-  height: 40px;
-  background: #f5f5f5;
-  border-radius: 20px;
-  margin: 20px 0;
-  cursor: pointer;
-}
-
-.slider-track {
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  background: #e0e0e0;
-  border-radius: 20px;
-}
-
-.slider-button {
-  position: absolute;
-  height: 40px;
-  width: 40px;
-  background: white;
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  left: 0;
-  top: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  z-index: 2;
-}
-
-.captcha-success {
-  color: #4CAF50;
-  font-weight: bold;
-  margin-top: 10px;
-}
-
-/* 验证码按钮样式 */
-.get-code-btn {
-  position: absolute;
-  right: 30px;
-  transform: translateY(-50%);
-  height: 30px;
-  width: 90px;
-  cursor: pointer;
-  border: none;
-  background-color: #4b4b4b;
-  color: white;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-
-.get-code-btn:hover {
-  background-color: #656565;
-}
-
-.get-code-btn:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-/* 原有样式基础上增加邮箱图标 */
-.login-box .ri-mail-line {
-  color: #666;
-}
-
-.login-box .ri-shield-keyhole-line {
-  color: #666;
-}
-
-/* 调整验证码输入框位置 */
-.login-box:has(.get-code-btn) .login-box-input {
-  padding-right: 100px;
-}
+/* 页面特定样式（如有需要） */
 </style>

@@ -5,6 +5,7 @@ import 'element-plus/dist/index.css';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import router from "./router/router.ts";
 import './style/base.css';
+import './style/auth.css';
 import pinia from "@/store";
 // import {msg} from './util/message.ts';
 import { loadEnvConfig } from '@/util/envConfig'

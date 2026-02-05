@@ -1,0 +1,360 @@
+/* ========================================
+   认证页面共享样式 (Login/Register)
+   ======================================== */
+
+.auth-container {
+    position: relative;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.auth-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    opacity: 0.9;
+}
+
+.auth-form {
+    position: relative;
+    background: var(--bg-overlay);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    width: 90%;
+    max-width: 400px;
+    box-shadow: var(--shadow-lg);
+    z-index: 1;
+}
+
+.auth-title {
+    text-align: center;
+    color: var(--text-white);
+    font-size: 1.8rem;
+    margin-bottom: var(--spacing-xl);
+    font-weight: 500;
+}
+
+.auth-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* ======== 输入框组 ======== */
+.auth-input-group {
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--border-lighter);
+    padding-bottom: var(--spacing-xs);
+}
+
+.auth-input-group.with-action {
+    grid-template-columns: 30px 1fr auto;
+}
+
+.auth-icon {
+    color: var(--text-white);
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-input-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.auth-input {
+    width: 100%;
+    padding: 0.8rem 0;
+    background: transparent;
+    color: var(--text-white);
+    font-size: 1rem;
+    border: none;
+    outline: none;
+    transition: all var(--transition-normal);
+}
+
+.auth-input::placeholder {
+    color: transparent;
+}
+
+.auth-label {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1rem;
+    pointer-events: none;
+    transition: all var(--transition-normal);
+}
+
+/* 输入框获得焦点或有值时，标签上移 */
+.auth-input:focus + .auth-label,
+.auth-input:not(:placeholder-shown) + .auth-label {
+    top: -8px;
+    transform: translateY(0);
+    font-size: 0.75rem;
+    color: var(--color-primary);
+}
+
+/* 密码显示切换按钮 */
+.auth-eye-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: color var(--transition-fast);
+    background: none;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.auth-eye-btn:hover {
+    color: var(--text-white);
+}
+
+/* ======== 复选框组 ======== */
+.auth-check {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.auth-check-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.auth-check-input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+.auth-check-label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.auth-forgot-link {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    transition: color var(--transition-fast);
+}
+
+.auth-forgot-link:hover {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+/* ======== 主按钮 ======== */
+.auth-submit-btn {
+    width: 100%;
+    padding: var(--spacing-md);
+    background: linear-gradient(135deg, var(--color-primary), #3a9a95);
+    color: var(--text-white);
+    font-size: 1.1rem;
+    font-weight: 500;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    margin-bottom: var(--spacing-lg);
+}
+
+.auth-submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(74, 187, 181, 0.4);
+}
+
+.auth-submit-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* ======== 页面切换链接 ======== */
+.auth-switch {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.95rem;
+}
+
+.auth-switch-link {
+    color: var(--color-primary);
+    font-weight: 500;
+    margin-left: var(--spacing-xs);
+    transition: color var(--transition-fast);
+}
+
+.auth-switch-link:hover {
+    color: var(--color-primary-hover);
+    text-decoration: none;
+}
+
+/* ======== 验证码按钮 ======== */
+.auth-code-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: transparent;
+    color: var(--color-primary);
+    font-size: 0.85rem;
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.auth-code-btn:hover:not(:disabled) {
+    background: var(--color-primary-light);
+}
+
+.auth-code-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ======== 验证码弹窗 ======== */
+.captcha-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.captcha-content {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    width: 90%;
+    max-width: 320px;
+    box-shadow: var(--shadow-lg);
+}
+
+.captcha-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.captcha-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-title);
+}
+
+.captcha-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.captcha-close:hover {
+    color: var(--text-primary);
+}
+
+.captcha-body {
+    text-align: center;
+}
+
+.captcha-body p {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.captcha-slider {
+    position: relative;
+    height: 40px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+}
+
+.slider-track {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: var(--color-primary-light);
+    border-radius: var(--radius-md);
+    transition: width 0.3s;
+}
+
+.slider-button {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 40px;
+    height: 40px;
+    background: var(--color-primary);
+    color: var(--text-white);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: grab;
+    transition: transform 0.2s;
+}
+
+.slider-button:hover {
+    transform: scale(1.05);
+}
+
+.captcha-success {
+    margin-top: var(--spacing-md);
+    color: var(--color-success);
+    font-weight: 500;
+}
+
+.captcha-success span {
+    color: var(--color-success);
+}
+
+/* ======== 响应式 ======== */
+@media (max-width: 480px) {
+    .auth-form {
+        padding: var(--spacing-lg);
+        margin: var(--spacing-md);
+    }
+
+    .auth-title {
+        font-size: 1.5rem;
+    }
+
+    .auth-submit-btn {
+        font-size: 1rem;
+    }
+}

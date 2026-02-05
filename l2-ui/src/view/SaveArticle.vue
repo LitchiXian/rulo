@@ -233,280 +233,243 @@ onMounted(() => {
 
 <style scoped>
 .create-article-container {
-  width: 90%;
-  padding: 40px 20px;
-  color: #ece2c0;
-
+  padding: var(--spacing-xl) var(--spacing-lg);
+  color: var(--text-primary);
 }
 
+.article-form {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.form-title {
+  font-size: 1.6rem;
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--color-primary);
+}
+
+.form-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  font-weight: 500;
+  color: var(--text-title);
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+  outline: none;
+}
+
+.form-textarea {
+  min-height: 200px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+/* 标签选择器 */
 .tag-selector-container {
   width: 100%;
   min-height: 42px;
-  padding: 10px 15px;
-  border: 1px solid #555;
-  border-radius: 6px;
-  background-color: #303030;
-  color: #ece2c0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-body);
+  color: var(--text-primary);
   cursor: pointer;
   position: relative;
   display: flex;
   align-items: center;
-  transition: all 0.3s;
-  margin-top: 8px;
+  transition: all var(--transition-fast);
+  margin-top: var(--spacing-sm);
 }
 
 .tag-selector-container:hover {
-  border-color: #4abbb5;
-  box-shadow: 0 0 0 3px rgba(74, 187, 181, 0.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
 .selected-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--spacing-sm);
   width: 100%;
   padding-right: 24px;
 }
 
 .placeholder-text {
-  color: #888;
+  color: var(--text-muted);
   font-style: italic;
-  margin-left: 10px;
 }
 
 .dropdown-icon {
-  color: #ece2c0;
+  color: var(--text-primary);
   position: absolute;
-  right: 15px;
+  right: var(--spacing-md);
   top: 50%;
   transform: translateY(-50%);
-  transition: color 0.2s;
+  transition: color var(--transition-fast);
 }
 
 .tag-selector-container:hover .dropdown-icon {
-  color: #4abbb5;
+  color: var(--color-primary);
 }
 
 .selected-tag {
-  background-color: #4abbb5;
-  color: #000;
+  background-color: var(--color-primary);
+  color: var(--bg-body);
   border: none;
-  transition: all 0.2s;
-}
-
-.selected-tag:hover {
-  background-color: #5cd6cf;
-}
-
-.tag-selector-popover {
-  width: 300px;
-  background-color: #303030;
-  border: 1px solid #555;
-  border-radius: 6px;
-  padding: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .tag-selector-content {
   max-height: 200px;
   overflow-y: auto;
-  padding-right: 5px;
-}
-
-.tag-selector-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.tag-selector-content::-webkit-scrollbar-track {
-  background: #444;
-  border-radius: 4px;
-}
-
-.tag-selector-content::-webkit-scrollbar-thumb {
-  background: #666;
-  border-radius: 4px;
-}
-
-.tag-selector-content::-webkit-scrollbar-thumb:hover {
-  background: #4abbb5;
+  padding-right: var(--spacing-xs);
 }
 
 .tag-option {
-  padding: 5px 0;
-}
-
-.tag-option .el-checkbox__label {
-  color: #ece2c0;
-}
-
-.tag-option .el-checkbox__input.is-checked .el-checkbox__inner {
-  background-color: #4abbb5;
-  border-color: #4abbb5;
+  padding: var(--spacing-xs) 0;
 }
 
 .tag-selector-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #555;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border-color);
 }
 
-.tag-selector-footer .el-button {
-  background-color: #444;
-  border-color: #555;
-  color: #ece2c0;
-}
-
-.tag-selector-footer .el-button:hover {
-  background-color: #555;
-  border-color: #666;
-}
-
-.tag-selector-footer .el-button--primary {
-  background-color: #4abbb5;
-  border-color: #4abbb5;
-  color: #000;
-}
-
-.tag-selector-footer .el-button--primary:hover {
-  background-color: #5cd6cf;
-  border-color: #5cd6cf;
-}
-
-.form-title {
-  font-size: 1.8rem;
-  margin-bottom: 30px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #555;
-  color: #4abbb5;
-}
-
-.form-group {
-  margin-bottom: 25px;
-}
-
-label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #e2e2ec;
-}
-
-.form-input, .form-textarea {
-  width: 100%;
-  padding: 12px 15px;
-  border: 1px solid #555;
-  border-radius: 6px;
-  background-color: #303030;
-  color: #ece2c0;
-  font-size: 1rem;
-  transition: all 0.3s;
-}
-
-.form-input:focus, .form-textarea:focus {
-  border-color: #4abbb5;
-  box-shadow: 0 0 0 3px rgba(74, 187, 181, 0.2);
-  outline: none;
-}
-
-.form-textarea {
-  min-height: 150px;
-  resize: vertical;
-}
-
+/* 按钮区域 */
 .form-actions {
   display: flex;
-  gap: 15px;
-  margin-top: 30px;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
 }
 
-.btn-submit, .btn-cancel {
-  padding: 12px 25px;
+.btn-submit,
+.btn-cancel {
+  padding: var(--spacing-sm) var(--spacing-xl);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-weight: 500;
-  transition: all 0.3s;
   font-size: 1rem;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-submit {
-  background-color: #4abbb5;
-  color: #303030;
+  background-color: var(--color-primary);
+  color: var(--bg-body);
 }
 
 .btn-submit:hover {
-  background-color: #3ca9a4;
+  background-color: var(--color-primary-hover);
   transform: translateY(-2px);
 }
 
 .btn-cancel {
   background-color: transparent;
-  color: #ece2c0;
-  border: 1px solid #555;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
 .btn-cancel:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: #777;
+  background-color: var(--bg-card);
+  border-color: var(--text-muted);
+  text-decoration: none;
 }
 
-/* 加载状态样式 */
+/* 加载状态 */
 .loading-container {
   text-align: center;
-  padding: 50px 0;
+  padding: var(--spacing-2xl) 0;
 }
 
 .loading {
   display: inline-flex;
   align-items: center;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
 }
 
 .loading::after {
   content: "";
   display: inline-block;
-  margin-left: 10px;
-  width: 24px;
-  height: 24px;
-  border: 3px solid rgba(74, 187, 181, 0.3);
-  border-radius: 50%;
-  border-top-color: #4abbb5;
+  margin-left: var(--spacing-sm);
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-primary-light);
+  border-radius: var(--radius-full);
+  border-top-color: var(--color-primary);
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
-/* 错误容器样式 */
+/* 错误状态 */
 .error-container {
-  padding: 20px;
-  margin-top: 30px;
-  background-color: rgba(255, 107, 107, 0.15);
-  border-radius: 6px;
+  padding: var(--spacing-lg);
+  margin-top: var(--spacing-xl);
+  background-color: rgba(245, 108, 108, 0.15);
+  border-radius: var(--radius-md);
   text-align: center;
+  color: var(--color-danger);
 }
 
 .error-container button {
-  margin-top: 15px;
-  padding: 8px 20px;
-  background-color: rgba(255, 107, 107, 0.5);
-  color: white;
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--color-danger);
+  color: var(--text-white);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: opacity var(--transition-fast);
 }
 
 .error-container button:hover {
-  background-color: rgba(255, 107, 107, 0.7);
+  opacity: 0.9;
+}
+
+/* 响应式 */
+@media (max-width: 600px) {
+  .form-title {
+    font-size: 1.3rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .btn-submit,
+  .btn-cancel {
+    width: 100%;
+  }
 }
 </style>
