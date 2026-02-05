@@ -1,19 +1,29 @@
-use crate::handlers::{auth_handler, blog_handler};
-use crate::services::{auth_service::AuthService, blog_service::BlogService};
+use crate::handlers::{auth_handler, blog_handler, tag_handler};
+use crate::services::{auth_service::AuthService, blog_service::BlogService, tag_service::TagService};
 use axum::{
+    http::{header, Method},
     routing::{get, post},
     Router,
 };
 use sqlx::MySqlPool;
+use tower_http::cors::{Any, CorsLayer};
 
 // 创建所有路由
 pub fn create_routes(db_pool: MySqlPool) -> Router {
     // 创建服务
     let auth_service = AuthService::new(db_pool.clone());
     let blog_service = BlogService::new(db_pool.clone());
+    let tag_service = TagService::new(db_pool.clone());
 
-    // 创建路由并注入服务
-    Router::new()
+    // 配置CORS - 允许前端跨域访问
+    let cors = CorsLayer::new()
+        .allow_origin(Any) // 允许所有来源，生产环境应限制
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
+        .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION, header::HeaderName::from_static("satoken")])
+        .allow_credentials(false);
+
+    // 创建主路由并注入服务
+    let app = Router::new()
         // 根路径欢迎页面
         .route("/", get(root_handler))
         // 认证相关路由
@@ -52,6 +62,21 @@ pub fn create_routes(db_pool: MySqlPool) -> Router {
         )
         // 注入服务状态
         .with_state((auth_service, blog_service))
+        // 添加CORS中间件
+        .layer(cors.clone());
+
+    // 创建标签路由，使用单独的状态
+    let tag_router = Router::new()
+        .route("/blog/tag/list", get(tag_handler::list_tags_handler))
+        .route("/blog/tag/get", get(tag_handler::get_tag_handler))
+        .route("/blog/tag/save", post(tag_handler::save_tag_handler))
+        .route("/blog/tag/update", post(tag_handler::update_tag_handler))
+        .route("/blog/tag/remove", post(tag_handler::remove_tag_handler))
+        .with_state(tag_service)
+        .layer(cors);
+
+    // 合并路由
+    app.merge(tag_router)
 }
 
 // 根路径处理函数

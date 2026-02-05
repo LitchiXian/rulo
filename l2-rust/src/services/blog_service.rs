@@ -21,22 +21,36 @@ impl BlogService {
         title: String,
         content: String,
         user_id: i64,
-        status: i32,
+        is_published: i32,
     ) -> Result<Article, ArticleError> {
+        // 生成雪花ID
+        let id: u64 = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
+
         let now = Utc::now();
-        let result = sqlx::query("INSERT INTO article (title, content, user_id, status, create_time, update_time) VALUES (?, ?, ?, ?, ?, ?)")
+        let published_time = if is_published == 1 { Some(now) } else { None };
+        
+        sqlx::query(
+            "INSERT INTO b_blog_article (id, title, content, user_id, published_time, is_published, is_deleted, create_id, create_time, update_id, update_time) \
+             VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)"
+        )
+            .bind(id)
             .bind(&title)
             .bind(&content)
-            .bind(&user_id)
-            .bind(&status)
+            .bind(user_id as u64)
+            .bind(published_time)
+            .bind(is_published as u8)
+            .bind(user_id as u64)
             .bind(&now)
+            .bind(user_id as u64)
             .bind(&now)
             .execute(&self.db_pool)
             .await
             .map_err(|e| ArticleError::DatabaseError(e.to_string()))?;
 
         // 获取插入的文章
-        let id = result.last_insert_id() as i64;
         let article = sqlx::query("SELECT id, title, content, user_id, published_time, is_published, is_deleted, create_id, create_time, update_id, update_time FROM b_blog_article WHERE id = ?")
             .bind(id)
             .fetch_one(&self.db_pool)

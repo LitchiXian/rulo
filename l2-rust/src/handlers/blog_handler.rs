@@ -1,20 +1,25 @@
+use crate::handlers::auth_handler::AjaxResult;
 use crate::services::blog_service::BlogService;
-use axum::response::{IntoResponse, Response};
+use axum::response::IntoResponse;
 use axum::{
     extract::{Query, State},
     Json,
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::sync::Arc;
 
 // 请求体结构体
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct ArticleRequest {
     pub id: Option<String>,
     pub title: String,
     pub content: String,
-    pub user_id: i64,
-    pub status: Option<i32>,
+    pub tags: Option<String>,
+    pub excerpt: Option<String>,
+    pub is_published: Option<u8>,
+    pub is_featured: Option<bool>,
 }
 
 #[derive(Deserialize)]
@@ -27,27 +32,6 @@ pub struct UserArticleRequest {
     pub id: String,
 }
 
-// 响应体结构体
-#[derive(Serialize)]
-pub struct ArticleResponse {
-    pub code: i32,
-    pub message: String,
-    pub data: Option<serde_json::Value>,
-}
-
-// 为 ArticleResponse 实现 IntoResponse trait
-impl IntoResponse for ArticleResponse {
-    fn into_response(self) -> Response {
-        let body = serde_json::to_string(&self).unwrap();
-        let mut response = body.into_response();
-        response.headers_mut().insert(
-            axum::http::header::CONTENT_TYPE,
-            axum::http::header::HeaderValue::from_static("application/json"),
-        );
-        response
-    }
-}
-
 // 保存文章处理函数
 pub async fn save_article_handler(
     State((_, blog_service)): State<(
@@ -56,25 +40,20 @@ pub async fn save_article_handler(
     )>,
     Json(payload): Json<ArticleRequest>,
 ) -> impl IntoResponse {
+    // TODO: 从token获取真实的user_id，这里暂时使用固定值
+    let user_id = 1i64;
+    
     let result = blog_service
         .save_article(
             payload.title,
             payload.content,
-            payload.user_id,
-            payload.status.unwrap_or(1),
+            user_id,
+            payload.is_published.unwrap_or(0) as i32,
         )
         .await;
     match result {
-        Ok(article) => ArticleResponse {
-            code: 200,
-            message: "保存成功".to_string(),
-            data: Some(serde_json::to_value(article).unwrap()),
-        },
-        Err(e) => ArticleResponse {
-            code: 400,
-            message: e.to_string(),
-            data: None,
-        },
+        Ok(article) => AjaxResult::success_with_msg("保存成功", Some(serde_json::to_value(article).unwrap())),
+        Err(e) => AjaxResult::error(&e.to_string()),
     }
 }
 
@@ -88,16 +67,8 @@ pub async fn remove_article_handler(
 ) -> impl IntoResponse {
     let result = blog_service.delete_article(&payload.id).await;
     match result {
-        Ok(_) => ArticleResponse {
-            code: 200,
-            message: "删除成功".to_string(),
-            data: None,
-        },
-        Err(e) => ArticleResponse {
-            code: 400,
-            message: e.to_string(),
-            data: None,
-        },
+        Ok(_) => AjaxResult::success_with_msg("删除成功", None),
+        Err(e) => AjaxResult::error(&e.to_string()),
     }
 }
 
@@ -115,27 +86,15 @@ pub async fn update_article_handler(
                 &id,
                 payload.title,
                 payload.content,
-                payload.status.unwrap_or(1),
+                payload.is_published.unwrap_or(0) as i32,
             )
             .await;
         match result {
-            Ok(article) => ArticleResponse {
-                code: 200,
-                message: "更新成功".to_string(),
-                data: Some(serde_json::to_value(article).unwrap()),
-            },
-            Err(e) => ArticleResponse {
-                code: 400,
-                message: e.to_string(),
-                data: None,
-            },
+            Ok(article) => AjaxResult::success_with_msg("更新成功", Some(serde_json::to_value(article).unwrap())),
+            Err(e) => AjaxResult::error(&e.to_string()),
         }
     } else {
-        ArticleResponse {
-            code: 400,
-            message: "文章ID不能为空".to_string(),
-            data: None,
-        }
+        AjaxResult::error("文章ID不能为空")
     }
 }
 
@@ -148,16 +107,8 @@ pub async fn list_articles_handler(
 ) -> impl IntoResponse {
     let result = blog_service.get_article_list().await;
     match result {
-        Ok(articles) => ArticleResponse {
-            code: 200,
-            message: "获取成功".to_string(),
-            data: Some(serde_json::to_value(articles).unwrap()),
-        },
-        Err(e) => ArticleResponse {
-            code: 400,
-            message: e.to_string(),
-            data: None,
-        },
+        Ok(articles) => AjaxResult::success_with_msg("获取成功", Some(serde_json::to_value(articles).unwrap())),
+        Err(e) => AjaxResult::error(&e.to_string()),
     }
 }
 
@@ -171,16 +122,8 @@ pub async fn get_article_handler(
 ) -> impl IntoResponse {
     let result = blog_service.get_article_by_id(&params.id).await;
     match result {
-        Ok(article) => ArticleResponse {
-            code: 200,
-            message: "获取成功".to_string(),
-            data: Some(serde_json::to_value(article).unwrap()),
-        },
-        Err(e) => ArticleResponse {
-            code: 400,
-            message: e.to_string(),
-            data: None,
-        },
+        Ok(article) => AjaxResult::success_with_msg("获取成功", Some(serde_json::to_value(article).unwrap())),
+        Err(e) => AjaxResult::error(&e.to_string()),
     }
 }
 
@@ -194,15 +137,7 @@ pub async fn get_user_articles_handler(
 ) -> impl IntoResponse {
     let result = blog_service.get_articles_by_user_id(&params.id).await;
     match result {
-        Ok(articles) => ArticleResponse {
-            code: 200,
-            message: "获取成功".to_string(),
-            data: Some(serde_json::to_value(articles).unwrap()),
-        },
-        Err(e) => ArticleResponse {
-            code: 400,
-            message: e.to_string(),
-            data: None,
-        },
+        Ok(articles) => AjaxResult::success_with_msg("获取成功", Some(serde_json::to_value(articles).unwrap())),
+        Err(e) => AjaxResult::error(&e.to_string()),
     }
 }

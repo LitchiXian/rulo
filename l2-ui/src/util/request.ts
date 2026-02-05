@@ -35,7 +35,8 @@ service.interceptors.request.use(
 service.interceptors.response.use(
     (response) => {
         const res = response.data;
-        const businessCode = res.data?.code;
+        // Rust后端返回格式: { code: "200", msg: "xxx", data: xxx }
+        const businessCode = res.code;
 
         // console.log('API Response', res);
         // 检查业务错误码
@@ -45,12 +46,12 @@ service.interceptors.response.use(
 
         // 业务处理成功：直接返回data数据
         if (businessCode === '200') {
-            return res.data.data;
+            return res.data;
         }
 
         /* 业务处理失败 */
-        // 获取错误信息（优先使用data.message，其次是data.msg）
-        const errorMessage = res.data?.msg || '操作失败';
+        // 获取错误信息
+        const errorMessage = res.msg || '操作失败';
 
         // 显示错误提示
         ElMessage.error(errorMessage);

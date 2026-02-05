@@ -25,6 +25,7 @@ pub enum ArticleError {
     #[error("数据库错误: {0}")]
     DatabaseError(String),
     #[error("其他错误: {0}")]
+    #[allow(dead_code)]
     Other(String),
 }
 
