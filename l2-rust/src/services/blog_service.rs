@@ -51,31 +51,32 @@ impl BlogService {
         let is_pub = is_published == 1;
         
         // 查询用户名
-        let user_name: Option<String> = sqlx::query("SELECT nick_name FROM sys_user WHERE id = $1")
-            .bind(user_id)
-            .fetch_optional(&self.db_pool)
-            .await
-            .map_err(|e| ArticleError::DatabaseError(e.to_string()))?
-            .map(|row| row.get("nick_name"));
-        
-        sqlx::query(
-            "INSERT INTO b_blog_article (id, title, content, user_id, user_name, published_time, is_published, is_deleted, create_id, create_time, update_id, update_time) \
-             VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE, $8, $9, $10, $11)"
+        let user_name: Option<String> = sqlx::query!(
+            "SELECT nick_name FROM sys_user WHERE id = $1",
+            user_id
         )
-            .bind(id)
-            .bind(&title)
-            .bind(&content)
-            .bind(user_id)
-            .bind(&user_name)
-            .bind(published_time)
-            .bind(is_pub)
-            .bind(user_id)
-            .bind(&now)
-            .bind(user_id)
-            .bind(&now)
-            .execute(&self.db_pool)
-            .await
-            .map_err(|e| ArticleError::DatabaseError(e.to_string()))?;
+        .fetch_optional(&self.db_pool)
+        .await
+        .map_err(|e| ArticleError::DatabaseError(e.to_string()))?
+        .map(|row| row.nick_name);
+        
+        sqlx::query!(
+            "INSERT INTO b_blog_article (id, title, content, user_id, user_name, published_time, is_published, is_deleted, create_id, create_time, update_id, update_time) VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE, $8, $9, $10, $11)",
+            id,
+            &title,
+            &content,
+            user_id,
+            user_name.as_deref(),
+            published_time,
+            is_pub,
+            user_id,
+            now,
+            user_id,
+            now
+        )
+        .execute(&self.db_pool)
+        .await
+        .map_err(|e| ArticleError::DatabaseError(e.to_string()))?;
 
         // 获取插入的文章
         let article = sqlx::query(
@@ -111,11 +112,13 @@ impl BlogService {
             Err(_) => return Err(ArticleError::ArticleNotFound),
         };
 
-        let result = sqlx::query("UPDATE b_blog_article SET is_deleted = TRUE WHERE id = $1")
-            .bind(id)
-            .execute(&self.db_pool)
-            .await
-            .map_err(|e| ArticleError::DatabaseError(e.to_string()))?;
+        let result = sqlx::query!(
+            "UPDATE b_blog_article SET is_deleted = TRUE WHERE id = $1",
+            id
+        )
+        .execute(&self.db_pool)
+        .await
+        .map_err(|e| ArticleError::DatabaseError(e.to_string()))?;
 
         if result.rows_affected() == 0 {
             Err(ArticleError::ArticleNotFound)
@@ -139,14 +142,14 @@ impl BlogService {
 
         let now = Utc::now();
         let is_pub = status == 1;
-        let result = sqlx::query(
+        let result = sqlx::query!(
             "UPDATE b_blog_article SET title = $1, content = $2, is_published = $3, update_time = $4 WHERE id = $5",
+            &title,
+            &content,
+            is_pub,
+            now,
+            id
         )
-        .bind(&title)
-        .bind(&content)
-        .bind(is_pub)
-        .bind(&now)
-        .bind(id)
         .execute(&self.db_pool)
         .await
         .map_err(|e| ArticleError::DatabaseError(e.to_string()))?;

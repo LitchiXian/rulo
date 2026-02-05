@@ -114,19 +114,27 @@ impl AuthService {
         verification_code: String,
     ) -> Result<(), UserError> {
         // 检查用户名是否存在
-        if let Ok(_) = sqlx::query("SELECT id FROM sys_user WHERE user_name = $1 AND is_deleted = FALSE")
-            .bind(&user_name)
-            .fetch_one(&self.db_pool)
-            .await
+        if sqlx::query!(
+            "SELECT id FROM sys_user WHERE user_name = $1 AND is_deleted = FALSE",
+            &user_name
+        )
+        .fetch_optional(&self.db_pool)
+        .await
+        .map_err(|e| UserError::DatabaseError(e.to_string()))?
+        .is_some()
         {
             return Err(UserError::UsernameExists);
         }
 
         // 检查邮箱是否存在
-        if let Ok(_) = sqlx::query("SELECT id FROM sys_user WHERE email = $1 AND is_deleted = FALSE")
-            .bind(&email)
-            .fetch_one(&self.db_pool)
-            .await
+        if sqlx::query!(
+            "SELECT id FROM sys_user WHERE email = $1 AND is_deleted = FALSE",
+            &email
+        )
+        .fetch_optional(&self.db_pool)
+        .await
+        .map_err(|e| UserError::DatabaseError(e.to_string()))?
+        .is_some()
         {
             return Err(UserError::EmailExists);
         }
@@ -151,21 +159,23 @@ impl AuthService {
 
         // 创建用户
         let now = Utc::now();
-        match sqlx::query("INSERT INTO sys_user (id, user_name, nick_name, password, email, is_active, is_deleted, create_id, create_time, update_id, update_time) VALUES ($1, $2, $3, $4, $5, FALSE, FALSE, $6, $7, $8, $9)")
-            .bind(id)
-            .bind(&user_name)
-            .bind(&user_name) // nick_name默认为user_name
-            .bind(&password_hash)
-            .bind(&email)
-            .bind(id) // create_id
-            .bind(&now)
-            .bind(id) // update_id
-            .bind(&now)
-            .execute(&self.db_pool)
-            .await {
-            Ok(_) => Ok(()),
-            Err(e) => Err(UserError::DatabaseError(e.to_string())),
-        }
+        sqlx::query!(
+            "INSERT INTO sys_user (id, user_name, nick_name, password, email, is_active, is_deleted, create_id, create_time, update_id, update_time) VALUES ($1, $2, $3, $4, $5, FALSE, FALSE, $6, $7, $8, $9)",
+            id,
+            &user_name,
+            &user_name, // nick_name默认为user_name
+            &password_hash,
+            &email,
+            id, // create_id
+            now,
+            id, // update_id
+            now
+        )
+        .execute(&self.db_pool)
+        .await
+        .map_err(|e| UserError::DatabaseError(e.to_string()))?;
+        
+        Ok(())
     }
 
     // 发送验证码

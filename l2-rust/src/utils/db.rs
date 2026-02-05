@@ -11,7 +11,7 @@ pub async fn init_db_pool() -> Result<PgPool, sqlx::Error> {
     let pool = PgPool::connect(&database_url).await?;
 
     // 验证连接
-    sqlx::query("SELECT 1").execute(&pool).await?;
+    sqlx::query!("SELECT 1 as one").fetch_one(&pool).await?;
 
     Ok(pool)
 }

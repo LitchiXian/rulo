@@ -1,5 +1,6 @@
 use crate::services::blog_service::BlogService;
 use crate::utils::{ApiResponse, IntoApiResponse};
+use axum::http::HeaderMap;
 use axum::response::IntoResponse;
 use axum::{
     extract::{Query, State},
@@ -34,14 +35,33 @@ pub struct UserArticleRequest {
 
 // 保存文章处理函数
 pub async fn save_article_handler(
-    State((_, blog_service)): State<(
+    State((auth_service, blog_service)): State<(
         Arc<crate::services::auth_service::AuthService>,
         Arc<BlogService>,
     )>,
+    headers: HeaderMap,
     Json(payload): Json<ArticleRequest>,
 ) -> impl IntoResponse {
-    // TODO: 从token获取真实的user_id，这里暂时使用固定值
-    let user_id = 1i64;
+    // 从 header 获取 token 并获取用户ID
+    let token = headers
+        .get("satoken")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    
+    if token.is_empty() {
+        return ApiResponse::unauthorized("请先登录");
+    }
+    
+    // 从 token 获取用户信息
+    let user_info = match auth_service.get_user_by_token(token).await {
+        Ok(info) => info,
+        Err(_) => return ApiResponse::unauthorized("登录已过期"),
+    };
+    
+    let user_id = match user_info.id.parse::<i64>() {
+        Ok(id) => id,
+        Err(_) => return ApiResponse::error("用户ID格式错误"),
+    };
     
     blog_service
         .save_article(
