@@ -27,11 +27,12 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted} from 'vue'
-import {useRouter} from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import blogArticleApi from "@/api/web/blogArticle.ts";
-import type {Article, Tag} from "@/type/article";
-import {blogTagApi} from "@/api/web/blogTag.ts";
+import type { Article, Tag } from "@/type/article";
+import { blogTagApi } from "@/api/web/blogTag.ts";
+import { smartFormatDate } from "@/util/dateFormat.ts";
 
 const router = useRouter()
 const featuredPosts = ref<Article[]>([])
@@ -78,88 +79,48 @@ const getPostTags = (tagIds: string) => {
 
 const goToUser = (id?: string) => {
   if (!id) {
-    // 处理ID缺失的情况
     console.warn("跳转用户页失败：缺少用户ID");
     return;
   }
   router.push('/user/' + id);
 }
-
-/**
- * 智能格式化时间戳为易读格式
- * @param {number} timestamp - 时间戳（毫秒）
- * @returns {string} 格式化后的时间字符串
- */
-const smartFormatDate = (timestamp: number) => {
-  const now = new Date();
-  const date = new Date(timestamp);
-
-  // 计算今天的开始时间（0点0分0秒）
-  const todayStart = new Date(now).setHours(0, 0, 0, 0);
-
-  // 计算目标日期的开始时间（0点0分0秒）
-  const targetDateStart = new Date(date).setHours(0, 0, 0, 0);
-
-  // 计算日历天数差（基于天数的计算，而不是24小时周期）
-  const dayDiff = Math.round((todayStart - targetDateStart) / (1000 * 60 * 60 * 24));
-
-  // 获取时间组件
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-
-  // 判断时间范围并返回对应格式
-  if (dayDiff === 0) {
-    // 今天：显示"今天 HH:mm"
-    return `今天 ${hours}:${minutes}`;
-  } else if (dayDiff === 1) {
-    // 昨天：显示"昨天 HH:mm"
-    return `昨天 ${hours}:${minutes}`;
-  } else if (dayDiff <= 7) {
-    // 7天内：显示"X天前"
-    return `${dayDiff}天前`;
-  } else if (date.getFullYear() === now.getFullYear()) {
-    // 今年内：显示"MM-DD HH:mm"
-    return `${month}-${day} ${hours}:${minutes}`;
-  } else {
-    // 往年：显示完整时间
-    return `${year}-${month}-${day} ${hours}:${minutes}`;
-  }
-};
 </script>
 
 <style scoped>
 .home-content {
-  padding: 0 20px;
+  padding: 0 var(--spacing-lg);
 }
 
 .hero {
   text-align: center;
-  margin-bottom: 3rem;
-  padding: 2rem;
-  border-radius: 8px;
+  margin-bottom: var(--spacing-2xl);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-md);
 }
 
 .hero h1 {
   font-size: 2.5rem;
-  margin-bottom: 1rem;
-  color: var(--title-color);
+  margin-bottom: var(--spacing-md);
+  color: var(--text-title);
 }
 
 .hero p {
   font-size: 1.2rem;
-  color: rgba(236, 226, 192, 0.8);
+  color: var(--text-secondary);
 }
 
 .featured-posts {
-  border-radius: 8px;
-  padding: 2rem;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xl);
+}
+
+.featured-posts h2 {
+  color: var(--text-title);
+  margin-bottom: var(--spacing-lg);
 }
 
 .post-card {
-  padding: 1.5rem 0;
+  padding: var(--spacing-lg) 0;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -169,56 +130,60 @@ const smartFormatDate = (timestamp: number) => {
 
 .post-card h3 {
   font-size: 1.5rem;
-  margin-bottom: 0.5rem;
-  color: var(--title-color);
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-title);
+  transition: color var(--transition-fast);
 }
 
-.excerpt {
-  color: rgba(236, 226, 192, 0.8);
-  margin-bottom: 0.8rem;
+.post-card h3:hover {
+  color: var(--color-primary);
 }
 
 .meta {
   font-size: 0.9rem;
-  color: rgba(236, 226, 192, 0.6);
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.name:hover {
+  color: var(--color-primary);
+}
+
+.name::before {
+  content: '\1F464';
 }
 
 .date {
-  margin-left: 10px;
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: var(--spacing-xs);
 }
 
 .date::before {
-  content: '📅';
-  margin-right: 0.3rem;
+  content: '\1F4C5';
 }
 
 .tags {
-  margin-top: 0.8rem;
+  margin-top: var(--spacing-sm);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
 }
 
-.tag {
-  background-color: rgba(74, 187, 181, 0.15);
-  color: #4abbb5;
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  transition: all 0.2s;
-}
-
-.tag:hover {
-  background-color: rgba(74, 187, 181, 0.3);
-  transform: translateY(-2px);
-}
-
+/* 使用全局 .tag 样式，仅添加特定修改 */
 .tag.ellipsis {
   background-color: rgba(150, 150, 150, 0.15);
-  color: #969696;
+  color: var(--text-muted);
   cursor: default;
 }
 
@@ -227,14 +192,14 @@ const smartFormatDate = (timestamp: number) => {
   transform: none;
 }
 
-.name {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.name::before {
-  content: '👤';
-  margin-right: 0.3rem;
+/* 响应式 */
+@media (max-width: 600px) {
+  .hero h1 {
+    font-size: 1.8rem;
+  }
+  
+  .post-card h3 {
+    font-size: 1.2rem;
+  }
 }
 </style>
