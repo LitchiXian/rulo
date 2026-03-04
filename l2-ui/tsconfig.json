@@ -49,7 +49,7 @@
     // Vite 通常不需要手动配置 outDir，因为 Vite 自身处理模块加载（基于 ESM）。但此配置会影响 TypeScript 生成的类型声明文件（.d.ts）的位置，若项目需要发布类型声明（如库），需与 package.json 的 types 字段配合。
     //    "outDir": "./dist/types",
     // 控制 TypeScript 是否生成编译输出（如 .js、.d.ts 文件）。false 表示生成，true 表示不生成。
-    "noEmit": false
+    "noEmit": true
   },
   // 指定需要处理的文件（覆盖默认规则）
   "include": [

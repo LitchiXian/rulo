@@ -27,14 +27,16 @@ replay_pid*
 
 .idea/
 .vscode/
-.sqlx/
 
 **/target/
 
 application-local.yml
 
-logs/
-
 /l2-ui/package-lock.json
 
 **/test/
+
+logs/
+.sqlx/
+.marscode/
+**/Cargo.lock
