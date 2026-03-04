@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use axum::Router;
 
-use crate::state::AppState;
+use rulo_common::state::AppState;
 
 pub mod user;
 
