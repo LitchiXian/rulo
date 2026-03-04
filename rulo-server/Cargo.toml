@@ -1,6 +1,5 @@
 [workspace]
 members = ["rulo-app","rulo-common"]
-resolver = "2"
 
 [workspace.dependencies]
 axum = "0.8.8"
