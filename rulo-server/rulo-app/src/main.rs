@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -12,9 +11,8 @@ use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-mod state;
+use rulo_common::state::AppState;
 mod system;
-use state::AppState;
 
 #[derive(Debug, Deserialize)]
 struct ServerConfig {
@@ -78,8 +76,8 @@ async fn main() {
     // 共享状态配置
     let state = Arc::new(Mutex::new(AppState {
         db_pool: pool,
-        users: HashMap::new(),
-        next_id: 1,
+        // users: HashMap::new(),
+        // next_id: 1,
     }));
 
     let app = Router::new()
