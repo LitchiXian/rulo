@@ -1,27 +1,2 @@
-# L2
-Happy blueprint
-
-目标，做一个博客系统，带有 AI，系统管理，权限管理等内容。
-
-当前实现
-前后端初始化
-前端调用后端
-前端统一请求处理
-前后端各有方案处理跨域
-项目部署，nginx代理
-
-L2 0.0.3
-首页，文章展示，添加文章
-
-L2 0.0.4
-用户注册登录，发表私密文章
-
-下版本目标：
-
-1.文章标签
-
-2.文章列表分页
-
-3.角色管理
-
-4.头像上传修改
+# Rulo
+Rulo is a management system like Ruoyi, built on the Rust async ecosystem.
