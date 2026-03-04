@@ -32,7 +32,7 @@ replay_pid*
 
 application-local.yml
 
-/l2-ui/package-lock.json
+/rulo-client/package-lock.json
 
 **/test/
 
