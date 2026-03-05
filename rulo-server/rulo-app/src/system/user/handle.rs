@@ -1,11 +1,11 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use axum::{Json, extract::State};
 use sqlx::query_as;
 use tracing::info;
 
 use super::model::*;
-use rulo_common::state::AppState;
+use rulo_common::{api_result::R, state::AppState};
 
 // pub async fn user_save_handler(
 //     State(state): State<Arc<Mutex<AppState>>>,
@@ -27,17 +27,32 @@ use rulo_common::state::AppState;
 //     Json(s.users.clone())
 // }
 
-pub async fn db_user_list_handler(
-    State(state): State<Arc<Mutex<AppState>>>,
-) -> Json<Vec<DbSysUser>> {
+// pub async fn db_user_list_handler(
+//     State(state): State<Arc<Mutex<AppState>>>,
+// ) -> Json<Vec<DbSysUser>> {
+//     info!("db_user_list_handler");
+//     let pool = {
+//         let s = state.lock().unwrap();
+//         s.db_pool.clone()
+//     };
+//     let data = query_as::<_, DbSysUser>("select * from sys_user;")
+//         .fetch_all(&pool)
+//         .await
+//         .unwrap_or_default();
+//     Json(data)
+// }
+
+pub async fn db_user_list_handler(State(state): State<Arc<AppState>>) -> R<Vec<DbSysUser>> {
     info!("db_user_list_handler");
-    let pool = {
-        let s = state.lock().unwrap();
-        s.db_pool.clone()
-    };
+    let pool = state.db_pool.clone();
     let data = query_as::<_, DbSysUser>("select * from sys_user;")
         .fetch_all(&pool)
         .await
         .unwrap_or_default();
-    Json(data)
+    R::ok(data)
+}
+
+pub async fn hello_handler() -> R<()> {
+    info!("hello_handler");
+    R::ok(())
 }

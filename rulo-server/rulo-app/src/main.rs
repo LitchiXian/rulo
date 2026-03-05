@@ -1,7 +1,4 @@
-use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
-};
+use std::{sync::Arc, time::Duration};
 
 use axum::{Router, routing::get};
 use config::Config;
@@ -74,11 +71,11 @@ async fn main() {
         .expect("can't connect to database");
 
     // 共享状态配置
-    let state = Arc::new(Mutex::new(AppState {
+    let state = Arc::new(AppState {
         db_pool: pool,
         // users: HashMap::new(),
         // next_id: 1,
-    }));
+    });
 
     let app = Router::new()
         .route("/", get(|| async { "Hello, world!" }))
