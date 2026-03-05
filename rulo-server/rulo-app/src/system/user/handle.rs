@@ -1,11 +1,12 @@
 use std::sync::Arc;
 
-use axum::{Json, extract::State};
+use axum::{Json, extract::State, response::IntoResponse};
+use rulo_common::error::time_library::Timestamp;
 use sqlx::query_as;
 use tracing::info;
 
 use super::model::*;
-use rulo_common::{api_result::R, state::AppState};
+use rulo_common::{result::R, state::AppState};
 
 // pub async fn user_save_handler(
 //     State(state): State<Arc<Mutex<AppState>>>,
@@ -55,4 +56,14 @@ pub async fn db_user_list_handler(State(state): State<Arc<AppState>>) -> R<Vec<D
 pub async fn hello_handler() -> R<()> {
     info!("hello_handler");
     R::ok(())
+}
+
+pub async fn hello_error_handler() -> Result<R<Timestamp>, R<()>> {
+    info!("hello_error_handler");
+    let s = match Timestamp::now() {
+        Ok(s) => s,
+        Err(_) => return Err(R::err("Something went wrong")),
+    };
+    info!("now is {}", s.0);
+    Ok(R::ok(s))
 }

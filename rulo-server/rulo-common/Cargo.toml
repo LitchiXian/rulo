@@ -7,3 +7,4 @@ edition = "2024"
 axum = { workspace = true }
 serde = { workspace = true }
 sqlx = { workspace = true }
+tracing = { workspace = true }

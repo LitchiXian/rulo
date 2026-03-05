@@ -1,6 +1,6 @@
 use std::{sync::Arc, time::Duration};
 
-use axum::{Router, routing::get};
+use axum::{Router, middleware::from_fn, routing::get};
 use config::Config;
 use serde::Deserialize;
 use sqlx::postgres::PgPoolOptions;
@@ -8,7 +8,7 @@ use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use rulo_common::state::AppState;
+use rulo_common::{error, state::AppState};
 mod system;
 
 #[derive(Debug, Deserialize)]
@@ -81,7 +81,8 @@ async fn main() {
         .route("/", get(|| async { "Hello, world!" }))
         .nest("/system", system::routes())
         .with_state(state)
-        .layer(TraceLayer::new_for_http());
+        .layer(TraceLayer::new_for_http())
+        .layer(from_fn(error::log_app_errors));
 
     let listener = tokio::net::TcpListener::bind(format!(
         "{}:{}",

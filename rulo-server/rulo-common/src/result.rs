@@ -22,4 +22,15 @@ impl<T: Serialize> R<T> {
             message: "success".to_string(),
         }
     }
+
+}
+
+impl R<()> {
+    pub fn err(message: &str) -> R<()> {
+        R {
+            code: 500,
+            data: (),
+            message: message.to_string(),
+        }
+    }
 }
