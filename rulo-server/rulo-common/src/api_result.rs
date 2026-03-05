@@ -1,3 +1,4 @@
+use axum::{Json, response::IntoResponse};
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -7,7 +8,13 @@ pub struct R<T> {
     message: String,
 }
 
-impl R<T> {
+impl<T: Serialize> IntoResponse for R<T> {
+    fn into_response(self) -> axum::response::Response {
+        Json(self).into_response()
+    }
+}
+
+impl<T: Serialize> R<T> {
     pub fn ok(data: T) -> R<T> {
         R {
             code: 200,

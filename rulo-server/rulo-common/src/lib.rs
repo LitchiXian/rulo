@@ -1,4 +1,4 @@
-pub mod r;
+pub mod api_result;
 pub mod state;
 
 pub fn add(left: u64, right: u64) -> u64 {

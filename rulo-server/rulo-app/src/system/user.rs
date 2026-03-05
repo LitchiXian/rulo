@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use axum::{Router, routing::get};
 
@@ -8,9 +8,10 @@ pub mod handle;
 pub mod model;
 mod service;
 
-pub fn routes() -> Router<Arc<Mutex<AppState>>> {
+pub fn routes() -> Router<Arc<AppState>> {
     Router::new()
         // .route("/save", post(handle::user_save_handler))
         // .route("/list", get(handle::user_list_handler))
         .route("/db_list", get(handle::db_user_list_handler))
+        .route("/hello", get(handle::hello_handler))
 }
