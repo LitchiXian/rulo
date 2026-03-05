@@ -58,12 +58,12 @@ pub async fn hello_handler() -> R<()> {
     R::ok(())
 }
 
-pub async fn hello_error_handler() -> Result<R<Timestamp>, R<()>> {
+pub async fn hello_error_handler() -> R<Timestamp> {
     info!("hello_error_handler");
     let s = match Timestamp::now() {
         Ok(s) => s,
-        Err(_) => return Err(R::err("Something went wrong")),
+        Err(_) => return R::err("Something went wrong"),
     };
     info!("now is {}", s.0);
-    Ok(R::ok(s))
+    R::ok(s)
 }

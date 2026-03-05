@@ -4,7 +4,7 @@ use serde::Serialize;
 #[derive(Serialize)]
 pub struct R<T> {
     code: i32,
-    data: T,
+    data: Option<T>,
     message: String,
 }
 
@@ -18,18 +18,15 @@ impl<T: Serialize> R<T> {
     pub fn ok(data: T) -> R<T> {
         R {
             code: 200,
-            data: data,
+            data: Some(data),
             message: "success".to_string(),
         }
     }
 
-}
-
-impl R<()> {
-    pub fn err(message: &str) -> R<()> {
+    pub fn err(message: &str) -> R<T> {
         R {
             code: 500,
-            data: (),
+            data: None,
             message: message.to_string(),
         }
     }
