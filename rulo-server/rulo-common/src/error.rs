@@ -1,89 +1,106 @@
 use std::sync::Arc;
 
 use axum::{
-    extract::{FromRequest, Request, rejection::JsonRejection},
+    Json,
+    extract::Request,
     http::StatusCode,
     middleware::Next,
     response::{IntoResponse, Response},
 };
-use serde::Serialize;
 
-// `axum::Json` responds with plain text if the input is invalid.
-#[derive(FromRequest)]
-#[from_request(via(axum::Json), rejection(AppError))]
-struct AppJson<T>(T);
-
-impl<T> IntoResponse for AppJson<T>
-where
-    axum::Json<T>: IntoResponse,
-{
-    fn into_response(self) -> axum::response::Response {
-        axum::Json(self.0).into_response()
-    }
-}
+use crate::result::ApiResult;
 
 // The kinds of errors we can hit in ou application.
 #[derive(Debug)]
-enum AppError {
-    // The request body contained invalid JSON
-    JsonRejection(JsonRejection),
-    // Some error from a third party library we're using
-    TimeError(time_library::Error),
+pub enum AppError {
+    BadRequest(String),
+    Unauthorized(String),
+    Forbidden(String),
+    NotFound(String),
+    DbError(sqlx::Error),
+    // RedisError(redis::RedisError),
+    Internal(String),
+}
+
+impl AppError {
+    pub fn http_status(&self) -> StatusCode {
+        match self {
+            Self::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+            Self::Forbidden(_) => StatusCode::FORBIDDEN,
+            Self::NotFound(_) => StatusCode::NOT_FOUND,
+            Self::BadRequest(_) => StatusCode::BAD_REQUEST,
+            Self::DbError(_) => StatusCode::OK,
+            // Self::RedisError(_) => StatusCode::OK,
+            Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        }
+    }
+
+    pub fn biz_code(&self) -> i32 {
+        match self {
+            Self::BadRequest(_) => 40000,
+            Self::Unauthorized(_) => 40100,
+            Self::Forbidden(_) => 40300,
+            Self::NotFound(_) => 40400,
+            Self::DbError(_) => 50001,
+            // Self::RedisError(_) => 50002,
+            Self::Internal(_) => 50000,
+        }
+    }
+
+    pub fn user_message(&self) -> String {
+        match self {
+            Self::BadRequest(msg) => msg.clone(),
+            Self::Unauthorized(msg) => msg.clone(),
+            Self::Forbidden(msg) => msg.clone(),
+            Self::NotFound(msg) => msg.clone(),
+            Self::DbError(_) => "数据库异常".to_string(),
+            // Self::RedisError(_) => "缓存异常".to_string(),
+            Self::Internal(msg) => msg.clone(),
+        }
+    }
 }
 
 // Tell axum how `AppError` should be converted into a response.
 impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
-        // How we want error responses to be serialized
-        #[derive(Serialize)]
-        struct ErrorResponse {
-            message: String,
-        }
-
-        let (status, message, err) = match &self {
-            // this error is caused by bad user input so don't log it
-            AppError::JsonRejection(rejection) => (rejection.status(), rejection.body_text(), None),
-            // while we could simply log the error here we would introduce
-            // a side-effect to our conversion, insted add the AppError to
-            // Don't expose any details about the error to the client
-            AppError::TimeError(_err) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Something went wrong".to_owned(),
-                Some(self),
-            ),
-        };
-
-        let mut response = (status, AppJson(ErrorResponse { message })).into_response();
-        if let Some(err) = err {
-            // Insert our error into the response, our logging middleware will use this.
-            // By wrapping the error in an Arc we can use it as an Extension regardless of any inner types not deriving Clone.
-            response.extensions_mut().insert(Arc::new(err));
-        }
+        let status = self.http_status();
+        let body = ApiResult::<()>::err(self.biz_code(), self.user_message());
+        let mut response = (status, Json(body)).into_response();
+        response.extensions_mut().insert(Arc::new(self));
         response
     }
 }
 
-impl From<JsonRejection> for AppError {
-    fn from(rejection: JsonRejection) -> Self {
-        Self::JsonRejection(rejection)
-    }
-}
-
-impl From<time_library::Error> for AppError {
-    fn from(error: time_library::Error) -> Self {
-        Self::TimeError(error)
-    }
-}
-
-// Our middleware is responsible for logging error details internally
 pub async fn log_app_errors(request: Request, next: Next) -> Response {
+    let method = request.method().clone();
+    let uri = request.uri().clone();
+
     let response = next.run(request).await;
-    // If the response contains an AppError Extension, log it
+
     if let Some(err) = response.extensions().get::<Arc<AppError>>() {
-        tracing::error!(?err, "an unexpected error occurred inside a handler");
+        tracing::error!(
+            method = %method,
+            uri = %uri,
+            status = %response.status(),
+            error = ?err,
+            "request failed"
+        );
     }
+
     response
 }
+
+impl From<sqlx::Error> for AppError {
+    fn from(err: sqlx::Error) -> Self {
+        Self::DbError(err)
+    }
+}
+
+// impl From<redis::RedisError> for AppError {
+//     fn from(err: redis::RedisError) -> Self {
+//         Self::RedisError(err)
+//     }
+// }
 
 // Imagine this is some third party library that we're using, It sometimes returns errors which we
 // want to log

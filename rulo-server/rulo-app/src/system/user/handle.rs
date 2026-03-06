@@ -1,12 +1,15 @@
 use std::sync::Arc;
 
-use axum::{Json, extract::State, response::IntoResponse};
-use rulo_common::error::time_library::Timestamp;
+use axum::extract::State;
+use rulo_common::{
+    error::{self, AppError, time_library::Timestamp},
+    result::{ApiResult, R, success},
+};
 use sqlx::query_as;
 use tracing::info;
 
 use super::model::*;
-use rulo_common::{result::R, state::AppState};
+use rulo_common::state::AppState;
 
 // pub async fn user_save_handler(
 //     State(state): State<Arc<Mutex<AppState>>>,
@@ -48,22 +51,21 @@ pub async fn db_user_list_handler(State(state): State<Arc<AppState>>) -> R<Vec<D
     let pool = state.db_pool.clone();
     let data = query_as::<_, DbSysUser>("select * from sys_user;")
         .fetch_all(&pool)
-        .await
-        .unwrap_or_default();
-    R::ok(data)
+        .await?;
+    success(data)
 }
 
 pub async fn hello_handler() -> R<()> {
     info!("hello_handler");
-    R::ok(())
+    success(())
 }
 
 pub async fn hello_error_handler() -> R<Timestamp> {
     info!("hello_error_handler");
     let s = match Timestamp::now() {
         Ok(s) => s,
-        Err(_) => return R::err("Something went wrong"),
+        Err(_) => return Err(AppError::BadRequest("Hello".to_string())),
     };
     info!("now is {}", s.0);
-    R::ok(s)
+    success(s)
 }

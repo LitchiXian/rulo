@@ -71,3 +71,48 @@
 > 先打好 基础设施能力（数据库、缓存、异步、高并发、容器化）。
 > 再做 核心业务功能（管理系统、RBAC、文件管理）。
 > 最后可以尝试 AI 集成/微服务/全栈前端，形成完整的 Rust 项目经验。
+
+# 20260305
+
+## 当前进度说明
+
+### 已完成
+- PostgreSQL 连接池（sqlx + PgPoolOptions，`AppState` 注入）
+- `tracing` 日志（终端 + 文件滚动 rolling）
+- `config` crate 加载 `config/default.toml` 配置
+- 基础模块分层：`system/user/{handle, model, service}`
+- 统一响应体 `R<T>`（code / data / message）
+- 错误处理中间件 `log_app_errors`（extension 传递 AppError）
+- 基础路由：`GET /system/user/db_list`、`/hello`、`/hello_error`
+
+### 待完成（近期优先）
+
+#### ① 统一错误处理（TODO #5）⭐ 最优先
+当前 `AppError` 仅为示例代码，未与业务接通。
+- 在 `rulo-common` 中定义业务 `AppError`（DbError、NotFound、Unauthorized 等）
+- 实现 `IntoResponse` 返回标准 JSON 错误体
+- handler 中去掉 `.unwrap_or_default()`，改用 `?` 传播错误
+
+#### ② 用户模块补全（TODO #13）
+- `service.rs` 目前为空文件，需实现查/增/改/删逻辑
+- 启用被注释掉的 `user_save_handler`、`user_list_handler`
+- 密码字段加 `argon2` 哈希存储（TODO #8）
+
+#### ③ 连接 Redis（TODO #2）
+- 加依赖 `deadpool-redis`
+- 封装 `get / set / del / expire`
+- `AppState` 中加入 Redis 连接池
+
+#### ④ JWT 登录鉴权（TODO #7）
+- 加依赖 `jsonwebtoken`
+- 实现登录接口，生成 access_token + refresh_token
+- axum 中间件拦截未登录请求
+- 依赖 ①③ 完成后再做
+
+#### ⑤ 容器化（TODO #3）
+- 编写 `Dockerfile`（多阶段构建，减小镜像体积）
+- 编写 `docker-compose.yml`（编排 PostgreSQL + Redis + 应用）
+
+### 下一步行动
+先做 **① → ② → ③ → ④**，认证鉴权骨架搭好后，后续业务功能（RBAC、分页、文件上传等）才能往上堆。
+
