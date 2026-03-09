@@ -18,6 +18,42 @@ pub struct DbSysUser {
     pub remark: Option<String>,
 }
 
+impl DbSysUser {
+    pub fn new_user_from_save_dto(dto: SysUserSaveDto) -> Self {
+        // todo 生成 雪花ID
+        let id: i64 = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as i64;
+
+        // todo 密码加密
+        let now_time = Utc::now();
+
+        DbSysUser {
+            id: id,
+            user_name: id.to_string(),
+            nick_name: dto.nick_name,
+            password: dto.password,
+            email: dto.email,
+            is_active: true,
+            is_deleted: false,
+            create_id: id,
+            create_time: now_time.clone(),
+            update_id: id,
+            update_time: now_time.clone(),
+            remark: dto.remark,
+        }
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct SysUserSaveDto {
+    pub nick_name: String,
+    pub password: String,
+    pub email: Option<String>,
+    pub remark: Option<String>,
+}
+
 #[derive(Clone, Serialize)]
 pub struct SysUser {
     pub user_id: u64,
@@ -37,12 +73,4 @@ impl SysUser {
             remark: dto.remark,
         }
     }
-}
-
-#[derive(Deserialize, Debug)]
-pub struct SysUserSaveDto {
-    pub username: String,
-    pub sex: Option<u8>,
-    pub email: Option<String>,
-    pub remark: Option<String>,
 }

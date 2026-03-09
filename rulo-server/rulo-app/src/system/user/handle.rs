@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::extract::State;
+use axum::{Json, extract::State};
 use rulo_common::{
     error::{AppError, time_library::Timestamp},
     result::{R, success},
@@ -82,4 +82,10 @@ pub async fn hello_redis_handler(State(state): State<Arc<AppState>>) -> R<String
         }
     };
     success(str)
+}
+
+pub async fn save_handle(State(state): State<Arc<AppState>>, Json(dto): Json<SysUserSaveDto>) {
+let new_user = DbSysUser {
+
+}
 }
