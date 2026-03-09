@@ -18,7 +18,8 @@ pub enum AppError {
     Forbidden(String),
     NotFound(String),
     DbError(sqlx::Error),
-    // RedisError(redis::RedisError),
+    RedisError(redis::RedisError),
+    RedisPoolError(deadpool_redis::PoolError),
     Internal(String),
 }
 
@@ -30,7 +31,8 @@ impl AppError {
             Self::NotFound(_) => StatusCode::NOT_FOUND,
             Self::BadRequest(_) => StatusCode::BAD_REQUEST,
             Self::DbError(_) => StatusCode::OK,
-            // Self::RedisError(_) => StatusCode::OK,
+            Self::RedisError(_) => StatusCode::OK,
+            Self::RedisPoolError(_) => StatusCode::OK,
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
@@ -42,7 +44,8 @@ impl AppError {
             Self::Forbidden(_) => 40300,
             Self::NotFound(_) => 40400,
             Self::DbError(_) => 50001,
-            // Self::RedisError(_) => 50002,
+            Self::RedisError(_) => 50002,
+            Self::RedisPoolError(_) => 50003,
             Self::Internal(_) => 50000,
         }
     }
@@ -54,7 +57,8 @@ impl AppError {
             Self::Forbidden(msg) => msg.clone(),
             Self::NotFound(msg) => msg.clone(),
             Self::DbError(_) => "数据库异常".to_string(),
-            // Self::RedisError(_) => "缓存异常".to_string(),
+            Self::RedisError(_) => "缓存异常".to_string(),
+            Self::RedisPoolError(_) => "缓存连接池异常".to_string(),
             Self::Internal(msg) => msg.clone(),
         }
     }
@@ -96,11 +100,17 @@ impl From<sqlx::Error> for AppError {
     }
 }
 
-// impl From<redis::RedisError> for AppError {
-//     fn from(err: redis::RedisError) -> Self {
-//         Self::RedisError(err)
-//     }
-// }
+impl From<redis::RedisError> for AppError {
+    fn from(err: redis::RedisError) -> Self {
+        Self::RedisError(err)
+    }
+}
+
+impl From<deadpool_redis::PoolError> for AppError {
+    fn from(err: deadpool_redis::PoolError) -> Self {
+        Self::RedisPoolError(err)
+    }
+}
 
 // Imagine this is some third party library that we're using, It sometimes returns errors which we
 // want to log

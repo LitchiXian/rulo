@@ -8,3 +8,5 @@ axum = { workspace = true }
 serde = { workspace = true }
 sqlx = { workspace = true }
 tracing = { workspace = true }
+redis = { workspace = true }
+deadpool-redis = { workspace = true }

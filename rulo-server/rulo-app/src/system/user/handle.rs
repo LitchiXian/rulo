@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use axum::extract::State;
 use rulo_common::{
-    error::{self, AppError, time_library::Timestamp},
-    result::{ApiResult, R, success},
+    error::{AppError, time_library::Timestamp},
+    result::{R, success},
 };
 use sqlx::query_as;
 use tracing::info;
@@ -68,4 +68,18 @@ pub async fn hello_error_handler() -> R<Timestamp> {
     };
     info!("now is {}", s.0);
     success(s)
+}
+
+pub async fn hello_redis_handler(State(state): State<Arc<AppState>>) -> R<String> {
+    info!("hello_redis_handler");
+    let mut conn = state.redis_pool.get().await?;
+    let str = match redis::AsyncCommands::get(&mut conn, "abc".to_string()).await? {
+        Some(v) => v,
+        None => {
+            let s = "abcdefg".to_string();
+            let _: () = redis::AsyncCommands::set(&mut conn, "abc", &s).await?;
+            s
+        }
+    };
+    success(str)
 }

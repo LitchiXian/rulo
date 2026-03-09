@@ -15,4 +15,5 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/db_list", get(handle::db_user_list_handler))
         .route("/hello", get(handle::hello_handler))
         .route("/hello_error", get(handle::hello_error_handler))
+        .route("/hello_redis", get(handle::hello_redis_handler))
 }

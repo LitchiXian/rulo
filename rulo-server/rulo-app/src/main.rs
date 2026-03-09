@@ -2,12 +2,14 @@ use std::{sync::Arc, time::Duration};
 
 use axum::{Router, middleware::from_fn, routing::get};
 use config::Config;
+use deadpool_redis::Runtime;
 use serde::Deserialize;
 use sqlx::postgres::PgPoolOptions;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+use deadpool_redis::Config as RedisConfig;
 use rulo_common::{error, state::AppState};
 mod system;
 
@@ -36,8 +38,9 @@ async fn main() {
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
                 // axum logs rejections from built-in extractors with the `axum::rejection`
                 // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
-                    "rulo=debug,tower_http=debug,axum::rejection=trace".to_string()
-                .into()
+                "rulo=debug,tower_http=debug,axum::rejection=trace"
+                    .to_string()
+                    .into()
             }),
         )
         // 输出到terminal
@@ -59,17 +62,35 @@ async fn main() {
 
     info!("db_connection_str: {db_connection_str}");
 
-    // set up connection pool
-    let pool = PgPoolOptions::new()
+    // set up connection db pool
+    let db_pool = PgPoolOptions::new()
         .max_connections(5)
         .acquire_timeout(Duration::from_secs(3))
         .connect(&db_connection_str)
         .await
         .expect("can't connect to database");
 
+    // redis pool
+    let redis_pool = RedisConfig::from_url("redis://10.10.50.63:6379/6")
+        .create_pool(Some(Runtime::Tokio1))
+        .expect("Cannot create redis pool");
+    // 连接池都是延迟连接,即使失败也能启动. 所以马上连接,连接失败就启动失败
+    let mut conn = match redis_pool.get().await {
+        Ok(conn) => conn,
+        Err(err) => {
+            tracing::error!(error = ?err, "failed to get redis connection");
+            panic!("starup failed");
+        }
+    };
+    let _pong: String = redis::cmd("PING")
+        .query_async(&mut conn)
+        .await
+        .expect("Redis ping failed");
+
     // 共享状态配置
     let state = Arc::new(AppState {
-        db_pool: pool,
+        db_pool: db_pool,
+        redis_pool: redis_pool,
         // users: HashMap::new(),
         // next_id: 1,
     });
