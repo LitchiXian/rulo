@@ -19,9 +19,9 @@ pub struct DbSysUser {
 }
 
 impl DbSysUser {
-    pub fn new_user_from_save_dto(dto: SysUserSaveDto) -> Self {
+    pub fn new_user_from_save_dto(dto: &SysUserSaveDto) -> Self {
         // todo 生成 雪花ID
-        let id: i64 = std::time::SystemTime::now()
+        let user_id: i64 = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_millis() as i64;
@@ -30,18 +30,18 @@ impl DbSysUser {
         let now_time = Utc::now();
 
         DbSysUser {
-            id: id,
-            user_name: id.to_string(),
-            nick_name: dto.nick_name,
-            password: dto.password,
-            email: dto.email,
+            id: user_id,
+            user_name: user_id.to_string(),
+            nick_name: dto.nick_name.clone(),
+            password: dto.password.clone(),
+            email: dto.email.clone(),
             is_active: true,
             is_deleted: false,
-            create_id: id,
+            create_id: user_id,
             create_time: now_time.clone(),
-            update_id: id,
+            update_id: user_id,
             update_time: now_time.clone(),
-            remark: dto.remark,
+            remark: dto.remark.clone(),
         }
     }
 }
@@ -67,8 +67,8 @@ impl SysUser {
     pub fn new(id: u64, dto: SysUserSaveDto) -> SysUser {
         SysUser {
             user_id: id,
-            username: dto.username,
-            sex: dto.sex,
+            username: dto.nick_name,
+            sex: Some(1),
             email: dto.email,
             remark: dto.remark,
         }
