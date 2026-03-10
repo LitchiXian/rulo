@@ -5,7 +5,7 @@ use rulo_common::{
     error::{AppError, time_library::Timestamp},
     result::{R, success},
 };
-use sqlx::query_as;
+use sqlx::{query, query_as};
 use tracing::info;
 
 use super::model::*;
@@ -84,8 +84,54 @@ pub async fn hello_redis_handler(State(state): State<Arc<AppState>>) -> R<String
     success(str)
 }
 
-pub async fn save_handle(State(state): State<Arc<AppState>>, Json(dto): Json<SysUserSaveDto>) {
-let new_user = DbSysUser {
+// 上面是例子,测试代码
 
-}
+pub async fn save_handle(
+    State(state): State<Arc<AppState>>,
+    Json(dto): Json<SysUserSaveDto>,
+) -> R<DbSysUser> {
+    let new_user = DbSysUser::new_user_from_save_dto(&dto);
+    // let _data = query(
+    //     "insert into sys_user(
+    //     id, user_name, nick_name, password, email,
+    //     is_active, is_deleted, create_id, create_time,
+    //      update_id, update_time, remark
+    //      ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+    // )
+    // .bind(new_user.id)
+    // .bind(&new_user.user_name)
+    // .bind(&new_user.nick_name)
+    // .bind(&new_user.password)
+    // .bind(&new_user.email)
+    // .bind(new_user.is_active)
+    // .bind(new_user.is_deleted)
+    // .bind(new_user.create_id)
+    // .bind(new_user.create_time)
+    // .bind(new_user.update_id)
+    // .bind(new_user.update_time)
+    // .bind(&new_user.remark)
+    // .execute(&state.db_pool)
+    // .await?;
+    let _data = query!(
+        "insert into sys_user(
+        id, user_name, nick_name, password, email,
+        is_active, is_deleted, create_id, create_time,
+         update_id, update_time, remark
+         ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+        new_user.id,
+        &new_user.user_name,
+        &new_user.nick_name,
+        &new_user.password,
+        new_user.email.as_deref(),
+        new_user.is_active,
+        new_user.is_deleted,
+        new_user.create_id,
+        new_user.create_time,
+        new_user.update_id,
+        new_user.update_time,
+        new_user.remark.as_deref()
+    )
+    .execute(&state.db_pool)
+    .await?;
+    success(new_user)
 }
