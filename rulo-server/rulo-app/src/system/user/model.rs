@@ -1,9 +1,10 @@
 use chrono::{DateTime, Utc};
+use rulo_common::model::PageDto;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 
 #[derive(Serialize, FromRow)]
-pub struct DbSysUser {
+pub struct SysUser {
     pub id: i64,
     pub user_name: String,
     pub nick_name: String,
@@ -18,7 +19,7 @@ pub struct DbSysUser {
     pub remark: Option<String>,
 }
 
-impl DbSysUser {
+impl SysUser {
     pub fn new_user_from_save_dto(dto: &SysUserSaveDto) -> Self {
         // todo 生成 雪花ID
         let user_id: i64 = std::time::SystemTime::now()
@@ -29,7 +30,7 @@ impl DbSysUser {
         // todo 密码加密
         let now_time = Utc::now();
 
-        DbSysUser {
+        SysUser {
             id: user_id,
             user_name: user_id.to_string(),
             nick_name: dto.nick_name.clone(),
@@ -54,23 +55,22 @@ pub struct SysUserSaveDto {
     pub remark: Option<String>,
 }
 
-#[derive(Clone, Serialize)]
-pub struct SysUser {
-    pub user_id: u64,
-    pub username: String,
-    pub sex: Option<u8>,
+#[derive(Deserialize, Debug)]
+pub struct SysUserUpdateDto {
+    pub id: i64,
+    pub nick_name: Option<String>,
+    pub password: Option<String>,
     pub email: Option<String>,
     pub remark: Option<String>,
 }
 
-impl SysUser {
-    pub fn new(id: u64, dto: SysUserSaveDto) -> SysUser {
-        SysUser {
-            user_id: id,
-            username: dto.nick_name,
-            sex: Some(1),
-            email: dto.email,
-            remark: dto.remark,
-        }
-    }
+#[derive(Deserialize, Debug)]
+pub struct SysUserListDto {
+    pub nick_name: Option<String>,
+    pub email: Option<String>,
+    pub create_start_time: Option<DateTime<Utc>>,
+    pub create_end_time: Option<DateTime<Utc>>,
+    pub remark: Option<String>,
+    // #[serde(flatten)]
+    // pub page: PageDto,
 }

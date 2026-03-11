@@ -1,12 +1,18 @@
 use std::sync::Arc;
 
-use axum::{Json, extract::State};
+use axum::{
+    Json,
+    extract::{Query, State},
+};
 use rulo_common::{
     error::{AppError, time_library::Timestamp},
+    model::{IdDto, IdsDto},
     result::{R, success},
 };
-use sqlx::{query, query_as};
+use sqlx::query_as;
 use tracing::info;
+
+use crate::system::user::service;
 
 use super::model::*;
 use rulo_common::state::AppState;
@@ -33,23 +39,23 @@ use rulo_common::state::AppState;
 
 // pub async fn db_user_list_handler(
 //     State(state): State<Arc<Mutex<AppState>>>,
-// ) -> Json<Vec<DbSysUser>> {
+// ) -> Json<Vec<SysUser>> {
 //     info!("db_user_list_handler");
 //     let pool = {
 //         let s = state.lock().unwrap();
 //         s.db_pool.clone()
 //     };
-//     let data = query_as::<_, DbSysUser>("select * from sys_user;")
+//     let data = query_as::<_, SysUser>("select * from sys_user;")
 //         .fetch_all(&pool)
 //         .await
 //         .unwrap_or_default();
 //     Json(data)
 // }
 
-pub async fn db_user_list_handler(State(state): State<Arc<AppState>>) -> R<Vec<DbSysUser>> {
+pub async fn db_user_list_handler(State(state): State<Arc<AppState>>) -> R<Vec<SysUser>> {
     info!("db_user_list_handler");
     let pool = state.db_pool.clone();
-    let data = query_as::<_, DbSysUser>("select * from sys_user;")
+    let data = query_as::<_, SysUser>("select * from sys_user;")
         .fetch_all(&pool)
         .await?;
     success(data)
@@ -89,8 +95,7 @@ pub async fn hello_redis_handler(State(state): State<Arc<AppState>>) -> R<String
 pub async fn save_handle(
     State(state): State<Arc<AppState>>,
     Json(dto): Json<SysUserSaveDto>,
-) -> R<DbSysUser> {
-    let new_user = DbSysUser::new_user_from_save_dto(&dto);
+) -> R<SysUser> {
     // let _data = query(
     //     "insert into sys_user(
     //     id, user_name, nick_name, password, email,
@@ -112,26 +117,30 @@ pub async fn save_handle(
     // .bind(&new_user.remark)
     // .execute(&state.db_pool)
     // .await?;
-    let _data = query!(
-        "insert into sys_user(
-        id, user_name, nick_name, password, email,
-        is_active, is_deleted, create_id, create_time,
-         update_id, update_time, remark
-         ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
-        new_user.id,
-        &new_user.user_name,
-        &new_user.nick_name,
-        &new_user.password,
-        new_user.email.as_deref(),
-        new_user.is_active,
-        new_user.is_deleted,
-        new_user.create_id,
-        new_user.create_time,
-        new_user.update_id,
-        new_user.update_time,
-        new_user.remark.as_deref()
-    )
-    .execute(&state.db_pool)
-    .await?;
-    success(new_user)
+    service::save_handle(&state.db_pool, &dto).await
+}
+
+pub async fn remove_handle(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
+    service::remove_handle(&state.db_pool, &dto).await
+}
+
+pub async fn update_handle(
+    State(state): State<Arc<AppState>>,
+    Json(dto): Json<SysUserUpdateDto>,
+) -> R<()> {
+    service::update_handle(&state.db_pool, &dto).await
+}
+
+pub async fn get_one_handler(
+    State(state): State<Arc<AppState>>,
+    Query(dto): Query<IdDto>,
+) -> R<SysUser> {
+    service::get_one_handle(&state.db_pool, &dto).await
+}
+
+pub async fn list_handler(
+    State(state): State<Arc<AppState>>,
+    Query(dto): Query<SysUserListDto>,
+) -> R<Vec<SysUser>> {
+    service::list_handle(&state.db_pool, &dto).await
 }
