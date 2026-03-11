@@ -92,7 +92,7 @@ pub async fn hello_redis_handler(State(state): State<Arc<AppState>>) -> R<String
 
 // 上面是例子,测试代码
 
-pub async fn save_handle(
+pub async fn save_handler(
     State(state): State<Arc<AppState>>,
     Json(dto): Json<SysUserSaveDto>,
 ) -> R<SysUser> {
@@ -120,18 +120,18 @@ pub async fn save_handle(
     service::save_handle(&state.db_pool, &dto).await
 }
 
-pub async fn remove_handle(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
+pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
     service::remove_handle(&state.db_pool, &dto).await
 }
 
-pub async fn update_handle(
+pub async fn update_handler(
     State(state): State<Arc<AppState>>,
     Json(dto): Json<SysUserUpdateDto>,
 ) -> R<()> {
     service::update_handle(&state.db_pool, &dto).await
 }
 
-pub async fn get_one_handler(
+pub async fn detail_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<IdDto>,
 ) -> R<SysUser> {

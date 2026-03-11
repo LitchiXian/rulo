@@ -9,39 +9,39 @@ use rulo_common::{
     result::R,
 };
 
-use crate::system::permission::service;
+use crate::system::menu::service;
 
 use super::model::*;
 use rulo_common::state::AppState;
 
-pub async fn save_handle(
+pub async fn save_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<SysPermissionSaveDto>,
-) -> R<SysPermission> {
+    Json(dto): Json<SysMenuSaveDto>,
+) -> R<SysMenu> {
     service::save_handle(&state.db_pool, &dto).await
 }
 
-pub async fn remove_handle(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
+pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
     service::remove_handle(&state.db_pool, &dto).await
 }
 
-pub async fn update_handle(
+pub async fn update_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<SysPermissionUpdateDto>,
+    Json(dto): Json<SysMenuUpdateDto>,
 ) -> R<()> {
     service::update_handle(&state.db_pool, &dto).await
 }
 
-pub async fn get_one_handler(
+pub async fn detail_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<IdDto>,
-) -> R<SysPermission> {
+) -> R<SysMenu> {
     service::get_one_handle(&state.db_pool, &dto).await
 }
 
 pub async fn list_handler(
     State(state): State<Arc<AppState>>,
-    Query(dto): Query<SysPermissionListDto>,
-) -> R<Vec<SysPermission>> {
+    Query(dto): Query<SysMenuListDto>,
+) -> R<Vec<SysMenu>> {
     service::list_handle(&state.db_pool, &dto).await
 }
