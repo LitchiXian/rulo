@@ -8,6 +8,8 @@ pub struct SysUser {
     pub id: i64,
     pub user_name: String,
     pub nick_name: String,
+    // #[serde(skip)] // 序列化和反序列化都跳过
+    #[serde(skip_serializing)] // 序列化时跳过,不返回给前端
     pub password: String,
     pub email: Option<String>,
     pub is_active: bool,
