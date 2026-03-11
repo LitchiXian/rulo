@@ -97,7 +97,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(|| async { "Hello, world!" }))
-        .nest("/system", system::routes())
+        .nest("/system", system::router::routes())
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(from_fn(error::log_app_errors));
