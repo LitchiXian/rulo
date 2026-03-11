@@ -10,11 +10,11 @@ CREATE TABLE IF NOT EXISTS sys_user (
     create_id       BIGINT NOT NULL,
     create_time     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_id       BIGINT NOT NULL,
-    update_time     TIMESTAMP WITH TIME ZONE,
+    update_time     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     remark          VARCHAR(500)
 );
 
-COMMENT ON TABLE  sys_user             IS '用户信息表';
+COMMENT ON TABLE  sys_user             IS '系统_用户信息表';
 COMMENT ON COLUMN sys_user.id          IS 'ID';
 COMMENT ON COLUMN sys_user.user_name   IS '用户账号';
 COMMENT ON COLUMN sys_user.nick_name   IS '用户昵称';
