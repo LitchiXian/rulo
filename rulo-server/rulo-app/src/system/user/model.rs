@@ -3,7 +3,7 @@ use rulo_common::model::PageDto;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 
-#[derive(Serialize, FromRow)]
+#[derive(Debug, Serialize, FromRow)]
 pub struct SysUser {
     pub id: i64,
     pub user_name: String,

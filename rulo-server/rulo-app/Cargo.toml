@@ -17,3 +17,4 @@ tracing-subscriber = { workspace = true }
 redis = { workspace = true }
 deadpool-redis = { workspace = true }
 rulo-common = { path = "../rulo-common" }
+jsonwebtoken = { workspace = true }

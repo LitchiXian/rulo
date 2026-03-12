@@ -10,3 +10,5 @@ sqlx = { workspace = true }
 tracing = { workspace = true }
 redis = { workspace = true }
 deadpool-redis = { workspace = true }
+argon2 = { workspace = true }
+jsonwebtoken = { workspace = true }

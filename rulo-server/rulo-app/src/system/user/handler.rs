@@ -70,7 +70,7 @@ pub async fn hello_error_handler() -> R<Timestamp> {
     info!("hello_error_handler");
     let s = match Timestamp::now() {
         Ok(s) => s,
-        Err(_) => return Err(AppError::BadRequest("Hello".to_string())),
+        Err(_) => return Err(AppError::ServiceError("Hello".to_string())),
     };
     info!("now is {}", s.0);
     success(s)

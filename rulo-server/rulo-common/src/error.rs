@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use argon2::password_hash;
 use axum::{
     Json,
     extract::Request,
@@ -13,7 +14,7 @@ use crate::result::ApiResult;
 // The kinds of errors we can hit in ou application.
 #[derive(Debug)]
 pub enum AppError {
-    BadRequest(String),
+    ServiceError(String),
     Unauthorized(String),
     Forbidden(String),
     NotFound(String),
@@ -21,6 +22,7 @@ pub enum AppError {
     RedisError(redis::RedisError),
     RedisPoolError(deadpool_redis::PoolError),
     Internal(String),
+    PasswordHashError(password_hash::Error),
 }
 
 impl AppError {
@@ -29,17 +31,18 @@ impl AppError {
             Self::Unauthorized(_) => StatusCode::UNAUTHORIZED,
             Self::Forbidden(_) => StatusCode::FORBIDDEN,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
-            Self::BadRequest(_) => StatusCode::BAD_REQUEST,
+            Self::ServiceError(_) => StatusCode::OK,
             Self::DbError(_) => StatusCode::OK,
             Self::RedisError(_) => StatusCode::OK,
             Self::RedisPoolError(_) => StatusCode::OK,
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::PasswordHashError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
     pub fn biz_code(&self) -> i32 {
         match self {
-            Self::BadRequest(_) => 40000,
+            Self::ServiceError(_) => 40000,
             Self::Unauthorized(_) => 40100,
             Self::Forbidden(_) => 40300,
             Self::NotFound(_) => 40400,
@@ -47,12 +50,13 @@ impl AppError {
             Self::RedisError(_) => 50002,
             Self::RedisPoolError(_) => 50003,
             Self::Internal(_) => 50000,
+            Self::PasswordHashError(_) => 50001,
         }
     }
 
     pub fn user_message(&self) -> String {
         match self {
-            Self::BadRequest(msg) => msg.clone(),
+            Self::ServiceError(msg) => msg.clone(),
             Self::Unauthorized(msg) => msg.clone(),
             Self::Forbidden(msg) => msg.clone(),
             Self::NotFound(msg) => msg.clone(),
@@ -60,6 +64,7 @@ impl AppError {
             Self::RedisError(_) => "缓存异常".to_string(),
             Self::RedisPoolError(_) => "缓存连接池异常".to_string(),
             Self::Internal(msg) => msg.clone(),
+            Self::PasswordHashError(_) => "密码加密失败,请稍后充实".to_string(),
         }
     }
 }
@@ -109,6 +114,12 @@ impl From<redis::RedisError> for AppError {
 impl From<deadpool_redis::PoolError> for AppError {
     fn from(err: deadpool_redis::PoolError) -> Self {
         Self::RedisPoolError(err)
+    }
+}
+
+impl From<password_hash::Error> for AppError {
+    fn from(err: password_hash::Error) -> Self {
+        Self::PasswordHashError(err)
     }
 }
 
