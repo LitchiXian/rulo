@@ -15,6 +15,12 @@ use crate::system::auth::model::AuthUserDto;
 
 pub async fn login(db_pool: &PgPool, redis_pool: &Pool, dto: &AuthUserDto) -> R<String> {
     info!("login auth_user {:?}", &dto);
+
+    if dto.password.is_empty() || dto.username.is_empty() {
+        return Err(AppError::ServiceError("用户名或密码不能为空".to_string()));
+        
+    }
+
     let db_user = query_as!(
         SysUser,
         "SELECT * FROM sys_user
