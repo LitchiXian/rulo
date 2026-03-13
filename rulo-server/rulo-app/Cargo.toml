@@ -18,3 +18,4 @@ redis = { workspace = true }
 deadpool-redis = { workspace = true }
 rulo-common = { path = "../rulo-common" }
 jsonwebtoken = { workspace = true }
+serde_json = { workspace = true }

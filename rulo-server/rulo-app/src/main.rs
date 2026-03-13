@@ -11,6 +11,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use deadpool_redis::Config as RedisConfig;
 use rulo_common::{error, state::AppState};
+mod router;
 mod system;
 
 #[derive(Debug, Deserialize)]
@@ -97,7 +98,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(|| async { "Hello, world!" }))
-        .nest("/system", system::router::routes())
+        .merge(router::routes())
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(from_fn(error::log_app_errors));
