@@ -2,6 +2,7 @@ use crate::system::user::{
     model::{SysUser, SysUserSaveDto},
     service,
 };
+use axum::response::IntoResponse;
 use deadpool_redis::Pool;
 use rulo_common::{
     constant::redis_constant,
@@ -112,4 +113,12 @@ pub async fn register(db_pool: &PgPool, dto: &AuthUserDto) -> R<()> {
 
 pub fn logout() {}
 
-pub fn info() {}
+pub async fn info(redis_pool: &Pool, user_id: i64) -> R<SysUser> {
+    // 通过 token 获取 用户信息
+    let user_info_redis_key = redis_constant::USER_INFO.to_owned() + &user_id.to_string();
+    match redis_util::get_obj::<SysUser>(redis_pool, &user_info_redis_key).await {
+        Ok(Some(user_info)) => success(user_info),
+        Ok(None) => Err(AppError::Unauthorized("登录已过期, 请重新登录".to_string())),
+        Err(e) => Err(e),
+    }
+}

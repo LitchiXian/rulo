@@ -3,13 +3,13 @@ use rulo_common::model::PageDto;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 
-#[derive(Debug, Serialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct SysUser {
     pub id: i64,
     pub user_name: String,
     pub nick_name: String,
     // #[serde(skip)] // 序列化和反序列化都跳过
-    #[serde(skip_serializing)] // 序列化时跳过,不返回给前端
+    #[serde(skip_serializing, skip_deserializing)] // 序列化时跳过,不返回给前端
     pub password: String,
     pub email: Option<String>,
     pub is_active: bool,
@@ -20,6 +20,9 @@ pub struct SysUser {
     pub update_time: DateTime<Utc>,
     pub remark: Option<String>,
 }
+
+#[derive(Debug, Clone)]
+pub struct UserId(pub i64);
 
 impl SysUser {
     pub fn new_user_from_save_dto(dto: &SysUserSaveDto) -> Self {

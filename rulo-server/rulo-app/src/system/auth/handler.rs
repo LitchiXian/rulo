@@ -1,9 +1,17 @@
 use std::sync::Arc;
 
-use axum::{Json, extract::State};
-use rulo_common::{result::R, state::AppState};
+use axum::{
+    Extension, Json,
+    extract::{Request, State},
+    http::Extensions,
+};
+use rulo_common::{error::AppError, result::R, state::AppState};
+use tracing_subscriber::registry::ExtensionsMut;
 
-use crate::system::auth::{model::AuthUserDto, service};
+use crate::system::{
+    auth::{model::AuthUserDto, service},
+    user::model::{SysUser, UserId},
+};
 
 pub async fn hello_handler(
     State(state): State<Arc<AppState>>,
@@ -24,4 +32,11 @@ pub async fn register_handler(
     Json(dto): Json<AuthUserDto>,
 ) -> R<()> {
     service::register(&state.db_pool, &dto).await
+}
+
+pub async fn info_handler(
+    State(state): State<Arc<AppState>>,
+    Extension(UserId(user_id)): Extension<UserId>,
+) -> R<SysUser> {
+    service::info(&state.redis_pool, user_id).await
 }
