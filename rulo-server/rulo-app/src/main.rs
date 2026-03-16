@@ -98,7 +98,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(|| async { "Hello, world!" }))
-        .merge(router::routes())
+        .merge(router::routes(state.clone()))
         .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(from_fn(error::log_app_errors));
