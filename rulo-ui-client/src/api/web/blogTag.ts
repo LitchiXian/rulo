@@ -1,5 +1,5 @@
-import request from '@/util/request.ts';
-import type {Tag} from "@/type/article.ts";
+import request from '@/util/request'
+import type { Tag } from '@/type/article'
 
 export const blogTagApi = {
 

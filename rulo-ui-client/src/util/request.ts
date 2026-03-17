@@ -1,107 +1,72 @@
-import axios from 'axios';
-import router from '@/router/router.ts'; // 引入路由实例
-import { ElMessage } from 'element-plus'; // 引入消息提示组件
-import envConfig from "@/util/envConfig.ts";
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
-// 创建 axios 实例
-const service = axios.create({
-    baseURL: envConfig.service.apiBaseUrl,
-    timeout: 7000,
-    headers: { 'Content-Type': 'application/json' },
-});
-
-// 请求拦截器
-service.interceptors.request.use(
-    (config) => {
-        // console.log("envConfig", envConfig);
-        // 保存当前路由路径用于登录后跳回
-        if (!config.url?.includes('/login') && !(config as any)._isRetry) {
-            (config as any)._returnUrl = window.location.pathname + window.location.search;
-        }
-
-        // 添加 token 认证信息
-        const tokenValue = sessionStorage.getItem('satoken') || localStorage.getItem('satoken');
-        if (tokenValue && config.headers) {
-            config.headers['satoken'] = tokenValue;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
-
-// 响应拦截器
-service.interceptors.response.use(
-    (response) => {
-        const res = response.data;
-        // Rust后端返回格式: { code: "200", msg: "xxx", data: xxx }
-        const businessCode = res.code;
-
-        // console.log('API Response', res);
-        // 检查业务错误码
-        if (businessCode === 'A0230') { // 登录过期
-            return handleSessionExpired(response.config);
-        }
-
-        // 业务处理成功：直接返回data数据
-        if (businessCode === '200') {
-            return res.data;
-        }
-
-        /* 业务处理失败 */
-        // 获取错误信息
-        const errorMessage = res.msg || '操作失败';
-
-        // 显示错误提示
-        ElMessage.error(errorMessage);
-
-        // 返回拒绝的Promise防止进入then()
-        return Promise.reject(new Error(errorMessage));
-    },
-    (error) => {
-        // 统一处理错误
-        console.error('API Error', error);
-
-        // 处理登录过期情况
-        if (error.response?.data?.code === 'A0230') {
-            return handleSessionExpired(error.config);
-        }
-
-        // 显示错误消息
-        const errorMessage = error.response?.data?.msg || error.message || '请求失败';
-        ElMessage.error(errorMessage);
-
-        return Promise.reject(error);
-    }
-);
-
-/**
- * 处理会话过期逻辑
- * @param originalRequest 原始请求配置
- */
-function handleSessionExpired(originalRequest?: any): Promise<never> {
-    // 避免重复处理
-    if (originalRequest?._isRetry) return Promise.reject();
-    if (originalRequest) originalRequest._isRetry = true;
-
-    // 保存原始请求路径
-    const returnUrl = originalRequest?._returnUrl || window.location.pathname + window.location.search;
-    localStorage.setItem('returnUrl', returnUrl);
-
-    // 清除过期 token
-    localStorage.removeItem('satoken');
-
-    // 显示提示
-    ElMessage.warning('登录已过期，请重新登录');
-
-    // 跳转到登录页
-    router.replace({
-        path: '/login',
-        query: { redirect: returnUrl }
-    });
-
-    return Promise.reject(new Error('登录已过期'));
+// 从 pinia-plugin-persistedstate 持久化的 localStorage 中读取 token
+// key 与 store/user.ts 中 persist.key 保持一致
+function getToken(): string {
+  try {
+    const raw = localStorage.getItem('client-user')
+    if (!raw) return ''
+    return JSON.parse(raw).token || ''
+  } catch {
+    return ''
+  }
 }
 
-export default service;
+const request = axios.create({
+  baseURL: '',
+  timeout: 10000,
+  headers: { 'Content-Type': 'application/json' },
+})
+
+// 请求拦截器：自动附带 token
+request.interceptors.request.use(
+  (config) => {
+    const token = getToken()
+    if (token && config.headers) {
+      config.headers['authorization'] = token
+    }
+    return config
+  },
+  (error) => Promise.reject(error),
+)
+
+// 响应拦截器：统一处理业务码和错误
+request.interceptors.response.use(
+  (response) => {
+    const res = response.data
+    const code = res.code
+
+    // 登录过期
+    if (code === 'A0230' || code === 40100) {
+      ElMessage.error('登录已过期，请重新登录')
+      localStorage.removeItem('client-user')
+      window.location.href = '/login'
+      return Promise.reject(new Error('登录过期'))
+    }
+
+    // 业务成功
+    if (code === '200' || code === 200) {
+      return res.data
+    }
+
+    // 业务失败
+    const msg = res.msg || res.message || '操作失败'
+    ElMessage.error(msg)
+    return Promise.reject(new Error(msg))
+  },
+  (error) => {
+    const code = error.response?.data?.code
+    if (code === 'A0230' || code === 40100) {
+      ElMessage.error('登录已过期，请重新登录')
+      localStorage.removeItem('client-user')
+      window.location.href = '/login'
+      return Promise.reject(error)
+    }
+    const msg = error.response?.data?.msg || error.response?.data?.message || error.message || '请求失败'
+    ElMessage.error(msg)
+    return Promise.reject(error)
+  },
+)
+
+export default request

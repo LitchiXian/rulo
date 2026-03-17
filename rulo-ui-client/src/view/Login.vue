@@ -2,8 +2,8 @@
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Hide, View } from '@element-plus/icons-vue';
-import { useUserStore } from "@/store/user.ts";
-import { showMessage } from "@/util/message.ts";
+import { useUserStore } from '@/store/user';
+import { showMessage } from '@/util/message';
 
 // 响应式状态
 const email = ref('');
@@ -34,11 +34,12 @@ const handleSubmit = async (e: Event) => {
   try {
     const userStore = useUserStore();
     await userStore.login({
-      userName: email.value,
+      username: email.value,
       password: password.value,
-      redirect: route.query.redirect as string
     });
     showMessage('登录成功', 'success');
+    const redirect = route.query.redirect as string
+    router.push(redirect || '/')
   } catch (err) {
     console.error('登录失败:', err);
   } finally {

@@ -14,7 +14,6 @@ use rulo_common::{
     state::AppState,
     util::{jwt_util, redis_util},
 };
-use serde_json::to_string;
 
 use crate::system::{
     self,

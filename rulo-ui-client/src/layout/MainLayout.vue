@@ -69,7 +69,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { onMounted, ref } from 'vue';
-import { useUserStore } from "@/store/user.ts";
+import { useUserStore } from '@/store/user';
 
 interface TocItem {
   id: string;
@@ -89,7 +89,6 @@ const THEME_DARK = 'dark';
 const THEME_LIGHT = 'light';
 
 onMounted(() => {
-  userStore.initUser();
   initTheme();
 });
 
@@ -146,15 +145,11 @@ const goToLogin = () => {
 };
 
 const handleLogoutClick = async () => {
-  try {
-    await userStore.logout();
-  } finally {
-    localStorage.removeItem('satoken');
-    sessionStorage.removeItem('satoken');
-  }
+  await userStore.logout()
+  router.push('/login')
 };
 
-const goToUser = (id?: string) => {
+const goToUser = (id?: number) => {
   if (!id) {
     console.warn("跳转用户页失败：缺少用户ID");
     return;

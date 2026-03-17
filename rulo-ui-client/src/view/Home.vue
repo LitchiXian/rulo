@@ -29,10 +29,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import blogArticleApi from "@/api/web/blogArticle.ts";
+import blogArticleApi from '@/api/web/blogArticle';
 import type { Article, Tag } from "@/type/article";
-import { blogTagApi } from "@/api/web/blogTag.ts";
-import { smartFormatDate } from "@/util/dateFormat.ts";
+import { blogTagApi } from '@/api/web/blogTag';
+import { smartFormatDate } from '@/util/dateFormat';
 
 const router = useRouter()
 const featuredPosts = ref<Article[]>([])

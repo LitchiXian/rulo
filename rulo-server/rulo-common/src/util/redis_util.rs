@@ -1,7 +1,5 @@
-use std::fs::exists;
-
 use deadpool_redis::Pool;
-use redis::{AsyncCommands, ExistenceCheck};
+use redis::AsyncCommands;
 use serde::{Serialize, de::DeserializeOwned};
 
 use crate::error::AppError;

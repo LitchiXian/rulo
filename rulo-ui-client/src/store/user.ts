@@ -1,92 +1,52 @@
-import {defineStore} from 'pinia';
-import {computed, ref} from 'vue';
-import router from '@/router/router.ts';
-import authApi from '@/api/web/auth.ts';
-import type {LoginDto, UserInfo} from '@/type/user';
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import type { UserInfo, LoginDto } from '@/type/user'
+import authApi from '@/api/web/auth'
 
-export const useUserStore = defineStore('user', () => {
-    // 状态
-    const userInfo = ref<UserInfo | null>(null);
-    const token = ref<string>('');
-    const loading = ref(false);
-    const error = ref<string | null>(null);
+export const useUserStore = defineStore(
+  'client-user',
+  () => {
+    const token = ref<string>('')
+    const userInfo = ref<UserInfo | null>(null)
+    const loading = ref(false)
 
-    // 计算属性
-    const isLoggedIn = computed(() => !!token.value);
-    const userName = computed(() => userInfo.value?.nickName || '');
-    const userAvatar = computed(() => userInfo.value?.avatar || '');
-    // const isAdmin = computed(() => userInfo.value?.role === 'admin');
+    const isLoggedIn = computed(() => !!token.value)
+    const userName = computed(() => userInfo.value?.nick_name || userInfo.value?.user_name || '')
 
-    // 登录方法
     const login = async (credentials: LoginDto) => {
+      loading.value = true
+      try {
+        token.value = (await authApi.login(credentials)) as unknown as string
+      } finally {
+        loading.value = false
+      }
+    }
 
-        try {
-            loading.value = true;
-            error.value = null;
-
-            token.value = ((await authApi.login(credentials)) as unknown) as string;
-
-            // 持久化存储
-            if (credentials.remember) {
-                localStorage.setItem('satoken', token.value);
-            } else {
-                sessionStorage.setItem('satoken', token.value);
-            }
-
-            router.push(credentials.redirect || '/');
-        } catch (err: any) {
-            error.value = err.response?.data?.msg || '登录失败';
-            throw err;
-        } finally {
-            loading.value = false;
-        }
-    };
-
-    // 登出方法
-    const logout = async () => {
-        try {
-            if (isLoggedIn.value) {
-                await authApi.logout();
-            }
-        } finally {
-            clearUserData();
-            router.push('/login');
-        }
-    };
-
-    // 清除用户数据
-    const clearUserData = () => {
-        token.value = '';
-        userInfo.value = null;
-        localStorage.removeItem('satoken');
-        sessionStorage.removeItem('satoken');
-    };
-
-    // 初始化用户数据
     const initUser = async () => {
-        const savedToken = sessionStorage.getItem('satoken') || localStorage.getItem('satoken');
-        if (savedToken) {
-            token.value = savedToken;
-            try {
-                userInfo.value = await authApi.getLoginInfo();
-                console.log("用户信息",userInfo.value)
-            } catch (err) {
-                // token失效时清理数据
-                clearUserData();
-            }
-        }
-    };
+      if (!token.value) return
+      try {
+        userInfo.value = await authApi.getLoginInfo()
+      } catch {
+        token.value = ''
+        userInfo.value = null
+      }
+    }
 
-    return {
-        userInfo,
-        token,
-        loading,
-        error,
-        isLoggedIn,
-        userName,
-        userAvatar,
-        login,
-        logout,
-        initUser
-    };
-});
+    const logout = async () => {
+      try {
+        if (isLoggedIn.value) await authApi.logout()
+      } finally {
+        token.value = ''
+        userInfo.value = null
+      }
+    }
+
+    return { token, userInfo, loading, isLoggedIn, userName, login, initUser, logout }
+  },
+  {
+    persist: {
+      key: 'client-user',
+      pick: ['token'],
+    },
+  },
+)

@@ -1,16 +1,18 @@
-import vue from '@vitejs/plugin-vue';
-import createAutoImport from './auto-import.js'
+import vue from '@vitejs/plugin-vue'
+import createAutoImport from './auto-import'
+import createComponents from './components'
 import createSvgIcon from './svg-icon'
-import createCompression from './compression.js'
+import createCompression from './compression'
 import createSetupExtend from './setup-extend'
-import path from 'path';
+import path from 'path'
 
-export default (viteEnv: any, isBuild = false): [] => {
-    const vitePlugins: any = [];
-    vitePlugins.push(vue());
-    vitePlugins.push(createAutoImport(path));
-    vitePlugins.push(createSetupExtend());
-    vitePlugins.push(createSvgIcon(path));
-    isBuild && vitePlugins.push(createCompression(viteEnv));
-    return vitePlugins;
+export default (viteEnv: any, isBuild = false): any[] => {
+  const plugins: any[] = []
+  plugins.push(vue())
+  plugins.push(createAutoImport(path))
+  plugins.push(createComponents())
+  plugins.push(createSetupExtend())
+  plugins.push(createSvgIcon(path))
+  isBuild && plugins.push(createCompression(viteEnv))
+  return plugins
 }

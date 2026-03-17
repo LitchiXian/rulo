@@ -2,7 +2,6 @@ use crate::system::user::{
     model::{SysUser, SysUserSaveDto},
     service,
 };
-use axum::response::IntoResponse;
 use deadpool_redis::Pool;
 use rulo_common::{
     constant::redis_constant,
@@ -10,7 +9,6 @@ use rulo_common::{
     result::{R, success},
     util::{jwt_util, password_util, redis_util},
 };
-use serde_json::to_string;
 use sqlx::{PgPool, query_as};
 use tracing::info;
 

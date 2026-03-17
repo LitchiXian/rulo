@@ -56,7 +56,7 @@
             <el-checkbox
               :label="tag.id"
               :checked="selectedTags.includes(tag.id)"
-              @change="(checked:boolean) => handleTagCheck(tag.id, checked)"
+              @change="(checked) => handleTagCheck(tag.id, !!checked)"
             >
               {{ tag.name }}
             </el-checkbox>
@@ -116,9 +116,9 @@
 import {ref, reactive, onMounted, computed} from 'vue';
 import { Check, Close, ArrowDown } from '@element-plus/icons-vue';
 import {useRouter} from 'vue-router';
-import blogArticleApi from '@/api/web/blogArticle.ts';
-import {blogTagApi} from "@/api/web/blogTag.ts";
-import type {Tag} from "@/type/article.ts";
+import blogArticleApi from '@/api/web/blogArticle';
+import {blogTagApi} from '@/api/web/blogTag';
+import type {Tag} from '@/type/article';
 
 const router = useRouter()
 

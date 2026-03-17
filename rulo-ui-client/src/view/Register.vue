@@ -1,33 +1,23 @@
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue';
+import { ref } from 'vue';
 import { Hide, View } from '@element-plus/icons-vue';
 import { useRouter } from "vue-router";
-import authApi from "@/api/web/auth.ts";
-import { showMessage } from "@/util/message.ts";
+import authApi from '@/api/web/auth';
+import { showMessage } from '@/util/message';
 
 // 表单数据
 const userName = ref('');
 const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
-const code = ref('');
 const agreeTerms = ref(false);
 
 // UI状态
 const isPasswordVisible = ref(false);
 const isConfirmPasswordVisible = ref(false);
-const showCaptchaDialog = ref(false);
-const captchaVerified = ref(false);
-const countdown = ref(0);
 const loading = ref(false);
 
-let timer: ReturnType<typeof setInterval> | null = null;
 const router = useRouter();
-
-// 清理定时器
-onUnmounted(() => {
-  if (timer) clearInterval(timer);
-});
 
 // 切换密码可见性
 const togglePasswordVisibility = () => {
@@ -36,49 +26,6 @@ const togglePasswordVisibility = () => {
 
 const toggleConfirmPasswordVisibility = () => {
   isConfirmPasswordVisible.value = !isConfirmPasswordVisible.value;
-};
-
-// 打开验证码弹窗
-const openCaptchaDialog = () => {
-  if (!email.value) {
-    showMessage('请先输入邮箱', 'warning');
-    return;
-  }
-  showCaptchaDialog.value = true;
-};
-
-// 验证码完成处理
-const handleCaptchaComplete = () => {
-  captchaVerified.value = true;
-  showMessage('验证成功', 'success');
-
-  setTimeout(() => {
-    showCaptchaDialog.value = false;
-    getVerificationCode();
-  }, 800);
-};
-
-// 获取验证码
-const getVerificationCode = async () => {
-  try {
-    await authApi.getRegisterCode({ email: email.value });
-    showMessage('验证码已发送', 'success');
-    startCountdown();
-  } catch (err) {
-    console.error('获取验证码失败:', err);
-  }
-};
-
-// 开始倒计时
-const startCountdown = () => {
-  countdown.value = 60;
-  timer = setInterval(() => {
-    countdown.value--;
-    if (countdown.value <= 0 && timer) {
-      clearInterval(timer);
-      timer = null;
-    }
-  }, 1000);
 };
 
 // 表单验证
@@ -99,10 +46,6 @@ const validateForm = (): boolean => {
     showMessage('两次输入的密码不一致', 'warning');
     return false;
   }
-  if (!code.value.trim()) {
-    showMessage('请输入验证码', 'warning');
-    return false;
-  }
   return true;
 };
 
@@ -116,10 +59,9 @@ const handleSubmit = async (e: Event) => {
 
   try {
     await authApi.register({
-      userName: userName.value,
+      username: userName.value,
       email: email.value,
       password: password.value,
-      code: code.value
     });
 
     showMessage('注册成功', 'success');
@@ -215,31 +157,6 @@ const handleSubmit = async (e: Event) => {
             </el-icon>
           </div>
         </div>
-
-        <!-- 验证码输入框 -->
-        <div class="auth-input-group with-action">
-          <i class="ri-shield-keyhole-line auth-icon"></i>
-          <div class="auth-input-wrapper">
-            <input
-              type="text"
-              required
-              class="auth-input"
-              id="register-code"
-              placeholder=" "
-              v-model="code"
-              autocomplete="one-time-code"
-            >
-            <label for="register-code" class="auth-label">验证码</label>
-          </div>
-          <button
-            type="button"
-            class="auth-code-btn"
-            :disabled="countdown > 0"
-            @click="openCaptchaDialog"
-          >
-            {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
-          </button>
-        </div>
       </div>
 
       <div class="auth-check">
@@ -267,26 +184,6 @@ const handleSubmit = async (e: Event) => {
         <router-link to="/login" class="auth-switch-link">登录</router-link>
       </p>
     </form>
-
-    <!-- 验证码弹窗 -->
-    <div v-if="showCaptchaDialog" class="captcha-modal">
-      <div class="captcha-content">
-        <div class="captcha-header">
-          <h3>请完成安全验证</h3>
-          <button @click="showCaptchaDialog = false" class="captcha-close">&times;</button>
-        </div>
-        <div class="captcha-body">
-          <p>请拖动滑块完成验证</p>
-          <div class="captcha-slider" @mouseup="handleCaptchaComplete">
-            <div class="slider-track"></div>
-            <div class="slider-button">&rarr;</div>
-          </div>
-          <div v-if="captchaVerified" class="captcha-success">
-            <span>✓</span> 验证成功
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 

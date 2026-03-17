@@ -52,10 +52,10 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import MarkdownRenderer from '@/component/MarkdownRenderer.vue'
-import blogArticleApi from "@/api/web/blogArticle.ts";
-import type { Article, Tag } from "@/type/article.ts";
-import { blogTagApi } from "@/api/web/blogTag.ts";
-import { formatDate } from "@/util/dateFormat.ts";
+import blogArticleApi from '@/api/web/blogArticle';
+import type { Article, Tag } from '@/type/article';
+import { blogTagApi } from '@/api/web/blogTag';
+import { formatDate } from '@/util/dateFormat';
 
 const route = useRoute()
 const currentPost = ref<Article>()

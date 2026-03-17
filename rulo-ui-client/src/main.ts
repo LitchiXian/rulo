@@ -1,33 +1,23 @@
-import {createApp} from 'vue';
-import App from './App.vue';
-import ElementPlus from 'element-plus';
-import 'element-plus/dist/index.css';
-import * as ElementPlusIconsVue from '@element-plus/icons-vue';
-import router from "./router/router.ts";
-import './style/base.css';
-import './style/auth.css';
-import pinia from "@/store";
-// import {msg} from './util/message.ts';
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router/router'
+import pinia from '@/store'
 import { loadEnvConfig } from '@/util/envConfig'
-import request from "@/util/request.ts";
 
-async function initApp(){
-    await loadEnvConfig().then(r => {});
+// Element Plus 全量 CSS（组件由 unplugin-vue-components 按需注入，但样式需全量引入）
+import 'element-plus/dist/index.css'
+import 'element-plus/theme-chalk/dark/css-vars.css'
+import './style/base.css'
+import './style/auth.css'
 
-    const app = createApp(App);
+async function initApp() {
+  // 先加载运行时配置，再启动应用，确保 baseURL 已设置
+  await loadEnvConfig()
 
-    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-        app.component(key, component);
-    }
-
-    app.use(ElementPlus);
-    app.use(pinia);
-    app.use(router);
-
-// app.config.globalProperties.$msg = msg;
-// console.log('全局挂载的 $msg:', app.config.globalProperties.$msg);
-
-    app.mount('#app');
+  const app = createApp(App)
+  app.use(pinia)
+  app.use(router)
+  app.mount('#app')
 }
 
-initApp().then(r => {});
+initApp()

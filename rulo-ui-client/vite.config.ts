@@ -1,35 +1,51 @@
-import {defineConfig, loadEnv} from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import createVitePlugins from './vite/plugins'
-import path from "path";
+import path from 'path'
+import fs from 'fs'
 
-// vite.config.ts 是 Vite 构建工具的核心配置文件，用于定制 Vite 的行为，确保项目能按需求高效开发、构建和运行。
+// 读取 config.json 中 dev 的后端地址，作为代理目标
+function getProxyTarget(): string {
+  try {
+    const raw = fs.readFileSync(path.resolve(__dirname, 'public/config.json'), 'utf-8')
+    return JSON.parse(raw).dev.apiBaseUrl || 'http://127.0.0.1:3000'
+  } catch {
+    return 'http://127.0.0.1:3000'
+  }
+}
 
-// https://vite.dev/config/
-export default defineConfig(({ mode, command }) =>{
-  const env = loadEnv(mode, process.cwd());
+export default defineConfig(({ mode, command }) => {
+  const env = loadEnv(mode, process.cwd())
+  const proxyTarget = getProxyTarget()
   return {
     resolve: {
-      // https://cn.vitejs.dev/config/#resolve-alias
       alias: {
-        '@': path.resolve(__dirname, './src')
+        '@': path.resolve(__dirname, './src'),
       },
-      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue']
+      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue'],
     },
     plugins: createVitePlugins(env, command === 'build'),
+    build: {
+      sourcemap: command === 'build' ? false : 'inline',
+      chunkSizeWarningLimit: 2000,
+      rollupOptions: {
+        output: {
+          chunkFileNames: 'static/js/[name]-[hash].js',
+          entryFileNames: 'static/js/[name]-[hash].js',
+          assetFileNames: 'static/[ext]/[name]-[hash].[ext]',
+        },
+      },
+    },
     server: {
       port: 8888,
-      // 允许访问的域名
       host: '0.0.0.0',
-      // 若端口被占用，直接退出
       strictPort: true,
-      // 配置正向代理，用于处理跨域
-      // proxy: {
-      //   '/api': {
-      //     target: 'http://localhost:8090',
-      //     changeOrigin: true,
-      //     rewrite: (path) => path.replace(/^\/api/, ''),
-      //   },
-      // },
+      proxy: {
+        '/api': {
+          target: proxyTarget,
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/api/, ''),
+        },
+      },
     },
   }
-});
+})

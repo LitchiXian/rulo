@@ -3,9 +3,15 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import markdownParser from '@/util/markdownParser'
 import '@/style/markdown.css'
+
+interface TocItem {
+  id: string
+  text: string
+  level: number
+}
 
 const props = defineProps({
   content: {
@@ -35,7 +41,7 @@ onMounted(() => {
 const generateToc = () => {
   // 等待DOM更新
   setTimeout(() => {
-    const tocItems = []
+    const tocItems: TocItem[] = []
     const headings = document.querySelectorAll('.markdown-body h2, .markdown-body h3, .markdown-body h4')
 
     headings.forEach((heading, index) => {
@@ -45,7 +51,7 @@ const generateToc = () => {
 
       tocItems.push({
         id: id,
-        text: heading.innerText.replace('#', ''),
+        text: (heading as HTMLElement).textContent?.replace('#', '') || '',
         level: level
       })
     })

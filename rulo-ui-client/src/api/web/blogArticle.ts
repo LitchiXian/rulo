@@ -1,5 +1,5 @@
-import request from '@/util/request.ts';
-import type {Article} from "@/type/article.ts";
+import request from '@/util/request'
+import type { Article } from '@/type/article'
 
 // 定义 API 方法集合
 const blogArticleApi = {
