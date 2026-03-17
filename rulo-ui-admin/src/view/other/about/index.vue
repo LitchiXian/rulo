@@ -48,6 +48,6 @@
 .about-title {
   font-size: 22px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--rulo-text-primary);
 }
 </style>
