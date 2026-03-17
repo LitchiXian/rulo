@@ -16,6 +16,6 @@ pub fn public_routes() -> Router<Arc<AppState>> {
 
 pub fn protected_routes() -> Router<Arc<AppState>> {
     Router::new()
-        .route("/logout", post(handler::hello_handler))
+        .route("/logout", post(handler::logout_handler))
         .route("/info", get(handler::info_handler))
 }

@@ -48,11 +48,18 @@ pub async fn get_obj<T: DeserializeOwned>(pool: &Pool, key: &str) -> Result<Opti
     }
 }
 
-// 删除一个或多个键
-pub async fn del(pool: &Pool, key: &str) -> Result<bool, AppError> {
+// 查看键是否存在
+pub async fn exist(pool: &Pool, key: &str) -> Result<bool, AppError> {
     let mut conn = pool.get().await?;
     let exists: bool = conn.exists(key).await?;
     Ok(exists)
+}
+
+// 删除一个或多个键
+pub async fn del(pool: &Pool, key: &str) -> Result<bool, AppError> {
+    let mut conn = pool.get().await?;
+    let deleted: bool = conn.del(key).await?;
+    Ok(deleted)
 }
 
 // 设置键的过期时间(秒)

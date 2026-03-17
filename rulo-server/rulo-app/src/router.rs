@@ -14,8 +14,12 @@ use rulo_common::{
     state::AppState,
     util::{jwt_util, redis_util},
 };
+use serde_json::to_string;
 
-use crate::system::{self, user::model::UserId};
+use crate::system::{
+    self,
+    user::model::{UserId, UserToken},
+};
 
 // 顶层路由: 统一管理鉴权, 所有模块的公开/私密路由都在这里聚合
 // 新增模块时, 只需在这里 merge, 不用每个模块重复写逻辑鉴权逻辑
@@ -42,15 +46,15 @@ async fn jwt_auth(
         .and_then(|v| v.to_str().ok());
 
     let token = match token {
-        Some(t) => t,
+        Some(t) => t.to_string(),
         None => return AppError::Unauthorized("未登录, 请先登录".to_string()).into_response(),
     };
 
-    if jwt_util::verify_token(token).is_err() {
+    if jwt_util::verify_token(&token).is_err() {
         return AppError::Unauthorized("认证失败, token无效或已过期".to_string()).into_response();
     }
 
-    let redis_key = redis_constant::USER_TOKEN.to_owned() + token;
+    let redis_key = redis_constant::USER_TOKEN.to_owned() + &token;
     let user_id = match redis_util::get_obj::<i64>(&state.redis_pool, &redis_key).await {
         Ok(Some(user_id)) => user_id,
         Ok(None) => {
@@ -60,5 +64,6 @@ async fn jwt_auth(
     };
 
     req.extensions_mut().insert(UserId(user_id));
+    req.extensions_mut().insert(UserToken(token));
     next.run(req).await
 }

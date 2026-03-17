@@ -10,7 +10,7 @@ use tracing_subscriber::registry::ExtensionsMut;
 
 use crate::system::{
     auth::{model::AuthUserDto, service},
-    user::model::{SysUser, UserId},
+    user::model::{SysUser, UserId, UserToken},
 };
 
 pub async fn hello_handler(
@@ -32,6 +32,13 @@ pub async fn register_handler(
     Json(dto): Json<AuthUserDto>,
 ) -> R<()> {
     service::register(&state.db_pool, &dto).await
+}
+
+pub async fn logout_handler(
+    State(state): State<Arc<AppState>>,
+    Extension(UserToken(token)): Extension<UserToken>,
+) -> R<()> {
+    service::logout(&state.redis_pool, &token).await
 }
 
 pub async fn info_handler(

@@ -10,6 +10,7 @@ use rulo_common::{
     result::{R, success},
     util::{jwt_util, password_util, redis_util},
 };
+use serde_json::to_string;
 use sqlx::{PgPool, query_as};
 use tracing::info;
 
@@ -111,7 +112,13 @@ pub async fn register(db_pool: &PgPool, dto: &AuthUserDto) -> R<()> {
     success(())
 }
 
-pub fn logout() {}
+pub async fn logout(redis_pool: &Pool, token: &str) -> R<()> {
+    let redis_key = redis_constant::USER_TOKEN.to_owned() + token;
+    match redis_util::del(redis_pool, &redis_key).await {
+        Ok(_) => success(()),
+        Err(e) => Err(e),
+    }
+}
 
 pub async fn info(redis_pool: &Pool, user_id: i64) -> R<SysUser> {
     // 通过 token 获取 用户信息
