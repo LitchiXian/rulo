@@ -12,64 +12,91 @@ body,
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
-/* ══════ Theme CSS Variables ══════ */
+/* ══════ Rulo Theme Variables ══════ */
 :root {
-  /* 主色 */
-  --rulo-primary: #5D87FF;
+  /* 主色 — Rulo 青绿 */
+  --rulo-primary: #36A98F;
+  --rulo-primary-light: #e8f6f2;
+  --rulo-primary-lighter: #c7ebe2;
 
   /* 侧边栏 */
   --rulo-sidebar-bg: #ffffff;
-  --rulo-sidebar-border: #e8ecf0;
-  --rulo-sidebar-logo-color: #383853;
-  --rulo-sidebar-text: #4d5875;
-  --rulo-sidebar-text-hover: #1e293b;
-  --rulo-sidebar-text-active: #5D87FF;
-  --rulo-sidebar-hover-bg: #f2f4f5;
-  --rulo-sidebar-active-bg: #eef2ff;
-  --rulo-sidebar-icon: #6b7280;
+  --rulo-sidebar-border: #e5e9ef;
+  --rulo-sidebar-logo-color: #2c3e50;
+  --rulo-sidebar-text: #556370;
+  --rulo-sidebar-text-hover: #2c3e50;
+  --rulo-sidebar-text-active: #36A98F;
+  --rulo-sidebar-hover-bg: #f3f5f7;
+  --rulo-sidebar-active-bg: #e8f6f2;
+  --rulo-sidebar-icon: #7b8794;
 
   /* 顶栏 */
   --rulo-header-bg: #ffffff;
-  --rulo-header-border: #e8ecf0;
-  --rulo-header-shadow: rgba(0, 0, 0, 0.04);
-  --rulo-header-icon: #6b7280;
-  --rulo-header-icon-hover-bg: #f2f4f5;
-  --rulo-header-text: #374151;
+  --rulo-header-border: #e5e9ef;
+  --rulo-header-shadow: rgba(0, 0, 0, 0.05);
+  --rulo-header-icon: #7b8794;
+  --rulo-header-icon-hover-bg: #f3f5f7;
+  --rulo-header-text: #2c3e50;
 
   /* 主内容区 */
-  --rulo-main-bg: #f5f7fa;
+  --rulo-main-bg: #f4f6f8;
 
   /* 通用 */
-  --rulo-border: #e8ecf0;
-  --rulo-text-primary: #383853;
-  --rulo-text-secondary: #7987a1;
+  --rulo-border: #e5e9ef;
+  --rulo-text-primary: #2c3e50;
+  --rulo-text-secondary: #7b8794;
 }
 
 html.dark {
   /* 侧边栏 */
   --rulo-sidebar-bg: #161618;
   --rulo-sidebar-border: rgba(255, 255, 255, 0.08);
-  --rulo-sidebar-logo-color: #e3e3e8;
-  --rulo-sidebar-text: #ababba;
-  --rulo-sidebar-text-hover: #e3e3e8;
-  --rulo-sidebar-text-active: #5D87FF;
+  --rulo-sidebar-logo-color: #e0e4e8;
+  --rulo-sidebar-text: #a0aab4;
+  --rulo-sidebar-text-hover: #e0e4e8;
+  --rulo-sidebar-text-active: #4fc4a8;
   --rulo-sidebar-hover-bg: #252530;
-  --rulo-sidebar-active-bg: #1e2235;
-  --rulo-sidebar-icon: #8f8fa3;
+  --rulo-sidebar-active-bg: #1c2e2a;
+  --rulo-sidebar-icon: #8590a0;
 
   /* 顶栏 */
   --rulo-header-bg: #161618;
   --rulo-header-border: rgba(255, 255, 255, 0.08);
-  --rulo-header-shadow: rgba(0, 0, 0, 0.2);
-  --rulo-header-icon: #8f8fa3;
+  --rulo-header-shadow: rgba(0, 0, 0, 0.3);
+  --rulo-header-icon: #8590a0;
   --rulo-header-icon-hover-bg: #252530;
-  --rulo-header-text: #c7c7d1;
+  --rulo-header-text: #d0d6dc;
 
   /* 主内容区 */
   --rulo-main-bg: #0a0a0a;
 
   /* 通用 */
   --rulo-border: rgba(255, 255, 255, 0.08);
-  --rulo-text-primary: #e3e3e8;
-  --rulo-text-secondary: #8f8fa3;
+  --rulo-text-primary: #e0e4e8;
+  --rulo-text-secondary: #8590a0;
+
+  /* ── Element Plus 暗色覆盖（统一色系） ── */
+  --el-bg-color: #161618;
+  --el-bg-color-page: #0a0a0a;
+  --el-bg-color-overlay: #1e1e22;
+  --el-fill-color-blank: #161618;
+  --el-fill-color: #252530;
+  --el-fill-color-light: #1e1e22;
+  --el-fill-color-lighter: #1a1a1e;
+  --el-fill-color-dark: #2e2e38;
+  --el-border-color: #363843;
+  --el-border-color-light: #2c2c34;
+  --el-border-color-lighter: #252530;
+  --el-border-color-dark: #42424e;
+  --el-text-color-primary: #e0e4e8;
+  --el-text-color-regular: rgba(255, 255, 255, 0.85);
+  --el-text-color-secondary: #8590a0;
+  --el-text-color-placeholder: #5a5a6a;
+  --el-color-primary: #36A98F;
+  --el-color-primary-light-3: #2d8a75;
+  --el-color-primary-light-5: #1b6b5a;
+  --el-color-primary-light-7: #1a4a40;
+  --el-color-primary-light-9: #142e28;
+  --el-color-primary-dark-2: #4fc4a8;
+  --el-mask-color: rgba(0, 0, 0, 0.6);
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useLayoutStore } from '@/store/layout'
-import type { LayoutMode } from '@/store/layout'
+import type { LayoutMode, ThemeMode } from '@/store/layout'
+import { Sunny, Moon, Monitor } from '@element-plus/icons-vue'
 
 const layoutStore = useLayoutStore()
 
@@ -8,19 +9,29 @@ const visible = defineModel<boolean>({ default: false })
 
 const layouts: { mode: LayoutMode; label: string }[] = [
   { mode: 'left', label: '左侧菜单' },
-  { mode: 'left-top-mix', label: '左侧顶部混合' },
   { mode: 'top', label: '顶部菜单' },
   { mode: 'right', label: '右侧菜单' },
+  { mode: 'left-top-mix', label: '左侧顶部混合' },
   { mode: 'right-top-mix', label: '右侧顶部混合' },
+]
+
+const themes: { mode: ThemeMode; label: string; icon: typeof Sunny }[] = [
+  { mode: 'light', label: '浅色', icon: Sunny },
+  { mode: 'dark', label: '深色', icon: Moon },
+  { mode: 'system', label: '系统', icon: Monitor },
 ]
 
 const selectLayout = (mode: LayoutMode) => {
   layoutStore.setMode(mode)
 }
+
+const selectTheme = (mode: ThemeMode) => {
+  layoutStore.setThemeMode(mode)
+}
 </script>
 
 <template>
-  <el-drawer v-model="visible" title="布局设置" size="280px" :with-header="true">
+  <el-drawer v-model="visible" title="布局设置" size="320px" :with-header="true">
     <div class="layout-section">
       <div class="section-title">菜单布局</div>
       <div class="layout-grid">
@@ -77,6 +88,23 @@ const selectLayout = (mode: LayoutMode) => {
         </div>
       </div>
     </div>
+
+    <!-- 主题风格 -->
+    <div class="layout-section" style="margin-top: 24px;">
+      <div class="section-title">主题风格</div>
+      <div class="theme-grid">
+        <div
+          v-for="item in themes"
+          :key="item.mode"
+          class="theme-item"
+          :class="{ active: layoutStore.themeMode === item.mode }"
+          @click="selectTheme(item.mode)"
+        >
+          <el-icon :size="20"><component :is="item.icon" /></el-icon>
+          <span>{{ item.label }}</span>
+        </div>
+      </div>
+    </div>
   </el-drawer>
 </template>
 
@@ -94,17 +122,17 @@ const selectLayout = (mode: LayoutMode) => {
 
 .layout-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
 }
 
 .layout-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
-  padding: 8px;
+  padding: 6px;
   border-radius: 8px;
   border: 2px solid transparent;
   transition: all 0.2s;
@@ -120,7 +148,7 @@ const selectLayout = (mode: LayoutMode) => {
 }
 
 .layout-label {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--rulo-text-secondary);
   white-space: nowrap;
 }
@@ -132,8 +160,8 @@ const selectLayout = (mode: LayoutMode) => {
 
 /* ── Layout Thumbnails ── */
 .layout-thumb {
-  width: 80px;
-  height: 56px;
+  width: 68px;
+  height: 48px;
   border-radius: 4px;
   overflow: hidden;
   display: flex;
@@ -142,7 +170,7 @@ const selectLayout = (mode: LayoutMode) => {
 }
 
 .t-aside {
-  width: 20px;
+  width: 16px;
   background: var(--rulo-sidebar-bg);
   border-right: 1px solid var(--rulo-border);
   flex-shrink: 0;
@@ -156,7 +184,7 @@ const selectLayout = (mode: LayoutMode) => {
 }
 
 .t-header {
-  height: 12px;
+  height: 10px;
   background: var(--rulo-header-bg);
   border-bottom: 1px solid var(--rulo-border);
 }
@@ -191,7 +219,7 @@ const selectLayout = (mode: LayoutMode) => {
 }
 
 .t-header-full {
-  height: 12px;
+  height: 10px;
   background: var(--rulo-header-bg);
   border-bottom: 1px solid var(--rulo-border);
 }
@@ -199,5 +227,37 @@ const selectLayout = (mode: LayoutMode) => {
 .t-main-full {
   flex: 1;
   background: var(--rulo-main-bg);
+}
+
+/* ── Theme Style Selector ── */
+.theme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+.theme-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 8px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  color: var(--rulo-text-secondary);
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.theme-item:hover {
+  background: var(--rulo-sidebar-hover-bg);
+  color: var(--rulo-text-primary);
+}
+
+.theme-item.active {
+  border-color: var(--rulo-primary);
+  background: var(--rulo-sidebar-active-bg);
+  color: var(--rulo-primary);
 }
 </style>
