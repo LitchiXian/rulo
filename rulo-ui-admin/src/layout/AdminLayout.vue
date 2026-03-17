@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Fold, Expand, Odometer, User, SwitchButton } from '@element-plus/icons-vue'
+
 import { useUserStore } from '@/store/user'
 
 const route = useRoute()
@@ -27,8 +28,8 @@ const handleCommand = async (cmd: string) => {
     <!-- 侧边栏 -->
     <el-aside :width="isCollapsed ? '64px' : '220px'" class="admin-aside">
       <div class="admin-logo" :class="{ collapsed: isCollapsed }">
-        <span v-show="!isCollapsed">Rulo Admin</span>
-        <el-icon v-show="isCollapsed" :size="22"><Odometer /></el-icon>
+        <img src="/rulo.ico" class="logo-icon" alt="logo" />
+        <span v-show="!isCollapsed" class="logo-text">Rulo Admin</span>
       </div>
 
       <el-menu
@@ -104,6 +105,7 @@ const handleCommand = async (cmd: string) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   color: #f1f5f9;
   font-size: 18px;
   font-weight: 700;
@@ -112,6 +114,18 @@ const handleCommand = async (cmd: string) => {
   white-space: nowrap;
   overflow: hidden;
   transition: padding 0.28s ease;
+  padding: 0 16px;
+}
+
+.logo-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.logo-text {
+  transition: opacity 0.2s ease;
 }
 
 .admin-menu {

@@ -29,5 +29,6 @@ declare module 'vue' {
     EmptyLayout: typeof import('./layout/EmptyLayout.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SvgIcon: typeof import('./components/SvgIcon.vue')['default']
   }
 }
