@@ -1,7 +1,7 @@
 <script setup lang="ts" name="AdminLayout">
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Fold, Expand, Odometer, User, SwitchButton } from '@element-plus/icons-vue'
+import { Fold, Expand, Odometer, User, SwitchButton, Setting, UserFilled, Key, Menu as MenuIcon, Lock, MoreFilled, InfoFilled, Link } from '@element-plus/icons-vue'
 
 import { useUserStore } from '@/store/user'
 
@@ -21,6 +21,10 @@ const handleCommand = async (cmd: string) => {
     router.push('/login')
   }
 }
+
+const openProjectUrl = () => {
+  window.open('https://github.com/LitchiXian/rulo', '_blank')
+}
 </script>
 
 <template>
@@ -36,6 +40,7 @@ const handleCommand = async (cmd: string) => {
         :default-active="activeMenu"
         :collapse="isCollapsed"
         :collapse-transition="false"
+        unique-opened
         router
         class="admin-menu"
       >
@@ -43,6 +48,46 @@ const handleCommand = async (cmd: string) => {
           <el-icon><Odometer /></el-icon>
           <template #title>首页</template>
         </el-menu-item>
+
+        <!-- TODO: 侧边栏菜单目前是写死的，后续改为动态渲染：
+             从后端获取当前用户的菜单权限数据，递归生成 el-sub-menu / el-menu-item -->
+        <el-sub-menu index="/system">
+          <template #title>
+            <el-icon><Setting /></el-icon>
+            <span>系统管理</span>
+          </template>
+          <el-menu-item index="/system/user">
+            <el-icon><UserFilled /></el-icon>
+            <template #title>用户管理</template>
+          </el-menu-item>
+          <el-menu-item index="/system/role">
+            <el-icon><Key /></el-icon>
+            <template #title>角色管理</template>
+          </el-menu-item>
+          <el-menu-item index="/system/menu">
+            <el-icon><MenuIcon /></el-icon>
+            <template #title>菜单管理</template>
+          </el-menu-item>
+          <el-menu-item index="/system/permission">
+            <el-icon><Lock /></el-icon>
+            <template #title>权限管理</template>
+          </el-menu-item>
+        </el-sub-menu>
+
+        <el-sub-menu index="/other">
+          <template #title>
+            <el-icon><MoreFilled /></el-icon>
+            <span>其他</span>
+          </template>
+          <el-menu-item index="/other/about">
+            <el-icon><InfoFilled /></el-icon>
+            <template #title>关于我们</template>
+          </el-menu-item>
+          <el-menu-item @click="openProjectUrl">
+            <el-icon><Link /></el-icon>
+            <template #title>项目地址</template>
+          </el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
 

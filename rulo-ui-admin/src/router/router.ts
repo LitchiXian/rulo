@@ -18,6 +18,56 @@ export const constantRoutes: RouteRecordRaw[] = [
     component: () => import('@/view/Home.vue'),
     meta: { requiresAuth: true, title: '首页' },
   },
+  // TODO: 系统管理菜单目前是写死的静态路由，后续改为动态路由：
+  //   1. 登录后调用后端接口获取当前用户拥有的菜单权限（根据 sys_role_menu / sys_role_permission）
+  //   2. 根据返回的菜单数据动态 addRoute()，而非在此处静态注册
+  //   3. 侧边栏菜单也应从动态路由数据渲染，而非模板写死
+  {
+    path: '/system',
+    name: 'System',
+    redirect: '/system/user',
+    meta: { requiresAuth: true, title: '系统管理' },
+    children: [
+      {
+        path: 'user',
+        name: 'SystemUser',
+        component: () => import('@/view/system/user/index.vue'),
+        meta: { requiresAuth: true, title: '用户管理' },
+      },
+      {
+        path: 'role',
+        name: 'SystemRole',
+        component: () => import('@/view/system/role/index.vue'),
+        meta: { requiresAuth: true, title: '角色管理' },
+      },
+      {
+        path: 'menu',
+        name: 'SystemMenu',
+        component: () => import('@/view/system/menu/index.vue'),
+        meta: { requiresAuth: true, title: '菜单管理' },
+      },
+      {
+        path: 'permission',
+        name: 'SystemPermission',
+        component: () => import('@/view/system/permission/index.vue'),
+        meta: { requiresAuth: true, title: '权限管理' },
+      },
+    ],
+  },
+  {
+    path: '/other',
+    name: 'Other',
+    redirect: '/other/about',
+    meta: { requiresAuth: true, title: '其他' },
+    children: [
+      {
+        path: 'about',
+        name: 'About',
+        component: () => import('@/view/other/about/index.vue'),
+        meta: { requiresAuth: true, title: '关于我们' },
+      },
+    ],
+  },
   {
     path: '/login',
     name: 'Login',

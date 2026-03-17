@@ -1,0 +1,51 @@
+// 对应后端 SysMenu
+export interface SysMenu {
+  id: number
+  parent_id: number
+  perm_id: number | null
+  name: string
+  menu_type: number        // 1=目录 2=菜单 3=按钮
+  path: string | null
+  component: string | null
+  icon: string | null
+  sort_order: number
+  is_hidden: boolean
+  is_deleted: boolean
+  create_id: number
+  create_time: string
+  update_id: number
+  update_time: string
+  remark: string | null
+}
+
+export interface SysMenuSaveDto {
+  parent_id?: number
+  perm_id?: number
+  name: string
+  menu_type: number
+  path?: string
+  component?: string
+  icon?: string
+  sort_order?: number
+  remark?: string
+}
+
+export interface SysMenuUpdateDto {
+  id: number
+  name?: string
+  path?: string
+  component?: string
+  icon?: string
+  sort_order?: number
+  is_hidden?: boolean
+  remark?: string
+}
+
+export interface SysMenuListDto {
+  name?: string
+  menu_type?: number
+  is_hidden?: boolean
+  parent_id?: number
+  create_start_time?: string
+  create_end_time?: string
+}
