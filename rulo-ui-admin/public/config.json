@@ -1,0 +1,10 @@
+{
+  "dev": {
+    "apiBaseUrl": "http://127.0.0.1:13000",
+    "debugMode": true
+  },
+  "prod": {
+    "apiBaseUrl": "http://127.0.0.1:13000",
+    "debugMode": false
+  }
+}

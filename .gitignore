@@ -32,8 +32,6 @@ replay_pid*
 
 application-local.yml
 
-/rulo-ui-client/package-lock.json
-
 **/test/
 
 logs/
@@ -41,3 +39,4 @@ logs/
 .marscode/
 **/Cargo.lock
 .sqlx/
+demo*
