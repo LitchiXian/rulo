@@ -55,6 +55,20 @@ export const constantRoutes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/monitor',
+    name: 'Monitor',
+    redirect: '/monitor/server',
+    meta: { requiresAuth: true, title: '系统监控' },
+    children: [
+      {
+        path: 'server',
+        name: 'MonitorServer',
+        component: () => import('@/view/monitor/server/index.vue'),
+        meta: { requiresAuth: true, title: '服务监控' },
+      },
+    ],
+  },
+  {
     path: '/other',
     name: 'Other',
     redirect: '/other/about',
@@ -67,6 +81,18 @@ export const constantRoutes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, title: '关于我们' },
       },
     ],
+  },
+  {
+    path: '/changelog',
+    name: 'Changelog',
+    component: () => import('@/view/changelog/index.vue'),
+    meta: { requiresAuth: true, title: '更新日志' },
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/view/profile/index.vue'),
+    meta: { requiresAuth: true, title: '个人中心' },
   },
   {
     path: '/login',

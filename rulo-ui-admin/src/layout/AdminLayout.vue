@@ -1,10 +1,11 @@
 <script setup lang="ts" name="AdminLayout">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Fold, Expand, Odometer, User, SwitchButton, Setting, UserFilled, Key, Menu as MenuIcon, Lock, MoreFilled, InfoFilled, Link, Sunny, Moon, FullScreen, ScaleToOriginal } from '@element-plus/icons-vue'
+import { Fold, Expand, Odometer, User, SwitchButton, Setting, UserFilled, Key, Menu as MenuIcon, Lock, MoreFilled, InfoFilled, Link, Sunny, Moon, FullScreen, Notebook, Monitor, DataLine } from '@element-plus/icons-vue'
 
 import { useUserStore } from '@/store/user'
 import { useLayoutStore } from '@/store/layout'
+import { PROFILE_DECOR_CHANGE_EVENT, loadProfileDecor } from '@/util/profileDecor'
 import LayoutSetting from '@/component/LayoutSetting.vue'
 
 const route = useRoute()
@@ -29,7 +30,13 @@ const activeTopMenu = computed(() => {
 const activeTopKey = ref(activeTopMenu.value)
 watch(activeTopMenu, (v) => { activeTopKey.value = v })
 
+const headerAvatar = ref(loadProfileDecor().avatar)
+
 const handleCommand = async (cmd: string) => {
+  if (cmd === 'profile') {
+    router.push('/profile')
+    return
+  }
   if (cmd === 'logout') {
     await userStore.logout()
     router.push('/login')
@@ -52,8 +59,20 @@ const toggleFullscreen = () => {
 const onFullscreenChange = () => {
   isFullscreen.value = !!document.fullscreenElement
 }
-onMounted(() => document.addEventListener('fullscreenchange', onFullscreenChange))
-onUnmounted(() => document.removeEventListener('fullscreenchange', onFullscreenChange))
+const syncHeaderAvatar = () => {
+  headerAvatar.value = loadProfileDecor().avatar
+}
+
+onMounted(() => {
+  document.addEventListener('fullscreenchange', onFullscreenChange)
+  window.addEventListener(PROFILE_DECOR_CHANGE_EVENT, syncHeaderAvatar)
+  syncHeaderAvatar()
+})
+
+onUnmounted(() => {
+  document.removeEventListener('fullscreenchange', onFullscreenChange)
+  window.removeEventListener(PROFILE_DECOR_CHANGE_EVENT, syncHeaderAvatar)
+})
 
 // 混合模式：点击顶部一级菜单，切换侧边子菜单
 const handleTopMenuSelect = (index: string) => {
@@ -77,7 +96,7 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
     <!-- ========= 左侧侧边栏 (left / left-top-mix) ========= -->
     <el-aside
       v-if="hasSidebar && !isRight"
-      :width="isCollapsed ? '64px' : '220px'"
+      :width="isCollapsed ? '64px' : '230px'"
       class="admin-aside"
     >
       <div class="admin-logo" :class="{ collapsed: isCollapsed }">
@@ -122,6 +141,16 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
             <template #title>权限管理</template>
           </el-menu-item>
         </el-sub-menu>
+        <el-sub-menu index="/monitor">
+          <template #title>
+            <el-icon><Monitor /></el-icon>
+            <span>系统监控</span>
+          </template>
+          <el-menu-item index="/monitor/server">
+            <el-icon><DataLine /></el-icon>
+            <template #title>服务监控</template>
+          </el-menu-item>
+        </el-sub-menu>
         <el-sub-menu index="/other">
           <template #title>
             <el-icon><MoreFilled /></el-icon>
@@ -136,6 +165,10 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
             <template #title>项目地址</template>
           </el-menu-item>
         </el-sub-menu>
+        <el-menu-item index="/changelog">
+          <el-icon><Notebook /></el-icon>
+          <template #title>更新日志</template>
+        </el-menu-item>
       </el-menu>
 
       <!-- 混合：只显示当前一级菜单的子菜单 -->
@@ -175,6 +208,13 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
             <template #title>权限管理</template>
           </el-menu-item>
         </template>
+        <!-- /monitor 子菜单 -->
+        <template v-if="activeTopKey === '/monitor'">
+          <el-menu-item index="/monitor/server">
+            <el-icon><DataLine /></el-icon>
+            <template #title>服务监控</template>
+          </el-menu-item>
+        </template>
         <!-- /other 子菜单 -->
         <template v-if="activeTopKey === '/other'">
           <el-menu-item index="/other/about">
@@ -184,6 +224,13 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
           <el-menu-item @click="openProjectUrl">
             <el-icon><Link /></el-icon>
             <template #title>项目地址</template>
+          </el-menu-item>
+        </template>
+        <!-- /changelog 无子菜单 -->
+        <template v-if="activeTopKey === '/changelog'">
+          <el-menu-item index="/changelog">
+            <el-icon><Notebook /></el-icon>
+            <template #title>更新日志</template>
           </el-menu-item>
         </template>
       </el-menu>
@@ -221,9 +268,17 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
               <el-icon><Setting /></el-icon>
               <span>系统管理</span>
             </el-menu-item>
+            <el-menu-item index="/monitor">
+              <el-icon><Monitor /></el-icon>
+              <span>系统监控</span>
+            </el-menu-item>
             <el-menu-item index="/other">
               <el-icon><MoreFilled /></el-icon>
               <span>其他</span>
+            </el-menu-item>
+            <el-menu-item index="/changelog">
+              <el-icon><Notebook /></el-icon>
+              <span>更新日志</span>
             </el-menu-item>
           </el-menu>
 
@@ -260,6 +315,16 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
                 <span>权限管理</span>
               </el-menu-item>
             </el-sub-menu>
+            <el-sub-menu index="/monitor">
+              <template #title>
+                <el-icon><Monitor /></el-icon>
+                <span>系统监控</span>
+              </template>
+              <el-menu-item index="/monitor/server">
+                <el-icon><DataLine /></el-icon>
+                <span>服务监控</span>
+              </el-menu-item>
+            </el-sub-menu>
             <el-sub-menu index="/other">
               <template #title>
                 <el-icon><MoreFilled /></el-icon>
@@ -274,6 +339,10 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
                 <span>项目地址</span>
               </el-menu-item>
             </el-sub-menu>
+            <el-menu-item index="/changelog">
+              <el-icon><Notebook /></el-icon>
+              <span>更新日志</span>
+            </el-menu-item>
           </el-menu>
 
           <!-- 非顶部模式的面包屑 -->
@@ -295,9 +364,20 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
           <!-- 全屏切换 -->
           <el-tooltip :content="isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
             <span class="header-icon-btn" @click="toggleFullscreen">
-              <el-icon :size="18">
-                <ScaleToOriginal v-if="isFullscreen" />
-                <FullScreen v-else />
+              <svg
+                v-if="isFullscreen"
+                class="fullscreen-inset-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M10 4V9H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M14 4V9H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M10 20V15H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M14 20V15H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <el-icon v-else :size="18">
+                <FullScreen />
               </el-icon>
             </span>
           </el-tooltip>
@@ -322,13 +402,17 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
           <!-- 用户下拉 -->
           <el-dropdown trigger="click" @command="handleCommand">
             <div class="user-trigger">
-              <el-avatar :size="30" style="background: #409eff; flex-shrink: 0;">
-                <el-icon><User /></el-icon>
+              <el-avatar :size="30" class="header-avatar">
+                <img v-if="headerAvatar" :src="headerAvatar" alt="avatar" />
+                <el-icon v-else><User /></el-icon>
               </el-avatar>
               <span class="user-name">{{ userStore.userName || '管理员' }}</span>
             </div>
             <template #dropdown>
               <el-dropdown-menu>
+                <el-dropdown-item command="profile" :icon="UserFilled">
+                  个人中心
+                </el-dropdown-item>
                 <el-dropdown-item command="logout" :icon="SwitchButton">
                   退出登录
                 </el-dropdown-item>
@@ -345,7 +429,7 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
         </el-main>
 
         <!-- 右侧侧边栏 -->
-        <el-aside :width="isCollapsed ? '64px' : '220px'" class="admin-aside">
+        <el-aside :width="isCollapsed ? '64px' : '230px'" class="admin-aside">
           <div class="admin-logo" :class="{ collapsed: isCollapsed }">
             <img src="/rulo.ico" class="logo-icon" alt="logo" />
             <span v-show="!isCollapsed" class="logo-text">Rulo Admin</span>
@@ -388,6 +472,16 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
                 <template #title>权限管理</template>
               </el-menu-item>
             </el-sub-menu>
+            <el-sub-menu index="/monitor">
+              <template #title>
+                <el-icon><Monitor /></el-icon>
+                <span>系统监控</span>
+              </template>
+              <el-menu-item index="/monitor/server">
+                <el-icon><DataLine /></el-icon>
+                <template #title>服务监控</template>
+              </el-menu-item>
+            </el-sub-menu>
             <el-sub-menu index="/other">
               <template #title>
                 <el-icon><MoreFilled /></el-icon>
@@ -402,6 +496,10 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
                 <template #title>项目地址</template>
               </el-menu-item>
             </el-sub-menu>
+            <el-menu-item index="/changelog">
+              <el-icon><Notebook /></el-icon>
+              <template #title>更新日志</template>
+            </el-menu-item>
           </el-menu>
 
           <!-- 混合：只显示子菜单 -->
@@ -439,6 +537,12 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
                 <template #title>权限管理</template>
               </el-menu-item>
             </template>
+            <template v-if="activeTopKey === '/monitor'">
+              <el-menu-item index="/monitor/server">
+                <el-icon><DataLine /></el-icon>
+                <template #title>服务监控</template>
+              </el-menu-item>
+            </template>
             <template v-if="activeTopKey === '/other'">
               <el-menu-item index="/other/about">
                 <el-icon><InfoFilled /></el-icon>
@@ -447,6 +551,12 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
               <el-menu-item @click="openProjectUrl">
                 <el-icon><Link /></el-icon>
                 <template #title>项目地址</template>
+              </el-menu-item>
+            </template>
+            <template v-if="activeTopKey === '/changelog'">
+              <el-menu-item index="/changelog">
+                <el-icon><Notebook /></el-icon>
+                <template #title>更新日志</template>
               </el-menu-item>
             </template>
           </el-menu>
@@ -493,12 +603,12 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
   white-space: nowrap;
   overflow: hidden;
   transition: padding 0.28s ease, color 0.3s ease;
-  padding: 0 16px;
+  padding: 0 20px;
 }
 
 .logo-icon {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
   object-fit: contain;
 }
@@ -515,7 +625,7 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
   --el-menu-active-color: var(--rulo-sidebar-text-active);
   --el-menu-bg-color: var(--rulo-sidebar-bg);
   --el-menu-hover-bg-color: var(--rulo-sidebar-hover-bg);
-  --el-menu-item-height: 50px;
+  --el-menu-item-height: 52px;
   transition: background 0.3s ease;
 }
 
@@ -628,6 +738,17 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
 .github-icon {
   width: 18px;
   height: 18px;
+}
+
+.fullscreen-inset-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.header-avatar {
+  background: linear-gradient(135deg, var(--rulo-primary), color-mix(in srgb, var(--rulo-primary) 68%, #ffffff 32%));
+  flex-shrink: 0;
 }
 
 .user-trigger {
