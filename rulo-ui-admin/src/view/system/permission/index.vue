@@ -10,7 +10,7 @@ import type {
   SysPermissionListDto,
 } from '@/type/permission'
 
-const PERM_TYPE_MAP: Record<number, string> = { 1: '菜单', 2: '按钮', 3: 'API' }
+const PERM_TYPE_MAP: Record<number, string> = { 1: 'API权限', 2: '菜单入口' }
 
 // ---- 列表 ----
 const tableData = ref<SysPermission[]>([])
@@ -99,9 +99,8 @@ onMounted(fetchList)
         </el-form-item>
         <el-form-item label="类型">
           <el-select v-model="queryForm.perm_type" placeholder="请选择" clearable style="width: 120px">
-            <el-option label="菜单" :value="1" />
-            <el-option label="按钮" :value="2" />
-            <el-option label="API" :value="3" />
+            <el-option label="API权限" :value="1" />
+            <el-option label="菜单入口" :value="2" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -154,9 +153,8 @@ onMounted(fetchList)
         </el-form-item>
         <el-form-item label="类型" required>
           <el-radio-group v-model="formData.perm_type">
-            <el-radio :value="1">菜单</el-radio>
-            <el-radio :value="2">按钮</el-radio>
-            <el-radio :value="3">API</el-radio>
+            <el-radio :value="1">API权限</el-radio>
+            <el-radio :value="2">菜单入口</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="备注">

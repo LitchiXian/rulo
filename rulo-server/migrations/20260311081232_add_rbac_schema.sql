@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS sys_permission (
     id          BIGINT PRIMARY KEY,
     perm_code   VARCHAR(100) NOT NULL UNIQUE,             -- 权限标识 sys:user:list
     perm_name   VARCHAR(50)  NOT NULL,                   -- 权限名称
-    perm_type   SMALLINT     NOT NULL DEFAULT 1,         -- 1=菜单权限 2=按钮权限 3=API权限
+    perm_type   SMALLINT     NOT NULL DEFAULT 1,         -- 1=API权限 2=菜单权限
     is_deleted  BOOLEAN      NOT NULL DEFAULT FALSE,
     create_id   BIGINT       NOT NULL,
     create_time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -16,7 +16,7 @@ COMMENT ON TABLE  sys_permission             IS '系统_权限表（独立于菜
 COMMENT ON COLUMN sys_permission.id          IS 'ID';
 COMMENT ON COLUMN sys_permission.perm_code   IS '权限标识，如 sys:user:list';
 COMMENT ON COLUMN sys_permission.perm_name   IS '权限名称';
-COMMENT ON COLUMN sys_permission.perm_type   IS '类型：1=菜单 2=按钮 3=API';
+COMMENT ON COLUMN sys_permission.perm_type   IS '类型：1=API权限 2=菜单权限';
 COMMENT ON COLUMN sys_permission.is_deleted  IS '逻辑删除标志（false=正常，true=已删除）';
 COMMENT ON COLUMN sys_permission.create_id   IS '创建人ID';
 COMMENT ON COLUMN sys_permission.create_time IS '创建时间';
