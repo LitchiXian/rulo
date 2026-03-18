@@ -15,8 +15,6 @@ Rulo is built around three active parts:
 - `rulo-ui-admin`: Vue 3 + Vite admin panel for system management and monitoring
 - `rulo-ui-client`: Vue 3 client-facing frontend
 
-The repository also contains `demo01`, `demo02`, and `demo03` as reference/demo projects used during design and architecture exploration.
-
 ## Current Features
 
 ### Backend

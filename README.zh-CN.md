@@ -15,8 +15,6 @@
 - `rulo-ui-admin`：基于 Vue 3 + Vite 的后台管理端
 - `rulo-ui-client`：基于 Vue 3 + Vite 的客户端前端
 
-另外仓库中的 `demo01`、`demo02`、`demo03` 主要用于前期设计参考、架构分析和 UI 对照。
-
 ## 当前已具备的能力
 
 ### 后端
