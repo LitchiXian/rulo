@@ -1,17 +1,22 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { UserInfo, LoginDto } from '@/type/user'
+import type { UserInfoVo, MenuTreeNode, LoginDto } from '@/type/user'
 import authApi from '@/api/admin/auth'
 
 export const useUserStore = defineStore(
   'admin-user',
   () => {
     const token = ref<string>('')
-    const userInfo = ref<UserInfo | null>(null)
+    const userInfo = ref<UserInfoVo | null>(null)
+    const perms = ref<string[]>([])
+    const menus = ref<MenuTreeNode[]>([])
     const loading = ref(false)
 
     const isLoggedIn = computed(() => !!token.value)
     const userName = computed(() => userInfo.value?.nick_name || userInfo.value?.user_name || '')
+
+    /** 判断当前用户是否拥有指定权限码 */
+    const hasPerm = (code: string) => perms.value.includes(code)
 
     const login = async (credentials: LoginDto) => {
       loading.value = true
@@ -24,7 +29,10 @@ export const useUserStore = defineStore(
 
     const initUser = async () => {
       if (!token.value) return
-      userInfo.value = await authApi.getLoginInfo()
+      const info = await authApi.getLoginInfo()
+      userInfo.value = info.user
+      perms.value = info.perms
+      menus.value = info.menus
     }
 
     const logout = async () => {
@@ -33,10 +41,12 @@ export const useUserStore = defineStore(
       } finally {
         token.value = ''
         userInfo.value = null
+        perms.value = []
+        menus.value = []
       }
     }
 
-    return { token, userInfo, loading, isLoggedIn, userName, login, initUser, logout }
+    return { token, userInfo, perms, menus, loading, isLoggedIn, userName, hasPerm, login, initUser, logout }
   },
   {
     persist: {

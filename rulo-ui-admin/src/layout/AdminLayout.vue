@@ -2,6 +2,8 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Fold, Expand, Odometer, User, SwitchButton, Setting, UserFilled, Key, Menu as MenuIcon, Lock, MoreFilled, InfoFilled, Link, Sunny, Moon, FullScreen, Notebook, Monitor, DataLine } from '@element-plus/icons-vue'
+import type { Component } from 'vue'
+import type { MenuTreeNode } from '@/type/user'
 
 import { useUserStore } from '@/store/user'
 import { useLayoutStore } from '@/store/layout'
@@ -12,6 +14,37 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const layoutStore = useLayoutStore()
+
+// 图标名 → 组件映射
+const iconMap: Record<string, Component> = {
+  Odometer, User, Setting, UserFilled, Key, Menu: MenuIcon, Lock,
+  MoreFilled, InfoFilled, Link, Notebook, Monitor, DataLine, SwitchButton, Expand, Fold, Sunny, Moon, FullScreen,
+}
+
+// 可见菜单树（过滤 is_hidden）
+const visibleMenus = computed(() => filterHidden(userStore.menus))
+
+function filterHidden(nodes: MenuTreeNode[]): MenuTreeNode[] {
+  return nodes
+    .filter(n => !n.is_hidden)
+    .map(n => ({ ...n, children: filterHidden(n.children ?? []) }))
+}
+
+// 混合模式：顶部只展示一级菜单；侧边展示当前选中一级的子菜单
+const topLevelMenus = computed(() => visibleMenus.value)
+
+const mixSidebarMenus = computed(() => {
+  if (activeTopKey.value === '/dashboard') return []
+  const found = visibleMenus.value.find(m => m.path === activeTopKey.value)
+  return found?.children ?? []
+})
+
+// 点击菜单项时判断是否外链
+const handleMenuClick = (item: MenuTreeNode) => {
+  if (item.menu_type === 3 && item.path) {
+    window.open(item.path, '_blank')
+  }
+}
 
 const isCollapsed = ref(false)
 const toggleCollapse = () => (isCollapsed.value = !isCollapsed.value)
@@ -74,9 +107,16 @@ onUnmounted(() => {
   window.removeEventListener(PROFILE_DECOR_CHANGE_EVENT, syncHeaderAvatar)
 })
 
-// 混合模式：点击顶部一级菜单，切换侧边子菜单
+// 混合模式：点击顶部一级菜单，切换侧边子菜单；同时跳转到第一个子页面
 const handleTopMenuSelect = (index: string) => {
   activeTopKey.value = index
+  const found = visibleMenus.value.find(m => m.path === index)
+  if (found?.children?.length) {
+    const first = found.children[0]
+    if (first.path && first.menu_type !== 3) {
+      router.push(first.path)
+    }
+  }
 }
 
 // 布局模式判断
@@ -119,56 +159,38 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
           <el-icon><Odometer /></el-icon>
           <template #title>首页</template>
         </el-menu-item>
-        <el-sub-menu index="/system">
-          <template #title>
-            <el-icon><Setting /></el-icon>
-            <span>系统管理</span>
-          </template>
-          <el-menu-item index="/system/user">
-            <el-icon><UserFilled /></el-icon>
-            <template #title>用户管理</template>
+        <template v-for="item in visibleMenus" :key="item.id">
+          <el-sub-menu v-if="item.children?.length" :index="item.path ?? ''">
+            <template #title>
+              <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
+              <span>{{ item.name }}</span>
+            </template>
+            <template v-for="child in item.children" :key="child.id">
+              <el-menu-item
+                v-if="child.menu_type !== 3"
+                :index="child.path ?? ''"
+              >
+                <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>
+                <template #title>{{ child.name }}</template>
+              </el-menu-item>
+              <el-menu-item v-else :key="'ext-' + child.id" @click="handleMenuClick(child)">
+                <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>
+                <template #title>{{ child.name }}</template>
+              </el-menu-item>
+            </template>
+          </el-sub-menu>
+          <el-menu-item
+            v-else-if="item.menu_type !== 3"
+            :index="item.path ?? ''"
+          >
+            <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
+            <template #title>{{ item.name }}</template>
           </el-menu-item>
-          <el-menu-item index="/system/role">
-            <el-icon><Key /></el-icon>
-            <template #title>角色管理</template>
+          <el-menu-item v-else @click="handleMenuClick(item)">
+            <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
+            <template #title>{{ item.name }}</template>
           </el-menu-item>
-          <el-menu-item index="/system/menu">
-            <el-icon><MenuIcon /></el-icon>
-            <template #title>菜单管理</template>
-          </el-menu-item>
-          <el-menu-item index="/system/permission">
-            <el-icon><Lock /></el-icon>
-            <template #title>权限管理</template>
-          </el-menu-item>
-        </el-sub-menu>
-        <el-sub-menu index="/monitor">
-          <template #title>
-            <el-icon><Monitor /></el-icon>
-            <span>系统监控</span>
-          </template>
-          <el-menu-item index="/monitor/server">
-            <el-icon><DataLine /></el-icon>
-            <template #title>服务监控</template>
-          </el-menu-item>
-        </el-sub-menu>
-        <el-sub-menu index="/other">
-          <template #title>
-            <el-icon><MoreFilled /></el-icon>
-            <span>其他</span>
-          </template>
-          <el-menu-item index="/other/about">
-            <el-icon><InfoFilled /></el-icon>
-            <template #title>关于我们</template>
-          </el-menu-item>
-          <el-menu-item @click="openProjectUrl">
-            <el-icon><Link /></el-icon>
-            <template #title>项目地址</template>
-          </el-menu-item>
-        </el-sub-menu>
-        <el-menu-item index="/changelog">
-          <el-icon><Notebook /></el-icon>
-          <template #title>更新日志</template>
-        </el-menu-item>
+        </template>
       </el-menu>
 
       <!-- 混合：只显示当前一级菜单的子菜单 -->
@@ -182,56 +204,37 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
         :mode="sidebarMenuMode"
         class="admin-menu"
       >
-        <!-- /dashboard 没有子菜单，显示首页本身 -->
         <template v-if="activeTopKey === '/dashboard'">
           <el-menu-item index="/dashboard">
             <el-icon><Odometer /></el-icon>
             <template #title>首页</template>
           </el-menu-item>
         </template>
-        <!-- /system 子菜单 -->
-        <template v-if="activeTopKey === '/system'">
-          <el-menu-item index="/system/user">
-            <el-icon><UserFilled /></el-icon>
-            <template #title>用户管理</template>
-          </el-menu-item>
-          <el-menu-item index="/system/role">
-            <el-icon><Key /></el-icon>
-            <template #title>角色管理</template>
-          </el-menu-item>
-          <el-menu-item index="/system/menu">
-            <el-icon><MenuIcon /></el-icon>
-            <template #title>菜单管理</template>
-          </el-menu-item>
-          <el-menu-item index="/system/permission">
-            <el-icon><Lock /></el-icon>
-            <template #title>权限管理</template>
-          </el-menu-item>
-        </template>
-        <!-- /monitor 子菜单 -->
-        <template v-if="activeTopKey === '/monitor'">
-          <el-menu-item index="/monitor/server">
-            <el-icon><DataLine /></el-icon>
-            <template #title>服务监控</template>
-          </el-menu-item>
-        </template>
-        <!-- /other 子菜单 -->
-        <template v-if="activeTopKey === '/other'">
-          <el-menu-item index="/other/about">
-            <el-icon><InfoFilled /></el-icon>
-            <template #title>关于我们</template>
-          </el-menu-item>
-          <el-menu-item @click="openProjectUrl">
-            <el-icon><Link /></el-icon>
-            <template #title>项目地址</template>
-          </el-menu-item>
-        </template>
-        <!-- /changelog 无子菜单 -->
-        <template v-if="activeTopKey === '/changelog'">
-          <el-menu-item index="/changelog">
-            <el-icon><Notebook /></el-icon>
-            <template #title>更新日志</template>
-          </el-menu-item>
+        <template v-else>
+          <template v-for="child in mixSidebarMenus" :key="child.id">
+            <el-menu-item
+              v-if="child.menu_type !== 3"
+              :index="child.path ?? ''"
+            >
+              <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>
+              <template #title>{{ child.name }}</template>
+            </el-menu-item>
+            <el-menu-item v-else @click="handleMenuClick(child)">
+              <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>
+              <template #title>{{ child.name }}</template>
+            </el-menu-item>
+          </template>
+          <!-- 无子菜单的一级页面，显示自身 -->
+          <template v-if="!mixSidebarMenus.length">
+            <el-menu-item
+              v-for="item in visibleMenus.filter(m => m.path === activeTopKey && !m.children?.length)"
+              :key="item.id"
+              :index="item.path ?? ''"
+            >
+              <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
+              <template #title>{{ item.name }}</template>
+            </el-menu-item>
+          </template>
         </template>
       </el-menu>
     </el-aside>
@@ -264,21 +267,9 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
               <el-icon><Odometer /></el-icon>
               <span>首页</span>
             </el-menu-item>
-            <el-menu-item index="/system">
-              <el-icon><Setting /></el-icon>
-              <span>系统管理</span>
-            </el-menu-item>
-            <el-menu-item index="/monitor">
-              <el-icon><Monitor /></el-icon>
-              <span>系统监控</span>
-            </el-menu-item>
-            <el-menu-item index="/other">
-              <el-icon><MoreFilled /></el-icon>
-              <span>其他</span>
-            </el-menu-item>
-            <el-menu-item index="/changelog">
-              <el-icon><Notebook /></el-icon>
-              <span>更新日志</span>
+            <el-menu-item v-for="item in topLevelMenus" :key="item.id" :index="item.path ?? ''">
+              <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
+              <span>{{ item.name }}</span>
             </el-menu-item>
           </el-menu>
 
@@ -293,56 +284,38 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
               <el-icon><Odometer /></el-icon>
               <span>首页</span>
             </el-menu-item>
-            <el-sub-menu index="/system">
-              <template #title>
-                <el-icon><Setting /></el-icon>
-                <span>系统管理</span>
-              </template>
-              <el-menu-item index="/system/user">
-                <el-icon><UserFilled /></el-icon>
-                <span>用户管理</span>
+            <template v-for="item in visibleMenus" :key="item.id">
+              <el-sub-menu v-if="item.children?.length" :index="item.path ?? ''">
+                <template #title>
+                  <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
+                  <span>{{ item.name }}</span>
+                </template>
+                <template v-for="child in item.children" :key="child.id">
+                  <el-menu-item
+                    v-if="child.menu_type !== 3"
+                    :index="child.path ?? ''"
+                  >
+                    <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>
+                    <span>{{ child.name }}</span>
+                  </el-menu-item>
+                  <el-menu-item v-else @click="handleMenuClick(child)">
+                    <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>
+                    <span>{{ child.name }}</span>
+                  </el-menu-item>
+                </template>
+              </el-sub-menu>
+              <el-menu-item
+                v-else-if="item.menu_type !== 3"
+                :index="item.path ?? ''"
+              >
+                <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
+                <span>{{ item.name }}</span>
               </el-menu-item>
-              <el-menu-item index="/system/role">
-                <el-icon><Key /></el-icon>
-                <span>角色管理</span>
+              <el-menu-item v-else @click="handleMenuClick(item)">
+                <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
+                <span>{{ item.name }}</span>
               </el-menu-item>
-              <el-menu-item index="/system/menu">
-                <el-icon><MenuIcon /></el-icon>
-                <span>菜单管理</span>
-              </el-menu-item>
-              <el-menu-item index="/system/permission">
-                <el-icon><Lock /></el-icon>
-                <span>权限管理</span>
-              </el-menu-item>
-            </el-sub-menu>
-            <el-sub-menu index="/monitor">
-              <template #title>
-                <el-icon><Monitor /></el-icon>
-                <span>系统监控</span>
-              </template>
-              <el-menu-item index="/monitor/server">
-                <el-icon><DataLine /></el-icon>
-                <span>服务监控</span>
-              </el-menu-item>
-            </el-sub-menu>
-            <el-sub-menu index="/other">
-              <template #title>
-                <el-icon><MoreFilled /></el-icon>
-                <span>其他</span>
-              </template>
-              <el-menu-item index="/other/about">
-                <el-icon><InfoFilled /></el-icon>
-                <span>关于我们</span>
-              </el-menu-item>
-              <el-menu-item @click="openProjectUrl">
-                <el-icon><Link /></el-icon>
-                <span>项目地址</span>
-              </el-menu-item>
-            </el-sub-menu>
-            <el-menu-item index="/changelog">
-              <el-icon><Notebook /></el-icon>
-              <span>更新日志</span>
-            </el-menu-item>
+            </template>
           </el-menu>
 
           <!-- 非顶部模式的面包屑 -->
@@ -450,56 +423,38 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
               <el-icon><Odometer /></el-icon>
               <template #title>首页</template>
             </el-menu-item>
-            <el-sub-menu index="/system">
-              <template #title>
-                <el-icon><Setting /></el-icon>
-                <span>系统管理</span>
-              </template>
-              <el-menu-item index="/system/user">
-                <el-icon><UserFilled /></el-icon>
-                <template #title>用户管理</template>
+            <template v-for="item in visibleMenus" :key="item.id">
+              <el-sub-menu v-if="item.children?.length" :index="item.path ?? ''">
+                <template #title>
+                  <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
+                  <span>{{ item.name }}</span>
+                </template>
+                <template v-for="child in item.children" :key="child.id">
+                  <el-menu-item
+                    v-if="child.menu_type !== 3"
+                    :index="child.path ?? ''"
+                  >
+                    <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>
+                    <template #title>{{ child.name }}</template>
+                  </el-menu-item>
+                  <el-menu-item v-else @click="handleMenuClick(child)">
+                    <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>
+                    <template #title>{{ child.name }}</template>
+                  </el-menu-item>
+                </template>
+              </el-sub-menu>
+              <el-menu-item
+                v-else-if="item.menu_type !== 3"
+                :index="item.path ?? ''"
+              >
+                <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
+                <template #title>{{ item.name }}</template>
               </el-menu-item>
-              <el-menu-item index="/system/role">
-                <el-icon><Key /></el-icon>
-                <template #title>角色管理</template>
+              <el-menu-item v-else @click="handleMenuClick(item)">
+                <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
+                <template #title>{{ item.name }}</template>
               </el-menu-item>
-              <el-menu-item index="/system/menu">
-                <el-icon><MenuIcon /></el-icon>
-                <template #title>菜单管理</template>
-              </el-menu-item>
-              <el-menu-item index="/system/permission">
-                <el-icon><Lock /></el-icon>
-                <template #title>权限管理</template>
-              </el-menu-item>
-            </el-sub-menu>
-            <el-sub-menu index="/monitor">
-              <template #title>
-                <el-icon><Monitor /></el-icon>
-                <span>系统监控</span>
-              </template>
-              <el-menu-item index="/monitor/server">
-                <el-icon><DataLine /></el-icon>
-                <template #title>服务监控</template>
-              </el-menu-item>
-            </el-sub-menu>
-            <el-sub-menu index="/other">
-              <template #title>
-                <el-icon><MoreFilled /></el-icon>
-                <span>其他</span>
-              </template>
-              <el-menu-item index="/other/about">
-                <el-icon><InfoFilled /></el-icon>
-                <template #title>关于我们</template>
-              </el-menu-item>
-              <el-menu-item @click="openProjectUrl">
-                <el-icon><Link /></el-icon>
-                <template #title>项目地址</template>
-              </el-menu-item>
-            </el-sub-menu>
-            <el-menu-item index="/changelog">
-              <el-icon><Notebook /></el-icon>
-              <template #title>更新日志</template>
-            </el-menu-item>
+            </template>
           </el-menu>
 
           <!-- 混合：只显示子菜单 -->
@@ -519,45 +474,30 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
                 <template #title>首页</template>
               </el-menu-item>
             </template>
-            <template v-if="activeTopKey === '/system'">
-              <el-menu-item index="/system/user">
-                <el-icon><UserFilled /></el-icon>
-                <template #title>用户管理</template>
-              </el-menu-item>
-              <el-menu-item index="/system/role">
-                <el-icon><Key /></el-icon>
-                <template #title>角色管理</template>
-              </el-menu-item>
-              <el-menu-item index="/system/menu">
-                <el-icon><MenuIcon /></el-icon>
-                <template #title>菜单管理</template>
-              </el-menu-item>
-              <el-menu-item index="/system/permission">
-                <el-icon><Lock /></el-icon>
-                <template #title>权限管理</template>
-              </el-menu-item>
-            </template>
-            <template v-if="activeTopKey === '/monitor'">
-              <el-menu-item index="/monitor/server">
-                <el-icon><DataLine /></el-icon>
-                <template #title>服务监控</template>
-              </el-menu-item>
-            </template>
-            <template v-if="activeTopKey === '/other'">
-              <el-menu-item index="/other/about">
-                <el-icon><InfoFilled /></el-icon>
-                <template #title>关于我们</template>
-              </el-menu-item>
-              <el-menu-item @click="openProjectUrl">
-                <el-icon><Link /></el-icon>
-                <template #title>项目地址</template>
-              </el-menu-item>
-            </template>
-            <template v-if="activeTopKey === '/changelog'">
-              <el-menu-item index="/changelog">
-                <el-icon><Notebook /></el-icon>
-                <template #title>更新日志</template>
-              </el-menu-item>
+            <template v-else>
+              <template v-for="child in mixSidebarMenus" :key="child.id">
+                <el-menu-item
+                  v-if="child.menu_type !== 3"
+                  :index="child.path ?? ''"
+                >
+                  <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>
+                  <template #title>{{ child.name }}</template>
+                </el-menu-item>
+                <el-menu-item v-else @click="handleMenuClick(child)">
+                  <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>
+                  <template #title>{{ child.name }}</template>
+                </el-menu-item>
+              </template>
+              <template v-if="!mixSidebarMenus.length">
+                <el-menu-item
+                  v-for="item in visibleMenus.filter(m => m.path === activeTopKey && !m.children?.length)"
+                  :key="item.id"
+                  :index="item.path ?? ''"
+                >
+                  <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
+                  <template #title>{{ item.name }}</template>
+                </el-menu-item>
+              </template>
             </template>
           </el-menu>
         </el-aside>

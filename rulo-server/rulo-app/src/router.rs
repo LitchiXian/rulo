@@ -17,7 +17,7 @@ use rulo_common::{
 
 use crate::system::{
     self,
-    user::model::{UserId, UserToken},
+    auth::model::{UserId, UserToken},
 };
 
 // 顶层路由: 统一管理鉴权, 所有模块的公开/私密路由都在这里聚合

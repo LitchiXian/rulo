@@ -21,12 +21,6 @@ pub struct SysUser {
     pub remark: Option<String>,
 }
 
-#[derive(Debug, Clone)]
-pub struct UserId(pub i64);
-
-#[derive(Debug, Clone)]
-pub struct UserToken(pub String);
-
 impl SysUser {
     pub fn new_user_from_save_dto(dto: &SysUserSaveDto) -> Self {
         // todo 生成 雪花ID

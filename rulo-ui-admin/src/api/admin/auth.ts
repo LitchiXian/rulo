@@ -1,5 +1,5 @@
 import request from '@/util/request'
-import type { UserInfo } from '@/type/user'
+import type { LoginInfoVo } from '@/type/user'
 
 const authApi = {
   login(data: { username: string; password: string }) {
@@ -10,8 +10,8 @@ const authApi = {
     return request({ url: '/system/auth/logout', method: 'post' })
   },
 
-  getLoginInfo(): Promise<UserInfo> {
-    return request({ url: '/system/auth/info', method: 'get' }) as Promise<UserInfo>
+  getLoginInfo(): Promise<LoginInfoVo> {
+    return request({ url: '/system/auth/info', method: 'get' }) as Promise<LoginInfoVo>
   },
 }
 

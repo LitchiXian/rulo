@@ -1,6 +1,10 @@
-use crate::system::user::{
-    model::{SysUser, SysUserSaveDto},
-    service,
+use crate::system::{
+    auth::model::LoginUserInfo,
+    permission::model::SysPermission,
+    user::{
+        model::{SysUser, SysUserSaveDto},
+        service,
+    },
 };
 use deadpool_redis::Pool;
 use rulo_common::{
@@ -32,6 +36,7 @@ pub async fn login(db_pool: &PgPool, redis_pool: &Pool, dto: &AuthUserDto) -> R<
     .fetch_optional(db_pool)
     .await?
     .ok_or_else(|| AppError::ServiceError("用户名或密码有误".to_string()))?;
+
     info!("login user {:?}", &db_user);
 
     // validate that user can perform normal operations
@@ -67,6 +72,29 @@ pub async fn login(db_pool: &PgPool, redis_pool: &Pool, dto: &AuthUserDto) -> R<
         redis_constant::ONE_DAY,
     )
     .await?;
+
+    // 保存权限到redis
+    let permissions: Vec<SysPermission> = query_as!(
+        Vec<SysPermission>,
+        "SELECT DISTINCT p.*
+FROM sys_user u
+JOIN sys_user_role ur ON u.id = ur.user_id
+JOIN sys_role r ON ur.role_id = r.id
+JOIN sys_role_permission rp ON r.id = rp.role_id
+JOIN sys_permission p ON rp.permission_id = p.id
+WHERE p.perm_type = 1 and u.id = $1;",
+        &db_user.id
+    )
+    .fetch_all(db_pool)
+    .await?
+    .ok_or_else(|| AppError::ServiceError("用户名或密码有误".to_string()))?;
+
+    // 1. 查询权限
+    // 2. 收集权限字段到Vec<String>
+    // 3. 保存到redis
+    // 保存菜单到redis
+    // 1. 查询菜单
+    // 2. 保存到redis
 
     success(token)
 }
@@ -118,12 +146,30 @@ pub async fn logout(redis_pool: &Pool, token: &str) -> R<()> {
     }
 }
 
-pub async fn info(redis_pool: &Pool, user_id: i64) -> R<SysUser> {
+pub async fn info(db_pool: &PgPool, redis_pool: &Pool, user_id: i64) -> R<LoginUserInfo> {
     // 通过 token 获取 用户信息
     let user_info_redis_key = redis_constant::USER_INFO.to_owned() + &user_id.to_string();
-    match redis_util::get_obj::<SysUser>(redis_pool, &user_info_redis_key).await {
-        Ok(Some(user_info)) => success(user_info),
+    let user_info = match redis_util::get_obj::<SysUser>(redis_pool, &user_info_redis_key).await {
+        Ok(Some(user_info)) => user_info,
         Ok(None) => Err(AppError::Unauthorized("登录已过期, 请重新登录".to_string())),
         Err(e) => Err(e),
-    }
+    };
+
+    let user_permission_redis_key =
+        redis_constant::USER_PERMISSION.to_owned() + &user_id.to_string();
+    let user_permissions =
+        match redis_util::get_obj::<SysUser>(redis_pool, &user_permission_redis_key).await {
+            Ok(Some(user_info)) => user_info,
+            Ok(None) => Err(AppError::Unauthorized("登录已过期, 请重新登录".to_string())),
+            Err(e) => Err(e),
+        };
+    // 取权限和菜单
+    // 没有取到的话从数据库拿
+    // 保存权限到redis
+    // 1. 查询权限
+    // 2. 收集权限字段到Vec<String>
+    // 3. 保存到redis
+    // 保存菜单到redis
+    // 1. 查询菜单
+    // 2. 保存到redis
 }

@@ -1,4 +1,35 @@
-// 用户信息（对应后端 SysUser 序列化字段）
+// 脱敏用户信息（对应后端 UserInfoVo，info 接口返回）
+export interface UserInfoVo {
+  id: number
+  user_name: string
+  nick_name: string
+  email: string | null
+  is_active: boolean
+  remark: string | null
+}
+
+// 菜单树节点（对应后端 MenuTreeNode）
+export interface MenuTreeNode {
+  id: number
+  parent_id: number
+  name: string
+  menu_type: number // 1=目录 2=菜单 3=外链
+  path: string | null
+  component: string | null
+  icon: string | null
+  sort_order: number
+  is_hidden: boolean
+  children: MenuTreeNode[]
+}
+
+// info 接口完整返回（对应后端 LoginInfoVo）
+export interface LoginInfoVo {
+  user: UserInfoVo
+  perms: string[]
+  menus: MenuTreeNode[]
+}
+
+// 完整用户信息（对应后端 SysUser，管理页面用）
 export interface UserInfo {
   id: number
   user_name: string

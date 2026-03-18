@@ -4,8 +4,11 @@ use axum::{Extension, Json, extract::State};
 use rulo_common::{result::R, state::AppState};
 
 use crate::system::{
-    auth::{model::AuthUserDto, service},
-    user::model::{SysUser, UserId, UserToken},
+    auth::{
+        model::{AuthUserDto, LoginUserInfo, UserId, UserToken},
+        service,
+    },
+    user::model::SysUser,
 };
 
 pub async fn hello_handler(
@@ -39,6 +42,6 @@ pub async fn logout_handler(
 pub async fn info_handler(
     State(state): State<Arc<AppState>>,
     Extension(UserId(user_id)): Extension<UserId>,
-) -> R<SysUser> {
-    service::info(&state.redis_pool, user_id).await
+) -> R<LoginUserInfo> {
+    service::info(&state.db_pool, &state.redis_pool, user_id).await
 }
