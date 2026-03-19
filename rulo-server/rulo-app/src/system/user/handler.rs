@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{
-    Extension, Json,
+    Json,
     extract::{Query, State},
 };
 use rulo_common::{
@@ -9,10 +9,11 @@ use rulo_common::{
     model::{IdDto, IdsDto},
     result::{R, success},
 };
+use rulo_macro::perm;
 use sqlx::query_as;
 use tracing::info;
 
-use crate::system::{auth::model::PermCodes, user::service};
+use crate::system::user::service;
 
 use super::model::*;
 use rulo_common::state::AppState;
@@ -92,14 +93,6 @@ pub async fn hello_redis_handler(State(state): State<Arc<AppState>>) -> R<String
 
 // 上面是例子,测试代码
 
-fn require_perm(perms: &PermCodes, code: &str) -> Result<(), AppError> {
-    if perms.0.contains(&code.to_string()) {
-        Ok(())
-    } else {
-        Err(AppError::Forbidden(format!("缺少权限:{}", code)))
-    }
-}
-
 pub async fn save_handler(
     State(state): State<Arc<AppState>>,
     Json(dto): Json<SysUserSaveDto>,
@@ -139,20 +132,18 @@ pub async fn update_handler(
     service::update_handle(&state.db_pool, &dto).await
 }
 
+#[perm("sys:user:detail")]
 pub async fn detail_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<IdDto>,
-    Extension(perms): Extension<PermCodes>,
 ) -> R<SysUser> {
-    require_perm(&perms, "sys::user::detail")?;
     service::get_one_handle(&state.db_pool, &dto).await
 }
 
+#[perm("sys:user:list")]
 pub async fn list_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<SysUserListDto>,
-    Extension(perms): Extension<PermCodes>,
 ) -> R<Vec<SysUser>> {
-    require_perm(&perms, "sys:user:list")?;
     service::list_handle(&state.db_pool, &dto).await
 }

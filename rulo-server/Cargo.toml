@@ -1,5 +1,5 @@
 [workspace]
-members = ["rulo-app","rulo-common"]
+members = ["rulo-app","rulo-common", "rulo-macro"]
 resolver = "3"
 
 [workspace.dependencies]
@@ -30,3 +30,7 @@ argon2 = "0.5.3"
 jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
 # 系统信息
 sysinfo = "0.38.4"
+# 自定义 macro
+proc-macro2 = "1.0.106"
+quote = "1.0.45"
+syn = { version = "2.0.117", features = ["full"] }
