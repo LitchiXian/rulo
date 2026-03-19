@@ -153,6 +153,6 @@ pub async fn list_handler(
     Query(dto): Query<SysUserListDto>,
     Extension(perms): Extension<PermCodes>,
 ) -> R<Vec<SysUser>> {
-    require_perm(&perms, "sys::user::list")?;
+    require_perm(&perms, "sys:user:list")?;
     service::list_handle(&state.db_pool, &dto).await
 }

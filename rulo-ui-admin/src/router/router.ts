@@ -113,6 +113,21 @@ const router = createRouter({
   routes: constantRoutes,
 })
 
+// 不需要菜单权限校验的白名单路由
+const whiteList = ['/dashboard', '/profile', '/changelog']
+
+/** 从后端菜单树中递归提取所有路径 */
+function extractMenuPaths(menus: import('@/type/user').MenuTreeNode[]): Set<string> {
+  const paths = new Set<string>()
+  for (const menu of menus) {
+    if (menu.path) paths.add(menu.path)
+    if (menu.children?.length) {
+      for (const p of extractMenuPaths(menu.children)) paths.add(p)
+    }
+  }
+  return paths
+}
+
 // 路由守卫：进度条 + 动态标题 + 权限
 router.beforeEach(async (to: RouteLocationNormalized) => {
   NProgress.start()
@@ -129,6 +144,14 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
 
   if (to.name === 'Login' && userStore.isLoggedIn) {
     return { name: 'Dashboard' }
+  }
+
+  // 菜单权限校验：白名单放行，其余检查是否在用户菜单中
+  if (to.meta.requiresAuth && userStore.isLoggedIn && !whiteList.includes(to.path)) {
+    const allowedPaths = extractMenuPaths(userStore.menus)
+    if (!allowedPaths.has(to.path)) {
+      return { name: 'NotFound' }
+    }
   }
 })
 

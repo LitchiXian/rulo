@@ -12,12 +12,12 @@ const stats = [
   { label: '待处理工单', value: '13',  icon: ChatDotRound,  color: '#f56c6c', trend: '-2' },
 ]
 
-// 快捷入口
+// 快捷入口（perm 为空则无需权限）
 const shortcuts = [
-  { name: '用户管理', icon: User, path: '/system/user', color: '#409eff' },
-  { name: '角色管理', icon: Star, path: '/system/role', color: '#67c23a' },
-  { name: '菜单管理', icon: Document, path: '/system/menu', color: '#e6a23c' },
-  { name: '更新日志', icon: TrendCharts, path: '/changelog', color: '#36A98F' },
+  { name: '用户管理', icon: User, path: '/system/user', color: '#409eff', perm: 'sys:user:list' },
+  { name: '角色管理', icon: Star, path: '/system/role', color: '#67c23a', perm: 'sys:role:list' },
+  { name: '菜单管理', icon: Document, path: '/system/menu', color: '#e6a23c', perm: 'sys:menu:list' },
+  { name: '更新日志', icon: TrendCharts, path: '/changelog', color: '#36A98F', perm: '' },
 ]
 
 // 最近操作日志
@@ -76,7 +76,7 @@ const contentTotal = contentParts.reduce((a, b) => a + b.value, 0)
         </p>
       </div>
       <div class="welcome-right">
-        <div class="quick-entry" v-for="s in shortcuts" :key="s.name">
+        <div class="quick-entry" v-for="s in shortcuts" :key="s.name" v-show="!s.perm || userStore.hasPerm(s.perm)">
           <router-link :to="s.path" class="quick-link">
             <el-icon :size="20" :style="{ color: s.color }"><component :is="s.icon" /></el-icon>
             <span>{{ s.name }}</span>

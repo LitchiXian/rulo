@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router/router'
 import pinia from './store'
 import { loadEnvConfig } from './util/envConfig'
+import auth from './directive/auth'
 
 // Element Plus 全量 CSS（组件由 unplugin-vue-components 按需注入，但样式需全量引入）
 import 'element-plus/dist/index.css'
@@ -16,6 +17,7 @@ async function initApp() {
   const app = createApp(App)
   app.use(pinia)
   app.use(router)
+  app.directive('auth', auth)
   app.mount('#app')
 }
 
