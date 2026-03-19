@@ -15,12 +15,39 @@ pub struct UserId(pub i64);
 #[derive(Debug, Clone)]
 pub struct UserToken(pub String);
 
-#[derive(Debug, Clone)]
-pub struct UserPermissions(pub Vec<String>);
-
-#[derive(Debug, Serialize)]
-pub struct LoginUserInfo {
-    pub user_info: SysUser,
-    pub perms: Vec<String>,
-    pub menus: Vec<SysMenu>,
+// 菜单树节点 (返回给前端渲染侧边栏)
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MenuTreeNode {
+    pub id: i64,
+    pub parent_id: i64,
+    pub name: String,
+    pub menu_type: i16,
+    pub path: Option<String>,
+    pub component: Option<String>,
+    pub icon: Option<String>,
+    pub sort_order: i32,
+    pub is_hidden: bool,
+    #[serde(default)]
+    pub children: Vec<MenuTreeNode>,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct LoginInfoVo {
+    pub user: UserInfoVo,
+    pub perms: Vec<String>,
+    pub menus: Vec<MenuTreeNode>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserInfoVo {
+    pub id: i64,
+    pub user_name: String,
+    pub nick_name: String,
+    pub email: Option<String>,
+    pub is_active: bool,
+    pub remark: Option<String>,
+}
+
+// 权限码集合, 存入 request Extension
+#[derive(Debug, Clone)]
+pub struct PermCodes(pub Vec<String>);
