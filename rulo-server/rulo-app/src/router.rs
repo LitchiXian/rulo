@@ -16,11 +16,14 @@ use rulo_common::{
     util::{jwt_util, redis_util},
 };
 
-use crate::system::{
-    self,
-    auth::{
-        model::{UserId, UserToken},
-        service as auth_service,
+use crate::{
+    swagger,
+    system::{
+        self,
+        auth::{
+            model::{UserId, UserToken},
+            service as auth_service,
+        },
     },
 };
 
@@ -28,7 +31,9 @@ use crate::system::{
 // 新增模块时, 只需在这里 merge, 不用每个模块重复写逻辑鉴权逻辑
 pub fn routes(state: Arc<AppState>) -> Router<Arc<AppState>> {
     // public API
-    let public_routes = Router::new().nest("/system", system::router::public_routes());
+    let public_routes = Router::new()
+        .merge(swagger::router::routes())
+        .nest("/system", system::router::public_routes());
 
     // protected API: need authorization
     let protected_routes = Router::new()
