@@ -17,7 +17,10 @@ use rulo_common::{
 
 use crate::system::{
     self,
-    auth::model::{UserId, UserToken},
+    auth::{
+        model::{PermCodes, UserId, UserToken},
+        service as auth_service,
+    },
 };
 
 // 顶层路由: 统一管理鉴权, 所有模块的公开/私密路由都在这里聚合
@@ -64,5 +67,15 @@ async fn jwt_auth(
 
     req.extensions_mut().insert(UserId(user_id));
     req.extensions_mut().insert(UserToken(token));
+
+    let perms =
+        match auth_service::get_user_perms_from_cache(&state.db_pool, &state.redis_pool, user_id)
+            .await
+        {
+            Ok(p) => p,
+            Err(e) => return e.into_response(),
+        };
+    req.extensions_mut().insert(PermCodes(perms));
+
     next.run(req).await
 }
