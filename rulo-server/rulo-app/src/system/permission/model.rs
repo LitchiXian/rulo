@@ -1,8 +1,9 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
+use utoipa::{IntoParams, ToSchema};
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow, ToSchema)]
 pub struct SysPermission {
     pub id: i64,
     pub perm_code: String,
@@ -41,7 +42,7 @@ impl SysPermission {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, ToSchema)]
 pub struct SysPermissionSaveDto {
     pub perm_code: String,
     pub perm_name: String,
@@ -49,7 +50,7 @@ pub struct SysPermissionSaveDto {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, ToSchema)]
 pub struct SysPermissionUpdateDto {
     pub id: i64,
     pub perm_name: Option<String>,
@@ -57,7 +58,7 @@ pub struct SysPermissionUpdateDto {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, IntoParams, ToSchema)]
 pub struct SysPermissionListDto {
     pub perm_code: Option<String>,
     pub perm_name: Option<String>,

@@ -15,6 +15,12 @@ use super::model::*;
 use rulo_common::state::AppState;
 use rulo_macro::perm;
 
+#[utoipa::path(
+    post, path = "/system/role/save",
+    request_body = SysRoleSaveDto,
+    responses((status = 200, description = "success", body = SysRole)),
+    security(("bearer_auth" = []))
+)]
 #[perm("sys:role:save")]
 pub async fn save_handler(
     State(state): State<Arc<AppState>>,
@@ -23,11 +29,23 @@ pub async fn save_handler(
     service::save_handle(&state.db_pool, &dto).await
 }
 
+#[utoipa::path(
+    post, path = "/system/role/remove",
+    request_body = IdsDto,
+    responses((status = 200, description = "success")),
+    security(("bearer_auth" = []))
+)]
 #[perm("sys:role:remove")]
 pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
     service::remove_handle(&state.db_pool, &dto).await
 }
 
+#[utoipa::path(
+    post, path = "/system/role/update",
+    request_body = SysRoleUpdateDto,
+    responses((status = 200, description = "success")),
+    security(("bearer_auth" = []))
+)]
 #[perm("sys:role:update")]
 pub async fn update_handler(
     State(state): State<Arc<AppState>>,
@@ -36,6 +54,12 @@ pub async fn update_handler(
     service::update_handle(&state.db_pool, &dto).await
 }
 
+#[utoipa::path(
+    get, path = "/system/role/detail",
+    params(IdDto),
+    responses((status = 200, description = "success", body = SysRole)),
+    security(("bearer_auth" = []))
+)]
 #[perm("sys:role:detail")]
 pub async fn detail_handler(
     State(state): State<Arc<AppState>>,
@@ -44,6 +68,12 @@ pub async fn detail_handler(
     service::get_one_handle(&state.db_pool, &dto).await
 }
 
+#[utoipa::path(
+    get, path = "/system/role/list",
+    params(SysRoleListDto),
+    responses((status = 200, description = "success", body = Vec<SysRole>)),
+    security(("bearer_auth" = []))
+)]
 #[perm("sys:role:list")]
 pub async fn list_handler(
     State(state): State<Arc<AppState>>,

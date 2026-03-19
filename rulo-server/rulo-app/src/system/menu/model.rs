@@ -1,8 +1,9 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
+use utoipa::{IntoParams, ToSchema};
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow, ToSchema)]
 pub struct SysMenu {
     pub id: i64,
     pub parent_id: i64,
@@ -53,7 +54,7 @@ impl SysMenu {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, ToSchema)]
 pub struct SysMenuSaveDto {
     pub parent_id: Option<i64>,
     pub perm_id: Option<i64>,
@@ -66,7 +67,7 @@ pub struct SysMenuSaveDto {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, ToSchema)]
 pub struct SysMenuUpdateDto {
     pub id: i64,
     pub name: Option<String>,
@@ -78,7 +79,7 @@ pub struct SysMenuUpdateDto {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, IntoParams, ToSchema)]
 pub struct SysMenuListDto {
     pub name: Option<String>,
     pub menu_type: Option<i16>,

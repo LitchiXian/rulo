@@ -93,6 +93,12 @@ pub async fn hello_redis_handler(State(state): State<Arc<AppState>>) -> R<String
 
 // 上面是例子,测试代码
 
+#[utoipa::path(
+    post, path = "/system/user/save",
+    request_body = SysUserSaveDto,
+    responses((status = 200, description = "success", body = SysUser)),
+    security(("bearer_auth" = []))
+)]
 #[perm("sys:user:save")]
 pub async fn save_handler(
     State(state): State<Arc<AppState>>,
@@ -122,11 +128,23 @@ pub async fn save_handler(
     service::save_handle(&state.db_pool, &dto).await
 }
 
+#[utoipa::path(
+    post, path = "/system/user/remove",
+    request_body = IdsDto,
+    responses((status = 200, description = "success")),
+    security(("bearer_auth" = []))
+)]
 #[perm("sys:user:remove")]
 pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
     service::remove_handle(&state.db_pool, &dto).await
 }
 
+#[utoipa::path(
+    post, path = "/system/user/update",
+    request_body = SysUserUpdateDto,
+    responses((status = 200, description = "success")),
+    security(("bearer_auth" = []))
+)]
 #[perm("sys:user:update")]
 pub async fn update_handler(
     State(state): State<Arc<AppState>>,
@@ -135,6 +153,12 @@ pub async fn update_handler(
     service::update_handle(&state.db_pool, &dto).await
 }
 
+#[utoipa::path(
+    get, path = "/system/user/detail",
+    params(IdDto),
+    responses((status = 200, description = "success", body = SysUser)),
+    security(("bearer_auth" = []))
+)]
 #[perm("sys:user:detail")]
 pub async fn detail_handler(
     State(state): State<Arc<AppState>>,
@@ -143,6 +167,12 @@ pub async fn detail_handler(
     service::get_one_handle(&state.db_pool, &dto).await
 }
 
+#[utoipa::path(
+    get, path = "/system/user/list",
+    params(SysUserListDto),
+    responses((status = 200, description = "success", body = Vec<SysUser>)),
+    security(("bearer_auth" = []))
+)]
 #[perm("sys:user:list")]
 pub async fn list_handler(
     State(state): State<Arc<AppState>>,

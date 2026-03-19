@@ -1,8 +1,9 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
+use utoipa::{IntoParams, ToSchema};
 
-#[derive(Serialize, FromRow)]
+#[derive(Serialize, FromRow, ToSchema)]
 pub struct SysRole {
     pub id: i64,
     pub role_name: String,
@@ -43,14 +44,14 @@ impl SysRole {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, ToSchema)]
 pub struct SysRoleSaveDto {
     pub role_name: String,
     pub role_key: String,
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, ToSchema)]
 pub struct SysRoleUpdateDto {
     pub id: i64,
     pub role_name: Option<String>,
@@ -59,7 +60,7 @@ pub struct SysRoleUpdateDto {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, IntoParams, ToSchema)]
 pub struct SysRoleListDto {
     pub role_name: Option<String>,
     pub role_key: Option<String>,

@@ -2,14 +2,16 @@ use chrono::{DateTime, Utc};
 use rulo_common::model::PageDto;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
+use utoipa::{IntoParams, ToSchema};
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow, ToSchema)]
 pub struct SysUser {
     pub id: i64,
     pub user_name: String,
     pub nick_name: String,
     // #[serde(skip)] // 序列化和反序列化都跳过
-    #[serde(skip_serializing, skip_deserializing)] // 序列化时跳过,不返回给前端
+    #[serde(skip_serializing, skip_deserializing)]
+    #[schema(ignore)]
     pub password: String,
     pub email: Option<String>,
     pub is_active: bool,
@@ -49,7 +51,7 @@ impl SysUser {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, ToSchema)]
 pub struct SysUserSaveDto {
     pub nick_name: String,
     pub password: String,
@@ -57,7 +59,7 @@ pub struct SysUserSaveDto {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, ToSchema)]
 pub struct SysUserUpdateDto {
     pub id: i64,
     pub nick_name: Option<String>,
@@ -66,7 +68,7 @@ pub struct SysUserUpdateDto {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, IntoParams, ToSchema)]
 pub struct SysUserListDto {
     pub nick_name: Option<String>,
     pub email: Option<String>,
