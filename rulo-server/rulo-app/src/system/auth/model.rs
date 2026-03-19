@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::system::{menu::model::SysMenu, user::model::SysUser};
-
 #[derive(Debug, Deserialize)]
 pub struct AuthUserDto {
     pub username: String,
@@ -47,7 +45,3 @@ pub struct UserInfoVo {
     pub is_active: bool,
     pub remark: Option<String>,
 }
-
-// 权限码集合, 存入 request Extension
-#[derive(Debug, Clone)]
-pub struct PermCodes(pub Vec<String>);

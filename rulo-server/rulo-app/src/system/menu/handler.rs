@@ -13,7 +13,9 @@ use crate::system::menu::service;
 
 use super::model::*;
 use rulo_common::state::AppState;
+use rulo_macro::perm;
 
+#[perm("sys:menu:save")]
 pub async fn save_handler(
     State(state): State<Arc<AppState>>,
     Json(dto): Json<SysMenuSaveDto>,
@@ -21,10 +23,12 @@ pub async fn save_handler(
     service::save_handle(&state.db_pool, &dto).await
 }
 
+#[perm("sys:menu:remove")]
 pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
     service::remove_handle(&state.db_pool, &dto).await
 }
 
+#[perm("sys:menu:update")]
 pub async fn update_handler(
     State(state): State<Arc<AppState>>,
     Json(dto): Json<SysMenuUpdateDto>,
@@ -32,6 +36,7 @@ pub async fn update_handler(
     service::update_handle(&state.db_pool, &dto).await
 }
 
+#[perm("sys:menu:detail")]
 pub async fn detail_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<IdDto>,
@@ -39,6 +44,7 @@ pub async fn detail_handler(
     service::get_one_handle(&state.db_pool, &dto).await
 }
 
+#[perm("sys:menu:list")]
 pub async fn list_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<SysMenuListDto>,

@@ -93,6 +93,7 @@ pub async fn hello_redis_handler(State(state): State<Arc<AppState>>) -> R<String
 
 // 上面是例子,测试代码
 
+#[perm("sys:user:save")]
 pub async fn save_handler(
     State(state): State<Arc<AppState>>,
     Json(dto): Json<SysUserSaveDto>,
@@ -121,10 +122,12 @@ pub async fn save_handler(
     service::save_handle(&state.db_pool, &dto).await
 }
 
+#[perm("sys:user:remove")]
 pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
     service::remove_handle(&state.db_pool, &dto).await
 }
 
+#[perm("sys:user:update")]
 pub async fn update_handler(
     State(state): State<Arc<AppState>>,
     Json(dto): Json<SysUserUpdateDto>,

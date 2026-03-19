@@ -11,6 +11,7 @@ use axum::{
 use rulo_common::{
     constant::redis_constant,
     error::AppError,
+    model::PermCodes,
     state::AppState,
     util::{jwt_util, redis_util},
 };
@@ -18,7 +19,7 @@ use rulo_common::{
 use crate::system::{
     self,
     auth::{
-        model::{PermCodes, UserId, UserToken},
+        model::{UserId, UserToken},
         service as auth_service,
     },
 };
