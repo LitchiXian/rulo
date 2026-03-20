@@ -37,7 +37,12 @@ pub async fn save_handler(
 )]
 #[perm("sys:permission:remove")]
 pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
-    service::remove(&state.db_pool, &dto).await
+    let result = service::remove(&state.db_pool, &dto).await;
+    // 清除所有受影响角色的用户缓存
+    if result.is_ok() {
+        clear_all_role_user_cache(&state.redis_pool, &state.db_pool).await;
+    }
+    result
 }
 
 #[utoipa::path(
@@ -51,7 +56,23 @@ pub async fn update_handler(
     State(state): State<Arc<AppState>>,
     Json(dto): Json<SysPermissionUpdateDto>,
 ) -> R<()> {
-    service::update(&state.db_pool, &dto).await
+    let result = service::update(&state.db_pool, &dto).await;
+    if result.is_ok() {
+        clear_all_role_user_cache(&state.redis_pool, &state.db_pool).await;
+    }
+    result
+}
+/// 清除所有角色下所有用户的权限和菜单缓存（权限变更后全量清理）
+async fn clear_all_role_user_cache(redis_pool: &deadpool_redis::Pool, db_pool: &sqlx::PgPool) {
+    let user_ids = sqlx::query_scalar!("SELECT DISTINCT user_id FROM sys_user_role").fetch_all(db_pool).await;
+    if let Ok(ids) = user_ids {
+        for uid in ids {
+            let perms_key = rulo_common::constant::redis_constant::USER_PERMS.to_owned() + &uid.to_string();
+            let menus_key = rulo_common::constant::redis_constant::USER_MENUS.to_owned() + &uid.to_string();
+            let _ = rulo_common::util::redis_util::del(redis_pool, &perms_key).await;
+            let _ = rulo_common::util::redis_util::del(redis_pool, &menus_key).await;
+        }
+    }
 }
 
 #[utoipa::path(

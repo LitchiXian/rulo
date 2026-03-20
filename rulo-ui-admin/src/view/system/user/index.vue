@@ -123,7 +123,7 @@ onMounted(fetchList)
           <el-input v-model="queryForm.email" placeholder="请输入邮箱" clearable />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
+          <el-button v-auth="'sys:user:list'" type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
@@ -132,11 +132,10 @@ onMounted(fetchList)
     <!-- 操作栏 + 表格 -->
     <el-card shadow="never" class="table-card">
       <div class="table-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增用户</el-button>
+        <el-button v-auth="'sys:user:save'" type="primary" :icon="Plus" @click="openAdd">新增用户</el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" stripe border style="width: 100%">
-        <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="user_name" label="用户名" width="130" />
         <el-table-column prop="nick_name" label="昵称" width="130" />
         <el-table-column prop="email" label="邮箱" min-width="180" />
@@ -147,17 +146,12 @@ onMounted(fetchList)
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="create_time" label="创建时间" width="180">
-          <template #default="{ row }">
-            {{ new Date(row.create_time).toLocaleString('zh-CN') }}
-          </template>
-        </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="150" show-overflow-tooltip />
         <el-table-column label="操作" width="240" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="warning" :icon="User" @click="openRoleDialog(row)">分配角色</el-button>
-            <el-button link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
+            <el-button v-auth="'sys:user:update'" link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
+            <el-button v-auth="'sys:user:update-bind-roles'" link type="warning" :icon="User" @click="openRoleDialog(row)">分配角色</el-button>
+            <el-button v-auth="'sys:user:remove'" link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

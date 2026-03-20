@@ -40,7 +40,13 @@ pub async fn save_handler(
 )]
 #[perm("sys:role:remove")]
 pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
-    service::remove(&state.db_pool, &dto).await
+    let result = service::remove(&state.db_pool, &dto).await;
+    if result.is_ok() {
+        for role_id in &dto.ids {
+            clear_role_user_cache(&state.redis_pool, &state.db_pool, *role_id).await;
+        }
+    }
+    result
 }
 
 #[utoipa::path(
@@ -63,7 +69,7 @@ pub async fn update_handler(
     responses((status = 200, description = "success")),
     security(("bearer_auth" = []))
 )]
-#[perm("sys:role:update")]
+#[perm("sys:role:update-bind-menus")]
 pub async fn update_bind_menus_handler(
     State(state): State<Arc<AppState>>,
     Json(dto): Json<BindMenusDto>,
@@ -79,7 +85,7 @@ pub async fn update_bind_menus_handler(
     responses((status = 200, description = "success")),
     security(("bearer_auth" = []))
 )]
-#[perm("sys:role:update")]
+#[perm("sys:role:update-bind-perms")]
 pub async fn update_bind_perms_handler(
     State(state): State<Arc<AppState>>,
     Json(dto): Json<BindPermsDto>,
@@ -123,7 +129,7 @@ pub async fn list_handler(
     responses((status = 200, description = "success", body = Vec<i64>)),
     security(("bearer_auth" = []))
 )]
-#[perm("sys:role:list")]
+#[perm("sys:role:list-bind-menus")]
 pub async fn list_bind_menus_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<IdDto>,
@@ -137,7 +143,7 @@ pub async fn list_bind_menus_handler(
     responses((status = 200, description = "success", body = Vec<i64>)),
     security(("bearer_auth" = []))
 )]
-#[perm("sys:role:list")]
+#[perm("sys:role:list-bind-perms")]
 pub async fn list_bind_perms_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<IdDto>,

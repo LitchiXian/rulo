@@ -1,4 +1,5 @@
 use rulo_common::{
+    error::AppError,
     model::{IdDto, IdsDto},
     result::{R, success},
 };
@@ -9,6 +10,12 @@ use crate::system::user::model::{
 };
 
 pub async fn save(pool: &PgPool, dto: &SysUserSaveDto) -> R<SysUser> {
+    if dto.nick_name.trim().is_empty() {
+        return Err(AppError::ServiceError("昵称不能为空".to_string()));
+    }
+    if dto.password.trim().is_empty() {
+        return Err(AppError::ServiceError("密码不能为空".to_string()));
+    }
     let new_user = SysUser::new_user_from_save_dto(&dto);
     query!(
         "insert into sys_user(
@@ -35,13 +42,21 @@ pub async fn save(pool: &PgPool, dto: &SysUserSaveDto) -> R<SysUser> {
 }
 
 pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
-    sqlx::query!("DELETE FROM sys_user WHERE id = ANY($1)", &dto.ids)
-        .execute(pool)
-        .await?;
+    sqlx::query!(
+        "UPDATE sys_user SET is_deleted = true, update_time = now() WHERE id = ANY($1)",
+        &dto.ids
+    )
+    .execute(pool)
+    .await?;
     success(())
 }
 
 pub async fn update(pool: &PgPool, dto: &SysUserUpdateDto) -> R<()> {
+    if let Some(ref nick_name) = dto.nick_name {
+        if nick_name.trim().is_empty() {
+            return Err(AppError::ServiceError("昵称不能为空字符串".to_string()));
+        }
+    }
     sqlx::query!(
         "UPDATE sys_user SET 
             nick_name = COALESCE($2, nick_name),
@@ -49,7 +64,7 @@ pub async fn update(pool: &PgPool, dto: &SysUserUpdateDto) -> R<()> {
             email = COALESCE($4, email),
             remark = COALESCE($5, remark),
             update_time = now() 
-        WHERE id = $1",
+        WHERE id = $1 AND is_deleted = false",
         dto.id,
         dto.nick_name.as_deref(),
         dto.password.as_deref(),
@@ -80,22 +95,27 @@ pub async fn update_bind_roles(pool: &PgPool, dto: &BindRolesDto) -> R<()> {
 }
 
 pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysUser> {
-    let data = query_as!(SysUser, "select * from sys_user where id = $1", dto.id)
+    let data = query_as!(SysUser, "select * from sys_user where id = $1 AND is_deleted = false", dto.id)
         .fetch_one(pool)
         .await?;
     success(data)
 }
 
 pub async fn list(pool: &PgPool, dto: &SysUserListDto) -> R<Vec<SysUser>> {
-    let data = query_as!(SysUser, "select * from sys_user")
+    let data = query_as!(SysUser, "select * from sys_user WHERE is_deleted = false ORDER BY update_time DESC")
         .fetch_all(pool)
         .await?;
     success(data)
 }
 
 pub async fn list_bind_roles(pool: &PgPool, user_id: i64) -> R<Vec<i64>> {
-    let ids = query_scalar!("SELECT role_id FROM sys_user_role WHERE user_id = $1", user_id)
-        .fetch_all(pool)
-        .await?;
+    let ids = query_scalar!(
+        "SELECT ur.role_id FROM sys_user_role ur \
+         JOIN sys_role r ON ur.role_id = r.id \
+         WHERE ur.user_id = $1 AND r.is_deleted = false",
+        user_id
+    )
+    .fetch_all(pool)
+    .await?;
     success(ids)
 }

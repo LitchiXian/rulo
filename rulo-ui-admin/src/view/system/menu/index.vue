@@ -1,11 +1,11 @@
 <script setup lang="ts" name="MenuManage">
-import { ref, onMounted } from 'vue'
-import { ElMessageBox } from 'element-plus'
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Delete, Edit } from '@element-plus/icons-vue'
 import menuApi from '@/api/admin/menu'
 import type { SysMenu, SysMenuSaveDto, SysMenuUpdateDto, SysMenuListDto } from '@/type/menu'
 
-const MENU_TYPE_MAP: Record<number, string> = { 1: '目录', 2: '菜单', 3: '按钮' }
+const MENU_TYPE_MAP: Record<number, string> = { 1: '目录', 2: '菜单' }
 
 // ---- 列表 ----
 const tableData = ref<SysMenu[]>([])
@@ -21,6 +21,37 @@ const fetchList = async () => {
   }
 }
 
+// 构建树形结构
+interface MenuTreeNode extends SysMenu {
+  children?: MenuTreeNode[]
+}
+
+const treeData = computed<MenuTreeNode[]>(() => {
+  const map = new Map<number, MenuTreeNode>()
+  const roots: MenuTreeNode[] = []
+  // 先把所有节点放入 map
+  for (const item of tableData.value) {
+    map.set(item.id, { ...item, children: [] })
+  }
+  // 构建父子关系
+  for (const node of map.values()) {
+    if (node.parent_id && map.has(node.parent_id)) {
+      map.get(node.parent_id)!.children!.push(node)
+    } else {
+      roots.push(node)
+    }
+  }
+  return roots
+})
+
+// 展开/折叠
+const isExpandAll = ref(true)
+const tableKey = ref(0)
+const toggleExpandAll = () => {
+  isExpandAll.value = !isExpandAll.value
+  tableKey.value++
+}
+
 const handleSearch = () => fetchList()
 
 const handleReset = () => {
@@ -34,11 +65,45 @@ const isEdit = ref(false)
 const formData = ref<SysMenuSaveDto & { id?: number; is_hidden?: boolean }>({
   name: '',
   menu_type: 2,
+  sort_order: 100,
+})
+
+// 父级菜单树选项（编辑时排除自身及其后代）
+const parentTreeOptions = computed(() => {
+  const excludeIds = new Set<number>()
+  if (isEdit.value && formData.value.id) {
+    const collectIds = (id: number) => {
+      excludeIds.add(id)
+      for (const item of tableData.value) {
+        if (item.parent_id === id) collectIds(item.id)
+      }
+    }
+    collectIds(formData.value.id)
+  }
+  interface TreeOption { value: number; label: string; children?: TreeOption[] }
+  const map = new Map<number, TreeOption>()
+  const roots: TreeOption[] = []
+  for (const item of tableData.value) {
+    if (excludeIds.has(item.id)) continue
+    if (item.menu_type !== 1) continue  // 只有目录可作为父级
+    map.set(item.id, { value: item.id, label: item.name, children: [] })
+  }
+  for (const item of tableData.value) {
+    if (excludeIds.has(item.id)) continue
+    if (item.menu_type !== 1) continue
+    const node = map.get(item.id)!
+    if (item.parent_id && map.has(item.parent_id)) {
+      map.get(item.parent_id)!.children!.push(node)
+    } else {
+      roots.push(node)
+    }
+  }
+  return roots
 })
 
 const openAdd = () => {
   isEdit.value = false
-  formData.value = { name: '', menu_type: 2 }
+  formData.value = { name: '', menu_type: 2, sort_order: 100, auto_perm_code: '' }
   dialogVisible.value = true
 }
 
@@ -62,6 +127,16 @@ const openEdit = (row: SysMenu) => {
 
 const handleSave = async () => {
   if (isEdit.value) {
+    if (formData.value.menu_type === 2) {
+      if (!formData.value.path?.trim()) {
+        ElMessage.error('路由路径不能为空')
+        return
+      }
+      if (!formData.value.component?.trim()) {
+        ElMessage.error('组件路径不能为空')
+        return
+      }
+    }
     const dto: SysMenuUpdateDto = {
       id: formData.value.id!,
       name: formData.value.name || undefined,
@@ -74,7 +149,23 @@ const handleSave = async () => {
     }
     await menuApi.update(dto)
   } else {
-    await menuApi.save(formData.value as SysMenuSaveDto)
+    if (formData.value.menu_type === 2) {
+      if (!formData.value.path?.trim()) {
+        ElMessage.error('路由路径不能为空')
+        return
+      }
+      if (!formData.value.component?.trim()) {
+        ElMessage.error('组件路径不能为空')
+        return
+      }
+      if (!formData.value.auto_perm_code) {
+        ElMessage.error('菜单类型为菜单时，菜单权限码不能为空')
+        return
+      }
+    }
+    const saveDto = { ...formData.value } as SysMenuSaveDto
+    if (!saveDto.auto_perm_code) delete saveDto.auto_perm_code
+    await menuApi.save(saveDto)
   }
   dialogVisible.value = false
   fetchList()
@@ -87,7 +178,6 @@ const handleDelete = async (row: SysMenu) => {
   fetchList()
 }
 
-// TODO: 后续改为树形表格展示（根据 parent_id 构建树结构）
 // TODO: 后端 menu/list 暂不支持分页
 
 onMounted(fetchList)
@@ -105,11 +195,10 @@ onMounted(fetchList)
           <el-select v-model="queryForm.menu_type" placeholder="请选择" clearable style="width: 120px">
             <el-option label="目录" :value="1" />
             <el-option label="菜单" :value="2" />
-            <el-option label="按钮" :value="3" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
+          <el-button v-auth="'sys:menu:list'" type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
@@ -118,18 +207,17 @@ onMounted(fetchList)
     <!-- 表格 -->
     <el-card shadow="never" class="table-card">
       <div class="table-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增菜单</el-button>
+        <el-button v-auth="'sys:menu:save'" type="primary" :icon="Plus" @click="openAdd">新增菜单</el-button>
+        <el-button @click="toggleExpandAll">{{ isExpandAll ? '全部折叠' : '全部展开' }}</el-button>
       </div>
 
-      <el-table :data="tableData" v-loading="loading" stripe border style="width: 100%">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="name" label="菜单名" width="150" />
+      <el-table :key="tableKey" :data="treeData" v-loading="loading" stripe border style="width: 100%" row-key="id" :tree-props="{ children: 'children' }" :default-expand-all="isExpandAll">
+        <el-table-column prop="name" label="菜单名" width="200" />
         <el-table-column prop="menu_type" label="类型" width="80" align="center">
           <template #default="{ row }">
             <el-tag size="small">{{ MENU_TYPE_MAP[row.menu_type] || '未知' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="parent_id" label="父级ID" width="80" />
         <el-table-column prop="path" label="路由路径" min-width="150" show-overflow-tooltip />
         <el-table-column prop="component" label="组件路径" min-width="180" show-overflow-tooltip />
         <el-table-column prop="icon" label="图标" width="100" />
@@ -141,15 +229,10 @@ onMounted(fetchList)
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="create_time" label="创建时间" width="180">
-          <template #default="{ row }">
-            {{ new Date(row.create_time).toLocaleString('zh-CN') }}
-          </template>
-        </el-table-column>
         <el-table-column label="操作" width="160" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
+            <el-button v-auth="'sys:menu:update'" link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
+            <el-button v-auth="'sys:menu:remove'" link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -165,18 +248,25 @@ onMounted(fetchList)
           <el-radio-group v-model="formData.menu_type">
             <el-radio :value="1">目录</el-radio>
             <el-radio :value="2">菜单</el-radio>
-            <el-radio :value="3">按钮</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="父级ID">
-          <!-- TODO: 改为树形选择器，从已有菜单中选 -->
-          <el-input-number v-model="formData.parent_id" :min="0" placeholder="0 表示顶级" />
+        <el-form-item v-if="!isEdit && formData.menu_type === 2" label="菜单权限码">
+          <el-input v-model="formData.auto_perm_code" placeholder="如 sys:user:menu，留空则不自动关联菜单权限" clearable />
         </el-form-item>
-        <el-form-item label="路由路径" v-if="formData.menu_type !== 3">
+        <el-form-item label="父级菜单">
+          <el-tree-select
+            v-model="formData.parent_id"
+            :data="parentTreeOptions"
+            :render-after-expand="false"
+            placeholder="不选则为顶级菜单"
+            clearable
+          />
+        </el-form-item>
+        <el-form-item label="路由路径">
           <el-input v-model="formData.path" placeholder="如 /system/user" />
         </el-form-item>
         <el-form-item label="组件路径" v-if="formData.menu_type === 2">
-          <el-input v-model="formData.component" placeholder="如 system/UserManage" />
+          <el-input v-model="formData.component" placeholder="如 view/system/user/index.vue" />
         </el-form-item>
         <el-form-item label="图标">
           <el-input v-model="formData.icon" placeholder="Element Plus 图标名" />

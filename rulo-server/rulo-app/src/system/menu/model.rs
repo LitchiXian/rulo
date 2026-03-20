@@ -36,7 +36,7 @@ impl SysMenu {
         SysMenu {
             id: menu_id,
             parent_id: dto.parent_id.unwrap_or(0),
-            perm_id: dto.perm_id,
+            perm_id: None,
             name: dto.name.clone(),
             menu_type: dto.menu_type,
             path: dto.path.clone(),
@@ -57,7 +57,6 @@ impl SysMenu {
 #[derive(Deserialize, Debug, ToSchema)]
 pub struct SysMenuSaveDto {
     pub parent_id: Option<i64>,
-    pub perm_id: Option<i64>,
     pub name: String,
     pub menu_type: i16,
     pub path: Option<String>,
@@ -65,6 +64,8 @@ pub struct SysMenuSaveDto {
     pub icon: Option<String>,
     pub sort_order: Option<i32>,
     pub remark: Option<String>,
+    /// 仅 menu_type=2 时有效，填写则自动新建 perm_type=2 的菜单权限并关联
+    pub auto_perm_code: Option<String>,
 }
 
 #[derive(Deserialize, Debug, ToSchema)]

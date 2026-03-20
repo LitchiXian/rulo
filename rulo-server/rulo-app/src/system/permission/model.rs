@@ -54,7 +54,6 @@ pub struct SysPermissionSaveDto {
 pub struct SysPermissionUpdateDto {
     pub id: i64,
     pub perm_name: Option<String>,
-    pub perm_type: Option<i16>,
     pub remark: Option<String>,
 }
 

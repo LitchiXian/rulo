@@ -39,7 +39,16 @@ pub async fn save_handler(
 )]
 #[perm("sys:user:remove")]
 pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
-    service::remove(&state.db_pool, &dto).await
+    let result = service::remove(&state.db_pool, &dto).await;
+    if result.is_ok() {
+        for user_id in &dto.ids {
+            let perms_key = rulo_common::constant::redis_constant::USER_PERMS.to_owned() + &user_id.to_string();
+            let menus_key = rulo_common::constant::redis_constant::USER_MENUS.to_owned() + &user_id.to_string();
+            let _ = rulo_common::util::redis_util::del(&state.redis_pool, &perms_key).await;
+            let _ = rulo_common::util::redis_util::del(&state.redis_pool, &menus_key).await;
+        }
+    }
+    result
 }
 
 #[utoipa::path(
@@ -62,7 +71,7 @@ pub async fn update_handler(
     responses((status = 200, description = "success")),
     security(("bearer_auth" = []))
 )]
-#[perm("sys:user:update")]
+#[perm("sys:user:update-bind-roles")]
 pub async fn update_bind_roles_handler(
     State(state): State<Arc<AppState>>,
     Json(dto): Json<BindRolesDto>,
@@ -111,7 +120,7 @@ pub async fn list_handler(
     responses((status = 200, description = "success", body = Vec<i64>)),
     security(("bearer_auth" = []))
 )]
-#[perm("sys:user:list")]
+#[perm("sys:user:list-bind-roles")]
 pub async fn list_bind_roles_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<IdDto>,

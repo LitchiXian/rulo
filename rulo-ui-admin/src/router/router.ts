@@ -1,98 +1,40 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw, RouteLocationNormalized } from 'vue-router'
 import { useUserStore } from '@/store/user'
+import type { MenuTreeNode } from '@/type/user'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 
-// 关闭 NProgress 的转圈图标，只保留顶部进度条
 NProgress.configure({ showSpinner: false })
 
+// ---------- 组件懒加载映射（Vite glob import）----------
+// DB 存储格式：view/system/user/index.vue → glob key：../view/system/user/index.vue
+const viewModules = import.meta.glob('../view/**/*.vue')
+
+function resolveComponent(component: string) {
+  return viewModules[`../${component}`]
+}
+
+// ---------- 静态路由（不依赖权限，始终存在）----------
 export const constantRoutes: RouteRecordRaw[] = [
-  {
-    path: '/',
-    redirect: '/dashboard',
-  },
+  { path: '/', redirect: '/dashboard' },
   {
     path: '/dashboard',
     name: 'Dashboard',
     component: () => import('@/view/Home.vue'),
     meta: { requiresAuth: true, title: '首页' },
   },
-  // TODO: 系统管理菜单目前是写死的静态路由，后续改为动态路由：
-  //   1. 登录后调用后端接口获取当前用户拥有的菜单权限（根据 sys_role_menu / sys_role_permission）
-  //   2. 根据返回的菜单数据动态 addRoute()，而非在此处静态注册
-  //   3. 侧边栏菜单也应从动态路由数据渲染，而非模板写死
   {
-    path: '/system',
-    name: 'System',
-    redirect: '/system/user',
-    meta: { requiresAuth: true, title: '系统管理' },
-    children: [
-      {
-        path: 'user',
-        name: 'SystemUser',
-        component: () => import('@/view/system/user/index.vue'),
-        meta: { requiresAuth: true, title: '用户管理' },
-      },
-      {
-        path: 'role',
-        name: 'SystemRole',
-        component: () => import('@/view/system/role/index.vue'),
-        meta: { requiresAuth: true, title: '角色管理' },
-      },
-      {
-        path: 'menu',
-        name: 'SystemMenu',
-        component: () => import('@/view/system/menu/index.vue'),
-        meta: { requiresAuth: true, title: '菜单管理' },
-      },
-      {
-        path: 'permission',
-        name: 'SystemPermission',
-        component: () => import('@/view/system/permission/index.vue'),
-        meta: { requiresAuth: true, title: '权限管理' },
-      },
-    ],
-  },
-  {
-    path: '/monitor',
-    name: 'Monitor',
-    redirect: '/monitor/server',
-    meta: { requiresAuth: true, title: '系统监控' },
-    children: [
-      {
-        path: 'server',
-        name: 'MonitorServer',
-        component: () => import('@/view/monitor/server/index.vue'),
-        meta: { requiresAuth: true, title: '服务监控' },
-      },
-    ],
-  },
-  {
-    path: '/other',
-    name: 'Other',
-    redirect: '/other/about',
-    meta: { requiresAuth: true, title: '其他' },
-    children: [
-      {
-        path: 'about',
-        name: 'About',
-        component: () => import('@/view/other/about/index.vue'),
-        meta: { requiresAuth: true, title: '关于我们' },
-      },
-    ],
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/view/profile/index.vue'),
+    meta: { requiresAuth: true, title: '个人中心' },
   },
   {
     path: '/changelog',
     name: 'Changelog',
     component: () => import('@/view/changelog/index.vue'),
     meta: { requiresAuth: true, title: '更新日志' },
-  },
-  {
-    path: '/profile',
-    name: 'Profile',
-    component: () => import('@/view/profile/index.vue'),
-    meta: { requiresAuth: true, title: '个人中心' },
   },
   {
     path: '/login',
@@ -113,27 +55,74 @@ const router = createRouter({
   routes: constantRoutes,
 })
 
-// 不需要菜单权限校验的白名单路由
-const whiteList = ['/dashboard', '/profile', '/changelog']
+// ---------- 动态路由 ----------
+const staticPaths = new Set(['/', '/dashboard', '/profile', '/changelog', '/login'])
+let dynamicRouteNames: string[] = []
+let dynamicRoutesLoaded = false
 
-/** 从后端菜单树中递归提取所有路径 */
-function extractMenuPaths(menus: import('@/type/user').MenuTreeNode[]): Set<string> {
-  const paths = new Set<string>()
+/** 递归扁平化菜单树 */
+function flattenMenus(menus: MenuTreeNode[]): MenuTreeNode[] {
+  const result: MenuTreeNode[] = []
   for (const menu of menus) {
-    if (menu.path) paths.add(menu.path)
-    if (menu.children?.length) {
-      for (const p of extractMenuPaths(menu.children)) paths.add(p)
-    }
+    result.push(menu)
+    if (menu.children?.length) result.push(...flattenMenus(menu.children))
   }
-  return paths
+  return result
 }
 
-// 路由守卫：进度条 + 动态标题 + 权限
+/** 从菜单树生成并注册动态路由 */
+function addDynamicRoutes(menus: MenuTreeNode[]) {
+  for (const name of dynamicRouteNames) router.removeRoute(name)
+  dynamicRouteNames = []
+
+  for (const menu of flattenMenus(menus)) {
+    if (!menu.path || staticPaths.has(menu.path)) continue
+
+    const routeName = `Dynamic_${menu.id}`
+
+    if (menu.menu_type === 2 && menu.component) {
+      const comp = resolveComponent(menu.component)
+      if (comp) {
+        router.addRoute({
+          path: menu.path,
+          name: routeName,
+          component: comp,
+          meta: { requiresAuth: true, title: menu.name },
+        })
+        dynamicRouteNames.push(routeName)
+      }
+    } else if (menu.menu_type === 1 && menu.children?.length) {
+      const firstChild = menu.children.find(c => c.path && !c.is_hidden)
+      if (firstChild?.path) {
+        router.addRoute({
+          path: menu.path,
+          name: routeName,
+          redirect: firstChild.path,
+          meta: { requiresAuth: true, title: menu.name },
+        })
+        dynamicRouteNames.push(routeName)
+      }
+    }
+  }
+}
+
+function resetDynamicRoutes() {
+  for (const name of dynamicRouteNames) router.removeRoute(name)
+  dynamicRouteNames = []
+  dynamicRoutesLoaded = false
+}
+
+// ---------- 路由守卫 ----------
 router.beforeEach(async (to: RouteLocationNormalized) => {
   NProgress.start()
   const userStore = useUserStore()
 
-  // token 存在但用户信息未加载时，初始化用户信息
+  // 登出后清理动态路由
+  if (!userStore.isLoggedIn && dynamicRoutesLoaded) {
+    resetDynamicRoutes()
+  }
+
+  // token 存在但用户信息未加载 → 初始化
   if (!userStore.userInfo && userStore.isLoggedIn) {
     await userStore.initUser()
   }
@@ -146,17 +135,15 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
     return { name: 'Dashboard' }
   }
 
-  // 菜单权限校验：白名单放行，其余检查是否在用户菜单中
-  if (to.meta.requiresAuth && userStore.isLoggedIn && !whiteList.includes(to.path)) {
-    const allowedPaths = extractMenuPaths(userStore.menus)
-    if (!allowedPaths.has(to.path)) {
-      return { name: 'NotFound' }
-    }
+  // 动态路由未加载 → 从 userStore.menus 生成并重新导航
+  if (userStore.isLoggedIn && !dynamicRoutesLoaded) {
+    addDynamicRoutes(userStore.menus)
+    dynamicRoutesLoaded = true
+    return to.fullPath
   }
 })
 
 router.afterEach((to) => {
-  // 动态页面标题
   const title = to.meta.title ? `${to.meta.title} - Rulo Admin` : 'Rulo Admin'
   document.title = title
   NProgress.done()

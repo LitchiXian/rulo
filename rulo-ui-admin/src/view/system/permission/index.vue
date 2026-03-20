@@ -104,7 +104,7 @@ onMounted(fetchList)
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
+          <el-button v-auth="'sys:permission:list'" type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
@@ -113,28 +113,22 @@ onMounted(fetchList)
     <!-- 表格 -->
     <el-card shadow="never" class="table-card">
       <div class="table-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增权限</el-button>
+        <el-button v-auth="'sys:permission:save'" type="primary" :icon="Plus" @click="openAdd">新增权限</el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" stripe border style="width: 100%">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="perm_code" label="权限编码" min-width="180" />
+        <el-table-column prop="perm_code" label="权限编码" min-width="150" />
         <el-table-column prop="perm_name" label="权限名" width="150" />
-        <el-table-column prop="perm_type" label="类型" width="80" align="center">
+        <el-table-column prop="perm_type" label="类型" width="90" align="center">
           <template #default="{ row }">
             <el-tag size="small">{{ PERM_TYPE_MAP[row.perm_type] || '未知' }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="create_time" label="创建时间" width="180">
-          <template #default="{ row }">
-            {{ new Date(row.create_time).toLocaleString('zh-CN') }}
           </template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="150" show-overflow-tooltip />
         <el-table-column label="操作" width="160" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
+            <el-button v-auth="'sys:permission:update'" link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
+            <el-button v-auth="'sys:permission:remove'" link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

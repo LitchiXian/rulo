@@ -20,7 +20,6 @@ export interface SysMenu {
 
 export interface SysMenuSaveDto {
   parent_id?: number
-  perm_id?: number
   name: string
   menu_type: number
   path?: string
@@ -28,6 +27,8 @@ export interface SysMenuSaveDto {
   icon?: string
   sort_order?: number
   remark?: string
+  /** 仅 menu_type=2 新增时填写，后端自动创建对应菜单权限并关联 */
+  auto_perm_code?: string
 }
 
 export interface SysMenuUpdateDto {

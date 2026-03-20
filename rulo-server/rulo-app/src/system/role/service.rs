@@ -1,4 +1,5 @@
 use rulo_common::{
+    error::AppError,
     model::{IdDto, IdsDto},
     result::{R, success},
 };
@@ -9,6 +10,12 @@ use crate::system::role::model::{
 };
 
 pub async fn save(pool: &PgPool, dto: &SysRoleSaveDto) -> R<SysRole> {
+    if dto.role_name.trim().is_empty() {
+        return Err(AppError::ServiceError("角色名称不能为空".to_string()));
+    }
+    if dto.role_key.trim().is_empty() {
+        return Err(AppError::ServiceError("角色标识不能为空".to_string()));
+    }
     let new_role = SysRole::new_role_from_save_dto(&dto);
     query!(
         "insert into sys_role(
@@ -33,13 +40,26 @@ pub async fn save(pool: &PgPool, dto: &SysRoleSaveDto) -> R<SysRole> {
 }
 
 pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
-    sqlx::query!("DELETE FROM sys_role WHERE id = ANY($1)", &dto.ids)
-        .execute(pool)
-        .await?;
+    sqlx::query!(
+        "UPDATE sys_role SET is_deleted = true, update_time = now() WHERE id = ANY($1)",
+        &dto.ids
+    )
+    .execute(pool)
+    .await?;
     success(())
 }
 
 pub async fn update(pool: &PgPool, dto: &SysRoleUpdateDto) -> R<()> {
+    if let Some(ref role_name) = dto.role_name {
+        if role_name.trim().is_empty() {
+            return Err(AppError::ServiceError("角色名称不能为空字符串".to_string()));
+        }
+    }
+    if let Some(ref role_key) = dto.role_key {
+        if role_key.trim().is_empty() {
+            return Err(AppError::ServiceError("角色标识不能为空字符串".to_string()));
+        }
+    }
     sqlx::query!(
         "UPDATE sys_role SET
             role_name = COALESCE($2, role_name),
@@ -47,7 +67,7 @@ pub async fn update(pool: &PgPool, dto: &SysRoleUpdateDto) -> R<()> {
             is_active = COALESCE($4, is_active),
             remark = COALESCE($5, remark),
             update_time = now()
-        WHERE id = $1",
+        WHERE id = $1 AND is_deleted = false",
         dto.id,
         dto.role_name.as_deref(),
         dto.role_key.as_deref(),
@@ -62,7 +82,7 @@ pub async fn update(pool: &PgPool, dto: &SysRoleUpdateDto) -> R<()> {
 pub async fn update_bind_menus(pool: &PgPool, dto: &BindMenusDto) -> R<()> {
     // 把 menu_ids 转换为 perm_ids（只取有关联权限的菜单）
     let perm_ids: Vec<i64> = query_scalar!(
-        "SELECT DISTINCT perm_id FROM sys_menu WHERE id = ANY($1) AND perm_id IS NOT NULL",
+        "SELECT DISTINCT perm_id FROM sys_menu WHERE id = ANY($1) AND perm_id IS NOT NULL AND is_deleted = false",
         &dto.menu_ids
     )
     .fetch_all(pool)
@@ -115,14 +135,14 @@ pub async fn update_bind_perms(pool: &PgPool, dto: &BindPermsDto) -> R<()> {
 }
 
 pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysRole> {
-    let data = query_as!(SysRole, "select * from sys_role where id = $1", dto.id)
+    let data = query_as!(SysRole, "select * from sys_role where id = $1 AND is_deleted = false", dto.id)
         .fetch_one(pool)
         .await?;
     success(data)
 }
 
 pub async fn list(pool: &PgPool, _dto: &SysRoleListDto) -> R<Vec<SysRole>> {
-    let data = query_as!(SysRole, "select * from sys_role")
+    let data = query_as!(SysRole, "select * from sys_role WHERE is_deleted = false ORDER BY update_time DESC")
         .fetch_all(pool)
         .await?;
     success(data)
@@ -133,7 +153,7 @@ pub async fn list_bind_menus(pool: &PgPool, role_id: i64) -> R<Vec<i64>> {
         "SELECT m.id FROM sys_menu m \
          JOIN sys_permission p ON m.perm_id = p.id \
          JOIN sys_role_permission rp ON rp.perm_id = p.id \
-         WHERE rp.role_id = $1 AND p.perm_type = 2",
+         WHERE rp.role_id = $1 AND p.perm_type = 2 AND m.is_deleted = false AND p.is_deleted = false",
         role_id
     )
     .fetch_all(pool)
@@ -145,7 +165,7 @@ pub async fn list_bind_perms(pool: &PgPool, role_id: i64) -> R<Vec<i64>> {
     let ids = query_scalar!(
         "SELECT rp.perm_id FROM sys_role_permission rp \
          JOIN sys_permission p ON rp.perm_id = p.id \
-         WHERE rp.role_id = $1 AND p.perm_type = 1",
+         WHERE rp.role_id = $1 AND p.perm_type = 1 AND p.is_deleted = false",
         role_id
     )
     .fetch_all(pool)

@@ -233,7 +233,7 @@ onMounted(fetchList)
           <el-input v-model="queryForm.role_key" placeholder="请输入角色标识" clearable />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
+          <el-button v-auth="'sys:role:list'" type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
       </el-form>
@@ -242,11 +242,10 @@ onMounted(fetchList)
     <!-- 表格 -->
     <el-card shadow="never" class="table-card">
       <div class="table-toolbar">
-        <el-button type="primary" :icon="Plus" @click="openAdd">新增角色</el-button>
+        <el-button v-auth="'sys:role:save'" type="primary" :icon="Plus" @click="openAdd">新增角色</el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" stripe border style="width: 100%">
-        <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="role_name" label="角色名" width="150" />
         <el-table-column prop="role_key" label="角色标识" width="150" />
         <el-table-column prop="is_super" label="超级管理" width="100" align="center">
@@ -262,18 +261,13 @@ onMounted(fetchList)
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="create_time" label="创建时间" width="180">
-          <template #default="{ row }">
-            {{ new Date(row.create_time).toLocaleString('zh-CN') }}
-          </template>
-        </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="150" show-overflow-tooltip />
-        <el-table-column label="操作" width="320" fixed="right" align="center">
+        <el-table-column label="操作" width="360" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="warning" :icon="Menu" @click="openMenuDialog(row)">分配菜单</el-button>
-            <el-button link type="success" :icon="Key" @click="openPermDialog(row)">分配权限</el-button>
-            <el-button link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
+            <el-button v-auth="'sys:role:update'" link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
+            <el-button v-auth="'sys:role:update-bind-menus'" link type="warning" :icon="Menu" @click="openMenuDialog(row)">分配菜单</el-button>
+            <el-button v-auth="'sys:role:update-bind-perms'" link type="success" :icon="Key" @click="openPermDialog(row)">分配权限</el-button>
+            <el-button v-auth="'sys:role:remove'" link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
