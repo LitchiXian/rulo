@@ -73,6 +73,11 @@ export interface SysUserListDto {
   remark?: string
 }
 
+export interface BindRolesDto {
+  user_id: number
+  role_ids: number[]
+}
+
 // 通用 DTO（对应后端 IdDto / IdsDto）
 export interface IdDto {
   id: number

@@ -12,13 +12,19 @@ use crate::system;
         system::user::handler::save_handler,
         system::user::handler::remove_handler,
         system::user::handler::update_handler,
+        system::user::handler::update_bind_roles_handler,
         system::user::handler::detail_handler,
         system::user::handler::list_handler,
+        system::user::handler::list_bind_roles_handler,
         system::role::handler::save_handler,
         system::role::handler::remove_handler,
         system::role::handler::update_handler,
+        system::role::handler::update_bind_menus_handler,
+        system::role::handler::update_bind_perms_handler,
         system::role::handler::detail_handler,
         system::role::handler::list_handler,
+        system::role::handler::list_bind_menus_handler,
+        system::role::handler::list_bind_perms_handler,
         system::permission::handler::save_handler,
         system::permission::handler::remove_handler,
         system::permission::handler::update_handler,
@@ -29,6 +35,7 @@ use crate::system;
         system::menu::handler::update_handler,
         system::menu::handler::detail_handler,
         system::menu::handler::list_handler,
+        system::monitor::handler::server_info_handler,
     ),
     components(
         schemas(
@@ -42,10 +49,13 @@ use crate::system;
             system::user::model::SysUserSaveDto,
             system::user::model::SysUserUpdateDto,
             system::user::model::SysUserListDto,
+            system::user::model::BindRolesDto,
             system::role::model::SysRole,
             system::role::model::SysRoleSaveDto,
             system::role::model::SysRoleUpdateDto,
             system::role::model::SysRoleListDto,
+            system::role::model::BindMenusDto,
+            system::role::model::BindPermsDto,
             system::permission::model::SysPermission,
             system::permission::model::SysPermissionSaveDto,
             system::permission::model::SysPermissionUpdateDto,
@@ -54,6 +64,12 @@ use crate::system;
             system::menu::model::SysMenuSaveDto,
             system::menu::model::SysMenuUpdateDto,
             system::menu::model::SysMenuListDto,
+            system::monitor::model::ServerInfo,
+            system::monitor::model::CpuInfo,
+            system::monitor::model::MemInfo,
+            system::monitor::model::SysInfo,
+            system::monitor::model::DiskInfo,
+            system::monitor::model::RustInfo,
         )
     ),
     modifiers(&SecurityAddon),
@@ -68,11 +84,10 @@ impl utoipa::Modify for SecurityAddon {
         if let Some(components) = openapi.components.as_mut() {
             components.add_security_scheme(
                 "bearer_auth",
-                utoipa::openapi::security::SecurityScheme::Http(
-                    utoipa::openapi::security::HttpBuilder::new()
-                        .scheme(utoipa::openapi::security::HttpAuthScheme::Bearer)
-                        .bearer_format("JWT")
-                        .build(),
+                utoipa::openapi::security::SecurityScheme::ApiKey(
+                    utoipa::openapi::security::ApiKey::Header(
+                        utoipa::openapi::security::ApiKeyValue::new("authorization"),
+                    ),
                 ),
             );
         }

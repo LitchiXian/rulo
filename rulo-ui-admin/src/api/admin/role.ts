@@ -1,5 +1,5 @@
 import request from '@/util/request'
-import type { SysRole, SysRoleSaveDto, SysRoleUpdateDto, SysRoleListDto } from '@/type/role'
+import type { SysRole, SysRoleSaveDto, SysRoleUpdateDto, SysRoleListDto, BindMenusDto, BindPermsDto } from '@/type/role'
 import type { IdsDto } from '@/type/user'
 
 const roleApi = {
@@ -21,6 +21,22 @@ const roleApi = {
 
   remove(data: IdsDto) {
     return request({ url: '/system/role/remove', method: 'post', data })
+  },
+
+  updateBindMenus(data: BindMenusDto) {
+    return request({ url: '/system/role/update-bind-menus', method: 'post', data })
+  },
+
+  updateBindPerms(data: BindPermsDto) {
+    return request({ url: '/system/role/update-bind-perms', method: 'post', data })
+  },
+
+  listMenus(id: number) {
+    return request({ url: '/system/role/list-bind-menus', method: 'get', params: { id } }) as Promise<number[]>
+  },
+
+  listPerms(id: number) {
+    return request({ url: '/system/role/list-bind-perms', method: 'get', params: { id } }) as Promise<number[]>
   },
 }
 

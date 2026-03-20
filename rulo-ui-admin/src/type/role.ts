@@ -34,3 +34,13 @@ export interface SysRoleListDto {
   create_start_time?: string
   create_end_time?: string
 }
+
+export interface BindMenusDto {
+  role_id: number
+  menu_ids: number[]
+}
+
+export interface BindPermsDto {
+  role_id: number
+  perm_ids: number[]
+}

@@ -2,11 +2,13 @@ use rulo_common::{
     model::{IdDto, IdsDto},
     result::{R, success},
 };
-use sqlx::{PgPool, query, query_as};
+use sqlx::{PgPool, query, query_as, query_scalar};
 
-use crate::system::user::model::{SysUser, SysUserListDto, SysUserSaveDto, SysUserUpdateDto};
+use crate::system::user::model::{
+    BindRolesDto, SysUser, SysUserListDto, SysUserSaveDto, SysUserUpdateDto,
+};
 
-pub async fn save_handle(pool: &PgPool, dto: &SysUserSaveDto) -> R<SysUser> {
+pub async fn save(pool: &PgPool, dto: &SysUserSaveDto) -> R<SysUser> {
     let new_user = SysUser::new_user_from_save_dto(&dto);
     query!(
         "insert into sys_user(
@@ -32,14 +34,14 @@ pub async fn save_handle(pool: &PgPool, dto: &SysUserSaveDto) -> R<SysUser> {
     success(new_user)
 }
 
-pub async fn remove_handle(pool: &PgPool, dto: &IdsDto) -> R<()> {
+pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
     sqlx::query!("DELETE FROM sys_user WHERE id = ANY($1)", &dto.ids)
         .execute(pool)
         .await?;
     success(())
 }
 
-pub async fn update_handle(pool: &PgPool, dto: &SysUserUpdateDto) -> R<()> {
+pub async fn update(pool: &PgPool, dto: &SysUserUpdateDto) -> R<()> {
     sqlx::query!(
         "UPDATE sys_user SET 
             nick_name = COALESCE($2, nick_name),
@@ -59,16 +61,41 @@ pub async fn update_handle(pool: &PgPool, dto: &SysUserUpdateDto) -> R<()> {
     success(())
 }
 
-pub async fn get_one_handle(pool: &PgPool, dto: &IdDto) -> R<SysUser> {
+pub async fn update_bind_roles(pool: &PgPool, dto: &BindRolesDto) -> R<()> {
+    let mut tx = pool.begin().await?;
+    query!("DELETE FROM sys_user_role WHERE user_id = $1", dto.user_id)
+        .execute(&mut *tx)
+        .await?;
+    for role_id in &dto.role_ids {
+        query!(
+            "INSERT INTO sys_user_role (user_id, role_id) VALUES ($1, $2)",
+            dto.user_id,
+            role_id
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
+    tx.commit().await?;
+    success(())
+}
+
+pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysUser> {
     let data = query_as!(SysUser, "select * from sys_user where id = $1", dto.id)
         .fetch_one(pool)
         .await?;
     success(data)
 }
 
-pub async fn list_handle(pool: &PgPool, dto: &SysUserListDto) -> R<Vec<SysUser>> {
+pub async fn list(pool: &PgPool, dto: &SysUserListDto) -> R<Vec<SysUser>> {
     let data = query_as!(SysUser, "select * from sys_user")
         .fetch_all(pool)
         .await?;
     success(data)
+}
+
+pub async fn list_bind_roles(pool: &PgPool, user_id: i64) -> R<Vec<i64>> {
+    let ids = query_scalar!("SELECT role_id FROM sys_user_role WHERE user_id = $1", user_id)
+        .fetch_all(pool)
+        .await?;
+    success(ids)
 }

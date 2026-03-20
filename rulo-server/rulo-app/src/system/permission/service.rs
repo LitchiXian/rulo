@@ -8,7 +8,7 @@ use crate::system::permission::model::{
     SysPermission, SysPermissionListDto, SysPermissionSaveDto, SysPermissionUpdateDto,
 };
 
-pub async fn save_handle(pool: &PgPool, dto: &SysPermissionSaveDto) -> R<SysPermission> {
+pub async fn save(pool: &PgPool, dto: &SysPermissionSaveDto) -> R<SysPermission> {
     let new_perm = SysPermission::new_permission_from_save_dto(&dto);
     query!(
         "insert into sys_permission(
@@ -31,14 +31,14 @@ pub async fn save_handle(pool: &PgPool, dto: &SysPermissionSaveDto) -> R<SysPerm
     success(new_perm)
 }
 
-pub async fn remove_handle(pool: &PgPool, dto: &IdsDto) -> R<()> {
+pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
     sqlx::query!("DELETE FROM sys_permission WHERE id = ANY($1)", &dto.ids)
         .execute(pool)
         .await?;
     success(())
 }
 
-pub async fn update_handle(pool: &PgPool, dto: &SysPermissionUpdateDto) -> R<()> {
+pub async fn update(pool: &PgPool, dto: &SysPermissionUpdateDto) -> R<()> {
     sqlx::query!(
         "UPDATE sys_permission SET
             perm_name = COALESCE($2, perm_name),
@@ -56,7 +56,7 @@ pub async fn update_handle(pool: &PgPool, dto: &SysPermissionUpdateDto) -> R<()>
     success(())
 }
 
-pub async fn get_one_handle(pool: &PgPool, dto: &IdDto) -> R<SysPermission> {
+pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysPermission> {
     let data = query_as!(
         SysPermission,
         "select * from sys_permission where id = $1",
@@ -67,9 +67,18 @@ pub async fn get_one_handle(pool: &PgPool, dto: &IdDto) -> R<SysPermission> {
     success(data)
 }
 
-pub async fn list_handle(pool: &PgPool, _dto: &SysPermissionListDto) -> R<Vec<SysPermission>> {
-    let data = query_as!(SysPermission, "select * from sys_permission")
-        .fetch_all(pool)
-        .await?;
+pub async fn list(pool: &PgPool, dto: &SysPermissionListDto) -> R<Vec<SysPermission>> {
+    let data = query_as!(
+        SysPermission,
+        "SELECT * FROM sys_permission WHERE is_deleted = false \
+         AND ($1::smallint IS NULL OR perm_type = $1) \
+         AND ($2::varchar IS NULL OR perm_code ILIKE '%' || $2 || '%') \
+         AND ($3::varchar IS NULL OR perm_name ILIKE '%' || $3 || '%')",
+        dto.perm_type,
+        dto.perm_code.as_deref(),
+        dto.perm_name.as_deref()
+    )
+    .fetch_all(pool)
+    .await?;
     success(data)
 }

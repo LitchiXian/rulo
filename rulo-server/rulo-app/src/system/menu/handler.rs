@@ -26,7 +26,7 @@ pub async fn save_handler(
     State(state): State<Arc<AppState>>,
     Json(dto): Json<SysMenuSaveDto>,
 ) -> R<SysMenu> {
-    service::save_handle(&state.db_pool, &dto).await
+    service::save(&state.db_pool, &dto).await
 }
 
 #[utoipa::path(
@@ -37,7 +37,7 @@ pub async fn save_handler(
 )]
 #[perm("sys:menu:remove")]
 pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
-    service::remove_handle(&state.db_pool, &dto).await
+    service::remove(&state.db_pool, &dto).await
 }
 
 #[utoipa::path(
@@ -51,7 +51,7 @@ pub async fn update_handler(
     State(state): State<Arc<AppState>>,
     Json(dto): Json<SysMenuUpdateDto>,
 ) -> R<()> {
-    service::update_handle(&state.db_pool, &dto).await
+    service::update(&state.db_pool, &dto).await
 }
 
 #[utoipa::path(
@@ -65,7 +65,7 @@ pub async fn detail_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<IdDto>,
 ) -> R<SysMenu> {
-    service::get_one_handle(&state.db_pool, &dto).await
+    service::detail(&state.db_pool, &dto).await
 }
 
 #[utoipa::path(
@@ -79,5 +79,5 @@ pub async fn list_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<SysMenuListDto>,
 ) -> R<Vec<SysMenu>> {
-    service::list_handle(&state.db_pool, &dto).await
+    service::list(&state.db_pool, &dto).await
 }

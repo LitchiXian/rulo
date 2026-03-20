@@ -60,6 +60,18 @@ pub struct SysRoleUpdateDto {
     pub remark: Option<String>,
 }
 
+#[derive(Deserialize, Debug, ToSchema)]
+pub struct BindMenusDto {
+    pub role_id: i64,
+    pub menu_ids: Vec<i64>,
+}
+
+#[derive(Deserialize, Debug, ToSchema)]
+pub struct BindPermsDto {
+    pub role_id: i64,
+    pub perm_ids: Vec<i64>,
+}
+
 #[derive(Deserialize, Debug, IntoParams, ToSchema)]
 pub struct SysRoleListDto {
     pub role_name: Option<String>,

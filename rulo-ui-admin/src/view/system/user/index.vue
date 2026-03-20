@@ -1,9 +1,11 @@
 <script setup lang="ts" name="UserManage">
 import { ref, onMounted } from 'vue'
-import { ElMessageBox } from 'element-plus'
-import { Search, Plus, Delete, Edit } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Plus, Delete, Edit, User } from '@element-plus/icons-vue'
 import userApi from '@/api/admin/user'
+import roleApi from '@/api/admin/role'
 import type { UserInfo, SysUserSaveDto, SysUserUpdateDto, SysUserListDto } from '@/type/user'
+import type { SysRole } from '@/type/role'
 
 // ---- 列表 ----
 const tableData = ref<UserInfo[]>([])
@@ -76,6 +78,36 @@ const handleDelete = async (row: UserInfo) => {
   fetchList()
 }
 
+// ---- 分配角色弹窗 ----
+const roleDialogVisible = ref(false)
+const allRoles = ref<SysRole[]>([])
+const checkedRoleIds = ref<number[]>([])
+const currentUser = ref<UserInfo | null>(null)
+const roleSaving = ref(false)
+
+const openRoleDialog = async (row: UserInfo) => {
+  currentUser.value = row
+  roleDialogVisible.value = true
+  const [roles, checkedIds] = await Promise.all([
+    roleApi.list(),
+    userApi.listRoles(row.id),
+  ])
+  allRoles.value = roles
+  checkedRoleIds.value = checkedIds
+}
+
+const handleRoleSave = async () => {
+  if (!currentUser.value) return
+  roleSaving.value = true
+  try {
+    await userApi.updateBindRoles({ user_id: currentUser.value.id, role_ids: checkedRoleIds.value })
+    ElMessage.success('分配角色成功')
+    roleDialogVisible.value = false
+  } finally {
+    roleSaving.value = false
+  }
+}
+
 onMounted(fetchList)
 </script>
 
@@ -121,9 +153,10 @@ onMounted(fetchList)
           </template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="150" show-overflow-tooltip />
-        <el-table-column label="操作" width="160" fixed="right" align="center">
+        <el-table-column label="操作" width="240" fixed="right" align="center">
           <template #default="{ row }">
             <el-button link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="warning" :icon="User" @click="openRoleDialog(row)">分配角色</el-button>
             <el-button link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -152,6 +185,27 @@ onMounted(fetchList)
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSave">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 分配角色弹窗 -->
+    <el-dialog
+      :title="`分配角色 - ${currentUser?.nick_name ?? ''}`"
+      v-model="roleDialogVisible"
+      width="500px"
+    >
+      <el-checkbox-group v-model="checkedRoleIds">
+        <div v-for="role in allRoles" :key="role.id" style="margin-bottom: 8px">
+          <el-checkbox :value="role.id">
+            <span style="font-weight: 500; margin-right: 8px">{{ role.role_name }}</span>
+            <span style="color: #999; font-family: monospace">{{ role.role_key }}</span>
+            <el-tag v-if="role.is_super" type="warning" size="small" style="margin-left: 8px">超管</el-tag>
+          </el-checkbox>
+        </div>
+      </el-checkbox-group>
+      <template #footer>
+        <el-button @click="roleDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="roleSaving" @click="handleRoleSave">确定</el-button>
       </template>
     </el-dialog>
   </div>

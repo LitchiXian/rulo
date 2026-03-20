@@ -3,7 +3,7 @@ import type { ServerInfo } from '@/type/monitor'
 
 const monitorApi = {
   getServerInfo() {
-    return request({ url: '/system/monitor/server_info', method: 'get' }) as Promise<ServerInfo>
+    return request({ url: '/system/monitor/server-info', method: 'get' }) as Promise<ServerInfo>
   },
 }
 

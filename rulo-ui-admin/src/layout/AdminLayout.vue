@@ -39,9 +39,12 @@ const mixSidebarMenus = computed(() => {
   return found?.children ?? []
 })
 
+// 判断是否外链
+const isExternal = (path?: string | null) => !!path && /^https?:\/\//.test(path)
+
 // 点击菜单项时判断是否外链
 const handleMenuClick = (item: MenuTreeNode) => {
-  if (item.menu_type === 3 && item.path) {
+  if (item.path && isExternal(item.path)) {
     window.open(item.path, '_blank')
   }
 }
@@ -113,7 +116,7 @@ const handleTopMenuSelect = (index: string) => {
   const found = visibleMenus.value.find(m => m.path === index)
   if (found?.children?.length) {
     const first = found.children[0]
-    if (first.path && first.menu_type !== 3) {
+    if (first.path && !isExternal(first.path)) {
       router.push(first.path)
     }
   }
@@ -167,7 +170,7 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
             </template>
             <template v-for="child in item.children" :key="child.id">
               <el-menu-item
-                v-if="child.menu_type !== 3"
+                v-if="!isExternal(child.path)"
                 :index="child.path ?? ''"
               >
                 <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>
@@ -180,7 +183,7 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
             </template>
           </el-sub-menu>
           <el-menu-item
-            v-else-if="item.menu_type !== 3"
+            v-else-if="!isExternal(item.path)"
             :index="item.path ?? ''"
           >
             <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
@@ -213,7 +216,7 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
         <template v-else>
           <template v-for="child in mixSidebarMenus" :key="child.id">
             <el-menu-item
-              v-if="child.menu_type !== 3"
+              v-if="!isExternal(child.path)"
               :index="child.path ?? ''"
             >
               <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>
@@ -292,7 +295,7 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
                 </template>
                 <template v-for="child in item.children" :key="child.id">
                   <el-menu-item
-                    v-if="child.menu_type !== 3"
+                    v-if="!isExternal(child.path)"
                     :index="child.path ?? ''"
                   >
                     <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>
@@ -305,7 +308,7 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
                 </template>
               </el-sub-menu>
               <el-menu-item
-                v-else-if="item.menu_type !== 3"
+                v-else-if="!isExternal(item.path)"
                 :index="item.path ?? ''"
               >
                 <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
@@ -431,7 +434,7 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
                 </template>
                 <template v-for="child in item.children" :key="child.id">
                   <el-menu-item
-                    v-if="child.menu_type !== 3"
+                    v-if="!isExternal(child.path)"
                     :index="child.path ?? ''"
                   >
                     <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>
@@ -444,7 +447,7 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
                 </template>
               </el-sub-menu>
               <el-menu-item
-                v-else-if="item.menu_type !== 3"
+                v-else-if="!isExternal(item.path)"
                 :index="item.path ?? ''"
               >
                 <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
@@ -477,7 +480,7 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
             <template v-else>
               <template v-for="child in mixSidebarMenus" :key="child.id">
                 <el-menu-item
-                  v-if="child.menu_type !== 3"
+                  v-if="!isExternal(child.path)"
                   :index="child.path ?? ''"
                 >
                   <el-icon><component :is="iconMap[child.icon ?? '']" /></el-icon>

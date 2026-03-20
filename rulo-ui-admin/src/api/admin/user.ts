@@ -1,5 +1,5 @@
 import request from '@/util/request'
-import type { UserInfo, SysUserSaveDto, SysUserUpdateDto, SysUserListDto, IdsDto } from '@/type/user'
+import type { UserInfo, SysUserSaveDto, SysUserUpdateDto, SysUserListDto, IdsDto, BindRolesDto } from '@/type/user'
 
 const userApi = {
   list(params?: SysUserListDto) {
@@ -20,6 +20,14 @@ const userApi = {
 
   remove(data: IdsDto) {
     return request({ url: '/system/user/remove', method: 'post', data })
+  },
+
+  updateBindRoles(data: BindRolesDto) {
+    return request({ url: '/system/user/update-bind-roles', method: 'post', data })
+  },
+
+  listRoles(id: number) {
+    return request({ url: '/system/user/list-bind-roles', method: 'get', params: { id } }) as Promise<number[]>
   },
 }
 

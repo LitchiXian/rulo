@@ -129,7 +129,7 @@ pub async fn register(db_pool: &PgPool, dto: &AuthUserDto) -> R<()> {
         email: dto.email.clone(),
         remark: None,
     };
-    service::save_handle(db_pool, &user_save_dto).await?;
+    service::save(db_pool, &user_save_dto).await?;
 
     success(())
 }

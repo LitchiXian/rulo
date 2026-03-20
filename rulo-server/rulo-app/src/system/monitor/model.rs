@@ -1,6 +1,7 @@
 use serde::Serialize;
+use utoipa::ToSchema;
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct ServerInfo {
     pub cpu: CpuInfo,
     pub mem: MemInfo,
@@ -9,7 +10,7 @@ pub struct ServerInfo {
     pub rust: RustInfo,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct CpuInfo {
     // CPU 核心数
     pub cpu_num: usize,
@@ -21,7 +22,7 @@ pub struct CpuInfo {
     pub free: f64,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct MemInfo {
     // 总内存(GB)
     pub total: f64,
@@ -33,7 +34,7 @@ pub struct MemInfo {
     pub usage: f64,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct SysInfo {
     // 主机名
     pub host_name: String,
@@ -47,7 +48,7 @@ pub struct SysInfo {
     pub uptime: u64,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct DiskInfo {
     // 挂载点
     pub mount_point: String,
@@ -63,7 +64,7 @@ pub struct DiskInfo {
     pub usage: f64,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct RustInfo {
     // 进程内存(MB)
     pub mem_used: f64,

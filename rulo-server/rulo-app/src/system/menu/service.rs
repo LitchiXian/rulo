@@ -6,7 +6,7 @@ use sqlx::{PgPool, query, query_as};
 
 use crate::system::menu::model::{SysMenu, SysMenuListDto, SysMenuSaveDto, SysMenuUpdateDto};
 
-pub async fn save_handle(pool: &PgPool, dto: &SysMenuSaveDto) -> R<SysMenu> {
+pub async fn save(pool: &PgPool, dto: &SysMenuSaveDto) -> R<SysMenu> {
     let new_menu = SysMenu::new_menu_from_save_dto(&dto);
     query!(
         "insert into sys_menu(
@@ -36,14 +36,14 @@ pub async fn save_handle(pool: &PgPool, dto: &SysMenuSaveDto) -> R<SysMenu> {
     success(new_menu)
 }
 
-pub async fn remove_handle(pool: &PgPool, dto: &IdsDto) -> R<()> {
+pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
     sqlx::query!("DELETE FROM sys_menu WHERE id = ANY($1)", &dto.ids)
         .execute(pool)
         .await?;
     success(())
 }
 
-pub async fn update_handle(pool: &PgPool, dto: &SysMenuUpdateDto) -> R<()> {
+pub async fn update(pool: &PgPool, dto: &SysMenuUpdateDto) -> R<()> {
     sqlx::query!(
         "UPDATE sys_menu SET
             name = COALESCE($2, name),
@@ -69,15 +69,15 @@ pub async fn update_handle(pool: &PgPool, dto: &SysMenuUpdateDto) -> R<()> {
     success(())
 }
 
-pub async fn get_one_handle(pool: &PgPool, dto: &IdDto) -> R<SysMenu> {
+pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysMenu> {
     let data = query_as!(SysMenu, "select * from sys_menu where id = $1", dto.id)
         .fetch_one(pool)
         .await?;
     success(data)
 }
 
-pub async fn list_handle(pool: &PgPool, _dto: &SysMenuListDto) -> R<Vec<SysMenu>> {
-    let data = query_as!(SysMenu, "select * from sys_menu")
+pub async fn list(pool: &PgPool, _dto: &SysMenuListDto) -> R<Vec<SysMenu>> {
+    let data = query_as!(SysMenu, "select * from sys_menu where is_deleted = false")
         .fetch_all(pool)
         .await?;
     success(data)

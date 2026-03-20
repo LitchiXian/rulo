@@ -78,3 +78,9 @@ pub struct SysUserListDto {
     // #[serde(flatten)]
     // pub page: PageDto,
 }
+
+#[derive(Deserialize, Debug, ToSchema)]
+pub struct BindRolesDto {
+    pub user_id: i64,
+    pub role_ids: Vec<i64>,
+}

@@ -8,13 +8,6 @@ use crate::system::auth::{
     service,
 };
 
-pub async fn hello_handler(
-    State(state): State<Arc<AppState>>,
-    Json(dto): Json<AuthUserDto>,
-) -> R<String> {
-    service::login(&state.db_pool, &state.redis_pool, &dto).await
-}
-
 #[utoipa::path(
     post, path = "/system/auth/login",
     request_body = AuthUserDto,

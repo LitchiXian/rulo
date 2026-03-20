@@ -1,9 +1,14 @@
 <script setup lang="ts" name="RoleManage">
-import { ref, onMounted } from 'vue'
-import { ElMessageBox } from 'element-plus'
-import { Search, Plus, Delete, Edit } from '@element-plus/icons-vue'
+import { ref, onMounted, nextTick } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Plus, Delete, Edit, Menu, Key } from '@element-plus/icons-vue'
 import roleApi from '@/api/admin/role'
+import menuApi from '@/api/admin/menu'
+import permissionApi from '@/api/admin/permission'
 import type { SysRole, SysRoleSaveDto, SysRoleUpdateDto, SysRoleListDto } from '@/type/role'
+import type { SysMenu } from '@/type/menu'
+import type { SysPermission } from '@/type/permission'
+import type { ElTree } from 'element-plus'
 
 // ---- 列表 ----
 const tableData = ref<SysRole[]>([])
@@ -76,7 +81,142 @@ const handleDelete = async (row: SysRole) => {
   fetchList()
 }
 
-// TODO: 后续增加"分配权限"功能，调用 sys_role_permission 关联表接口（后端暂未提供）
+// ---- 分配菜单弹窗 ----
+const menuDialogVisible = ref(false)
+const menuTreeRef = ref<InstanceType<typeof ElTree>>()
+const allMenus = ref<SysMenu[]>([])
+const currentRole = ref<SysRole | null>(null)
+const menuSaving = ref(false)
+
+interface MenuTreeNode {
+  id: number
+  label: string
+  children?: MenuTreeNode[]
+}
+
+const buildMenuTree = (menus: SysMenu[], parentId = 0): MenuTreeNode[] => {
+  return menus
+    .filter(m => m.parent_id === parentId)
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map(m => ({
+      id: m.id,
+      label: m.name,
+      children: buildMenuTree(menus, m.id),
+    }))
+}
+
+const menuTreeData = ref<MenuTreeNode[]>([])
+
+const openMenuDialog = async (row: SysRole) => {
+  currentRole.value = row
+  try {
+    const [menus, checkedIds] = await Promise.all([
+      menuApi.list(),
+      roleApi.listMenus(row.id),
+    ])
+    allMenus.value = menus
+    menuTreeData.value = buildMenuTree(menus)
+    menuDialogVisible.value = true
+    await nextTick()
+    // 只勾选叶子节点，避免父节点被自动全选
+    const leafIds = checkedIds.filter(id => {
+      return !menus.some(m => m.parent_id === id)
+    })
+    menuTreeRef.value?.setCheckedKeys(leafIds)
+  } catch { /* 错误已由拦截器提示 */ }
+}
+
+const handleMenuSave = async () => {
+  if (!currentRole.value) return
+  menuSaving.value = true
+  try {
+    const checked = menuTreeRef.value?.getCheckedKeys() as number[]
+    const halfChecked = menuTreeRef.value?.getHalfCheckedKeys() as number[]
+    const menu_ids = [...checked, ...halfChecked]
+    await roleApi.updateBindMenus({ role_id: currentRole.value.id, menu_ids })
+    ElMessage.success('分配菜单成功')
+    menuDialogVisible.value = false
+  } finally {
+    menuSaving.value = false
+  }
+}
+
+// ---- 分配权限弹窗 ----
+const permDialogVisible = ref(false)
+const allPerms = ref<SysPermission[]>([])
+const checkedPermIds = ref<number[]>([])
+const permSaving = ref(false)
+const permSearch = ref('')
+
+import { computed } from 'vue'
+
+const filteredPerms = computed(() => {
+  if (!permSearch.value) return allPerms.value
+  const kw = permSearch.value.toLowerCase()
+  return allPerms.value.filter(
+    p => p.perm_code.toLowerCase().includes(kw) || p.perm_name.toLowerCase().includes(kw)
+  )
+})
+
+// 按模块分组（取 perm_code 中间段，如 sys:user:list → user）
+interface PermGroup {
+  module: string
+  perms: typeof allPerms.value
+}
+const groupedPerms = computed<PermGroup[]>(() => {
+  const map = new Map<string, typeof allPerms.value>()
+  for (const p of filteredPerms.value) {
+    const parts = p.perm_code.split(':')
+    const mod = parts.length >= 2 ? parts[1] : 'other'
+    if (!map.has(mod)) map.set(mod, [])
+    map.get(mod)!.push(p)
+  }
+  return Array.from(map, ([module, perms]) => ({ module, perms }))
+})
+
+// 模块全选/取消
+const isGroupAllChecked = (group: PermGroup) => group.perms.every(p => checkedPermIds.value.includes(p.id))
+const isGroupIndeterminate = (group: PermGroup) => {
+  const count = group.perms.filter(p => checkedPermIds.value.includes(p.id)).length
+  return count > 0 && count < group.perms.length
+}
+const handleGroupCheckAll = (group: PermGroup, checked: boolean) => {
+  const ids = group.perms.map(p => p.id)
+  if (checked) {
+    const set = new Set(checkedPermIds.value)
+    ids.forEach(id => set.add(id))
+    checkedPermIds.value = Array.from(set)
+  } else {
+    const remove = new Set(ids)
+    checkedPermIds.value = checkedPermIds.value.filter(id => !remove.has(id))
+  }
+}
+
+const openPermDialog = async (row: SysRole) => {
+  currentRole.value = row
+  permSearch.value = ''
+  try {
+    const [perms, checkedIds] = await Promise.all([
+      permissionApi.list({ perm_type: 1 }),
+      roleApi.listPerms(row.id),
+    ])
+    allPerms.value = perms
+    checkedPermIds.value = checkedIds
+    permDialogVisible.value = true
+  } catch { /* 错误已由拦截器提示 */ }
+}
+
+const handlePermSave = async () => {
+  if (!currentRole.value) return
+  permSaving.value = true
+  try {
+    await roleApi.updateBindPerms({ role_id: currentRole.value.id, perm_ids: checkedPermIds.value })
+    ElMessage.success('分配权限成功')
+    permDialogVisible.value = false
+  } finally {
+    permSaving.value = false
+  }
+}
 
 onMounted(fetchList)
 </script>
@@ -128,9 +268,11 @@ onMounted(fetchList)
           </template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="150" show-overflow-tooltip />
-        <el-table-column label="操作" width="160" fixed="right" align="center">
+        <el-table-column label="操作" width="320" fixed="right" align="center">
           <template #default="{ row }">
             <el-button link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="warning" :icon="Menu" @click="openMenuDialog(row)">分配菜单</el-button>
+            <el-button link type="success" :icon="Key" @click="openPermDialog(row)">分配权限</el-button>
             <el-button link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -160,6 +302,61 @@ onMounted(fetchList)
         <el-button type="primary" @click="handleSave">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 分配菜单弹窗 -->
+    <el-dialog
+      :title="`分配菜单 - ${currentRole?.role_name ?? ''}`"
+      v-model="menuDialogVisible"
+      width="800px"
+    >
+      <el-tree
+        ref="menuTreeRef"
+        :data="menuTreeData"
+        show-checkbox
+        node-key="id"
+        default-expand-all
+        :props="{ label: 'label', children: 'children' }"
+        class="menu-tree"
+      />
+      <template #footer>
+        <el-button @click="menuDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="menuSaving" @click="handleMenuSave">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 分配权限弹窗 -->
+    <el-dialog
+      :title="`分配权限 - ${currentRole?.role_name ?? ''}`"
+      v-model="permDialogVisible"
+      width="720px"
+    >
+      <el-input v-model="permSearch" placeholder="搜索权限编码或名称" clearable style="margin-bottom: 12px" />
+      <div style="max-height: 450px; overflow-y: auto">
+        <div v-for="group in groupedPerms" :key="group.module" class="perm-group">
+          <div class="perm-group-header">
+            <el-checkbox
+              :model-value="isGroupAllChecked(group)"
+              :indeterminate="isGroupIndeterminate(group)"
+              @change="(val: any) => handleGroupCheckAll(group, !!val)"
+            >
+              <span class="perm-group-title">{{ group.module }}</span>
+            </el-checkbox>
+          </div>
+          <el-checkbox-group v-model="checkedPermIds" class="perm-group-body">
+            <div v-for="perm in group.perms" :key="perm.id" class="perm-item">
+              <el-checkbox :value="perm.id">
+                <span class="perm-code">{{ perm.perm_code.split(':').pop() }}</span>
+                <span class="perm-name">{{ perm.perm_name }}</span>
+              </el-checkbox>
+            </div>
+          </el-checkbox-group>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="permDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="permSaving" @click="handlePermSave">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -167,4 +364,66 @@ onMounted(fetchList)
 .page-container { display: flex; flex-direction: column; gap: 16px; }
 .search-card :deep(.el-card__body) { padding-bottom: 0; }
 .table-toolbar { display: flex; justify-content: flex-start; margin-bottom: 16px; }
+
+/* 菜单树：子节点横排 4 个一行 */
+.menu-tree :deep(.el-tree-node__children) {
+  display: flex;
+  flex-wrap: wrap;
+}
+.menu-tree :deep(.el-tree-node__children > .el-tree-node) {
+  width: 25%;
+}
+/* 一级节点：分组卡片感 */
+.menu-tree :deep(> .el-tree-node) {
+  background: var(--el-fill-color-lighter);
+  border-radius: 6px;
+  padding: 8px 4px 4px;
+  margin-bottom: 10px;
+}
+/* 一级节点文字加粗 */
+.menu-tree :deep(> .el-tree-node > .el-tree-node__content) {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+/* 子节点稍小 */
+.menu-tree :deep(.el-tree-node__children > .el-tree-node > .el-tree-node__content) {
+  font-size: 13px;
+  padding: 2px 0;
+}
+
+/* 权限分组卡片 */
+.perm-group {
+  background: var(--el-fill-color-lighter);
+  border-radius: 6px;
+  padding: 10px 12px 6px;
+  margin-bottom: 10px;
+}
+.perm-group-header {
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  padding-bottom: 6px;
+}
+.perm-group-title {
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: capitalize;
+}
+.perm-group-body {
+  display: flex;
+  flex-wrap: wrap;
+}
+.perm-item {
+  width: 33.33%;
+  padding: 3px 0;
+  font-size: 13px;
+}
+.perm-code {
+  font-family: monospace;
+  margin-right: 4px;
+}
+.perm-name {
+  color: #999;
+  font-size: 12px;
+}
 </style>
