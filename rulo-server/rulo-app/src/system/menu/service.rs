@@ -1,9 +1,9 @@
 use rulo_common::{
     error::AppError,
-    model::{IdDto, IdsDto},
+    model::{IdDto, IdsDto, PageResult, normalize_page},
     result::{R, success},
 };
-use sqlx::{PgPool, query, query_as};
+use sqlx::{PgPool, Postgres, QueryBuilder, query, query_as};
 
 use crate::system::menu::model::{SysMenu, SysMenuListDto, SysMenuSaveDto, SysMenuUpdateDto};
 
@@ -179,9 +179,70 @@ pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysMenu> {
     success(data)
 }
 
-pub async fn list(pool: &PgPool, _dto: &SysMenuListDto) -> R<Vec<SysMenu>> {
-    let data = query_as!(SysMenu, "select * from sys_menu where is_deleted = false ORDER BY sort_order ASC")
+pub async fn list(pool: &PgPool, dto: &SysMenuListDto) -> R<PageResult<SysMenu>> {
+    let (page_num, page_size) = normalize_page(dto.page_num, dto.page_size);
+    let offset = ((page_num - 1) * page_size) as i64;
+
+    let mut count_builder = QueryBuilder::<Postgres>::new(
+        "SELECT COUNT(*)::bigint FROM sys_menu WHERE is_deleted = false",
+    );
+    append_menu_filters(&mut count_builder, dto);
+    let total = count_builder.build_query_scalar::<i64>().fetch_one(pool).await? as u64;
+
+    let mut data_builder = QueryBuilder::<Postgres>::new(
+        "SELECT * FROM sys_menu WHERE is_deleted = false",
+    );
+    append_menu_filters(&mut data_builder, dto);
+    data_builder
+        .push(" ORDER BY parent_id ASC, sort_order ASC, update_time DESC")
+        .push(" LIMIT ")
+        .push_bind(page_size as i64)
+        .push(" OFFSET ")
+        .push_bind(offset);
+
+    let list = data_builder
+        .build_query_as::<SysMenu>()
         .fetch_all(pool)
         .await?;
-    success(data)
+
+    success(PageResult {
+        list,
+        total,
+        page_num,
+        page_size,
+    })
+}
+
+pub async fn list_all(pool: &PgPool, dto: &SysMenuListDto) -> R<Vec<SysMenu>> {
+    let mut data_builder = QueryBuilder::<Postgres>::new(
+        "SELECT * FROM sys_menu WHERE is_deleted = false",
+    );
+    append_menu_filters(&mut data_builder, dto);
+    data_builder.push(" ORDER BY parent_id ASC, sort_order ASC, update_time DESC");
+    let list = data_builder
+        .build_query_as::<SysMenu>()
+        .fetch_all(pool)
+        .await?;
+    success(list)
+}
+
+fn append_menu_filters(builder: &mut QueryBuilder<Postgres>, dto: &SysMenuListDto) {
+    if let Some(name) = dto.name.as_deref().filter(|value| !value.trim().is_empty()) {
+        builder.push(" AND name ILIKE ").push_bind(format!("%{}%", name.trim()));
+    }
+    if let Some(menu_type) = dto.menu_type {
+        builder.push(" AND menu_type = ").push_bind(menu_type);
+    }
+    if let Some(is_hidden) = dto.is_hidden {
+        builder.push(" AND is_hidden = ").push_bind(is_hidden);
+    }
+    if let Some(parent_id) = dto.parent_id {
+        builder.push(" AND parent_id = ").push_bind(parent_id);
+    }
+    if let Some(create_start_time) = dto.create_start_time {
+        builder.push(" AND create_time >= ").push_bind(create_start_time);
+    }
+    if let Some(create_end_time) = dto.create_end_time {
+        builder.push(" AND create_time <= ").push_bind(create_end_time);
+    }
 }

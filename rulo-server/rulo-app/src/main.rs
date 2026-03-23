@@ -11,6 +11,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use deadpool_redis::Config as RedisConfig;
 use rulo_common::{error, state::AppState};
+mod ai;
 mod router;
 mod swagger;
 mod system;

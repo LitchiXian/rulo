@@ -1,4 +1,4 @@
-use jsonwebtoken::{DecodingKey, DecodingKeyKind, EncodingKey, Header, Validation, decode, encode};
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 
 const SECRET: &[u8] = b"rulo_jwt_secret_key";

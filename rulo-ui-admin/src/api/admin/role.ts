@@ -1,10 +1,15 @@
 import request from '@/util/request'
 import type { SysRole, SysRoleSaveDto, SysRoleUpdateDto, SysRoleListDto, BindMenusDto, BindPermsDto } from '@/type/role'
 import type { IdsDto } from '@/type/user'
+import type { PageResult } from '@/type/common'
 
 const roleApi = {
   list(params?: SysRoleListDto) {
-    return request({ url: '/system/role/list', method: 'get', params }) as Promise<SysRole[]>
+    return request({ url: '/system/role/list', method: 'get', params }) as Promise<PageResult<SysRole>>
+  },
+
+  listAll(params?: SysRoleListDto) {
+    return request({ url: '/system/role/list-all', method: 'get', params }) as Promise<SysRole[]>
   },
 
   detail(id: number) {

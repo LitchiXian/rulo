@@ -15,4 +15,5 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/update", post(handler::update_handler))
         .route("/detail", get(handler::detail_handler))
         .route("/list", get(handler::list_handler))
+        .route("/list-all", get(handler::list_all_handler))
 }

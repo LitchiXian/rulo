@@ -7,7 +7,7 @@ use axum::{
 use deadpool_redis::Pool as RedisPool;
 use rulo_common::{
     constant::redis_constant,
-    model::{IdDto, IdsDto},
+    model::{IdDto, IdsDto, PageResult},
     result::R,
     util::redis_util,
 };
@@ -112,15 +112,29 @@ pub async fn detail_handler(
 #[utoipa::path(
     get, path = "/system/role/list",
     params(SysRoleListDto),
-    responses((status = 200, description = "success", body = Vec<SysRole>)),
+    responses((status = 200, description = "success")),
     security(("bearer_auth" = []))
 )]
 #[perm("sys:role:list")]
 pub async fn list_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<SysRoleListDto>,
-) -> R<Vec<SysRole>> {
+) -> R<PageResult<SysRole>> {
     service::list(&state.db_pool, &dto).await
+}
+
+#[utoipa::path(
+    get, path = "/system/role/list-all",
+    params(SysRoleListDto),
+    responses((status = 200, description = "success", body = Vec<SysRole>)),
+    security(("bearer_auth" = []))
+)]
+#[perm("sys:role:list")]
+pub async fn list_all_handler(
+    State(state): State<Arc<AppState>>,
+    Query(dto): Query<SysRoleListDto>,
+) -> R<Vec<SysRole>> {
+    service::list_all(&state.db_pool, &dto).await
 }
 
 #[utoipa::path(

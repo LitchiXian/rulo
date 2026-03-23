@@ -1,10 +1,15 @@
 import request from '@/util/request'
 import type { SysMenu, SysMenuSaveDto, SysMenuUpdateDto, SysMenuListDto } from '@/type/menu'
 import type { IdsDto } from '@/type/user'
+import type { PageResult } from '@/type/common'
 
 const menuApi = {
   list(params?: SysMenuListDto) {
-    return request({ url: '/system/menu/list', method: 'get', params }) as Promise<SysMenu[]>
+    return request({ url: '/system/menu/list', method: 'get', params }) as Promise<PageResult<SysMenu>>
+  },
+
+  listAll(params?: SysMenuListDto) {
+    return request({ url: '/system/menu/list-all', method: 'get', params }) as Promise<SysMenu[]>
   },
 
   detail(id: number) {

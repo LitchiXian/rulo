@@ -1,9 +1,9 @@
 use rulo_common::{
     error::AppError,
-    model::{IdDto, IdsDto},
+    model::{IdDto, IdsDto, PageResult, normalize_page},
     result::{R, success},
 };
-use sqlx::{PgPool, query, query_as, query_scalar};
+use sqlx::{PgPool, Postgres, QueryBuilder, query, query_as, query_scalar};
 
 use crate::system::user::model::{
     BindRolesDto, SysUser, SysUserListDto, SysUserSaveDto, SysUserUpdateDto,
@@ -101,11 +101,56 @@ pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysUser> {
     success(data)
 }
 
-pub async fn list(pool: &PgPool, dto: &SysUserListDto) -> R<Vec<SysUser>> {
-    let data = query_as!(SysUser, "select * from sys_user WHERE is_deleted = false ORDER BY update_time DESC")
+pub async fn list(pool: &PgPool, dto: &SysUserListDto) -> R<PageResult<SysUser>> {
+    let (page_num, page_size) = normalize_page(dto.page_num, dto.page_size);
+    let offset = ((page_num - 1) * page_size) as i64;
+
+    let mut count_builder = QueryBuilder::<Postgres>::new(
+        "SELECT COUNT(*)::bigint FROM sys_user WHERE is_deleted = false",
+    );
+    append_user_filters(&mut count_builder, dto);
+    let total = count_builder.build_query_scalar::<i64>().fetch_one(pool).await? as u64;
+
+    let mut data_builder = QueryBuilder::<Postgres>::new(
+        "SELECT * FROM sys_user WHERE is_deleted = false",
+    );
+    append_user_filters(&mut data_builder, dto);
+    data_builder
+        .push(" ORDER BY update_time DESC")
+        .push(" LIMIT ")
+        .push_bind(page_size as i64)
+        .push(" OFFSET ")
+        .push_bind(offset);
+
+    let list = data_builder
+        .build_query_as::<SysUser>()
         .fetch_all(pool)
         .await?;
-    success(data)
+
+    success(PageResult {
+        list,
+        total,
+        page_num,
+        page_size,
+    })
+}
+
+fn append_user_filters(builder: &mut QueryBuilder<Postgres>, dto: &SysUserListDto) {
+    if let Some(nick_name) = dto.nick_name.as_deref().filter(|value| !value.trim().is_empty()) {
+        builder.push(" AND nick_name ILIKE ").push_bind(format!("%{}%", nick_name.trim()));
+    }
+    if let Some(email) = dto.email.as_deref().filter(|value| !value.trim().is_empty()) {
+        builder.push(" AND email ILIKE ").push_bind(format!("%{}%", email.trim()));
+    }
+    if let Some(remark) = dto.remark.as_deref().filter(|value| !value.trim().is_empty()) {
+        builder.push(" AND remark ILIKE ").push_bind(format!("%{}%", remark.trim()));
+    }
+    if let Some(create_start_time) = dto.create_start_time {
+        builder.push(" AND create_time >= ").push_bind(create_start_time);
+    }
+    if let Some(create_end_time) = dto.create_end_time {
+        builder.push(" AND create_time <= ").push_bind(create_end_time);
+    }
 }
 
 pub async fn list_bind_roles(pool: &PgPool, user_id: i64) -> R<Vec<i64>> {

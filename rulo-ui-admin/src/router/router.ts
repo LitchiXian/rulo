@@ -37,6 +37,12 @@ export const constantRoutes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, title: '更新日志' },
   },
   {
+    path: '/ai-chat',
+    name: 'AiChat',
+    component: () => import('@/view/ai/index.vue'),
+    meta: { requiresAuth: true, title: 'AI 助手' },
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/view/Login.vue'),
@@ -56,7 +62,7 @@ const router = createRouter({
 })
 
 // ---------- 动态路由 ----------
-const staticPaths = new Set(['/', '/dashboard', '/profile', '/changelog', '/login'])
+const staticPaths = new Set(['/', '/dashboard', '/profile', '/changelog', '/ai-chat', '/login'])
 let dynamicRouteNames: string[] = []
 let dynamicRoutesLoaded = false
 

@@ -23,6 +23,7 @@ pub fn routes() -> Router<Arc<AppState>> {
         )
         .route("/detail", get(handler::detail_handler))
         .route("/list", get(handler::list_handler))
+        .route("/list-all", get(handler::list_all_handler))
         .route("/list-bind-menus", get(handler::list_bind_menus_handler))
         .route("/list-bind-perms", get(handler::list_bind_perms_handler))
 }

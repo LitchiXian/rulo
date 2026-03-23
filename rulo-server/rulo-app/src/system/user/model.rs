@@ -1,5 +1,4 @@
 use chrono::{DateTime, Utc};
-use rulo_common::model::PageDto;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use utoipa::{IntoParams, ToSchema};
@@ -75,8 +74,8 @@ pub struct SysUserListDto {
     pub create_start_time: Option<DateTime<Utc>>,
     pub create_end_time: Option<DateTime<Utc>>,
     pub remark: Option<String>,
-    // #[serde(flatten)]
-    // pub page: PageDto,
+    pub page_num: Option<u64>,
+    pub page_size: Option<u64>,
 }
 
 #[derive(Deserialize, Debug, ToSchema)]

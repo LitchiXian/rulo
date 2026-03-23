@@ -1,7 +1,7 @@
 <script setup lang="ts" name="AdminLayout">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Fold, Expand, Odometer, User, SwitchButton, Setting, UserFilled, Key, Menu as MenuIcon, Lock, MoreFilled, InfoFilled, Link, Sunny, Moon, FullScreen, Notebook, Monitor, DataLine } from '@element-plus/icons-vue'
+import { Fold, Expand, Odometer, User, SwitchButton, Setting, UserFilled, Key, Menu as MenuIcon, Lock, MoreFilled, InfoFilled, Link, Sunny, Moon, FullScreen, Notebook, Monitor, DataLine, ChatDotRound } from '@element-plus/icons-vue'
 import type { Component } from 'vue'
 import type { MenuTreeNode } from '@/type/user'
 
@@ -162,6 +162,10 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
           <el-icon><Odometer /></el-icon>
           <template #title>首页</template>
         </el-menu-item>
+        <el-menu-item index="/ai-chat">
+          <el-icon><ChatDotRound /></el-icon>
+          <template #title>AI 助手</template>
+        </el-menu-item>
         <template v-for="item in visibleMenus" :key="item.id">
           <el-sub-menu v-if="item.children?.length" :index="item.path ?? ''">
             <template #title>
@@ -211,6 +215,10 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
           <el-menu-item index="/dashboard">
             <el-icon><Odometer /></el-icon>
             <template #title>首页</template>
+          </el-menu-item>
+          <el-menu-item index="/ai-chat">
+            <el-icon><ChatDotRound /></el-icon>
+            <template #title>AI 助手</template>
           </el-menu-item>
         </template>
         <template v-else>
@@ -270,6 +278,10 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
               <el-icon><Odometer /></el-icon>
               <span>首页</span>
             </el-menu-item>
+            <el-menu-item index="/ai-chat">
+              <el-icon><ChatDotRound /></el-icon>
+              <span>AI 助手</span>
+            </el-menu-item>
             <el-menu-item v-for="item in topLevelMenus" :key="item.id" :index="item.path ?? ''">
               <el-icon><component :is="iconMap[item.icon ?? '']" /></el-icon>
               <span>{{ item.name }}</span>
@@ -286,6 +298,10 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
             <el-menu-item index="/dashboard">
               <el-icon><Odometer /></el-icon>
               <span>首页</span>
+            </el-menu-item>
+            <el-menu-item index="/ai-chat">
+              <el-icon><ChatDotRound /></el-icon>
+              <span>AI 助手</span>
             </el-menu-item>
             <template v-for="item in visibleMenus" :key="item.id">
               <el-sub-menu v-if="item.children?.length" :index="item.path ?? ''">
@@ -426,6 +442,10 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
               <el-icon><Odometer /></el-icon>
               <template #title>首页</template>
             </el-menu-item>
+            <el-menu-item index="/ai-chat">
+              <el-icon><ChatDotRound /></el-icon>
+              <template #title>AI 助手</template>
+            </el-menu-item>
             <template v-for="item in visibleMenus" :key="item.id">
               <el-sub-menu v-if="item.children?.length" :index="item.path ?? ''">
                 <template #title>
@@ -475,6 +495,10 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
               <el-menu-item index="/dashboard">
                 <el-icon><Odometer /></el-icon>
                 <template #title>首页</template>
+              </el-menu-item>
+              <el-menu-item index="/ai-chat">
+                <el-icon><ChatDotRound /></el-icon>
+                <template #title>AI 助手</template>
               </el-menu-item>
             </template>
             <template v-else>

@@ -17,7 +17,7 @@ use rulo_common::{
 };
 
 use crate::{
-    swagger,
+    ai, swagger,
     system::{
         self,
         auth::{
@@ -38,6 +38,7 @@ pub fn routes(state: Arc<AppState>) -> Router<Arc<AppState>> {
     // protected API: need authorization
     let protected_routes = Router::new()
         .nest("/system", system::router::protected_routes())
+        .nest("/ai", ai::router::routes())
         .layer(middleware::from_fn_with_state(state, jwt_auth));
 
     Router::new().merge(public_routes).merge(protected_routes)

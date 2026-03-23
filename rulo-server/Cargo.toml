@@ -37,3 +37,7 @@ syn = { version = "2.0.117", features = ["full"] }
 # API 文档
 utoipa = { version = "5", features = ["axum_extras", "chrono"] }
 utoipa-swagger-ui = { version = "9", features = ["axum"] }
+# HTTP 客户端 (调用外部 AI API)
+reqwest = { version = "0.12", features = ["json", "stream"] }
+# 异步流工具
+futures-util = "0.3"

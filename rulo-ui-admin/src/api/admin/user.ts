@@ -1,9 +1,10 @@
 import request from '@/util/request'
 import type { UserInfo, SysUserSaveDto, SysUserUpdateDto, SysUserListDto, IdsDto, BindRolesDto } from '@/type/user'
+import type { PageResult } from '@/type/common'
 
 const userApi = {
   list(params?: SysUserListDto) {
-    return request({ url: '/system/user/list', method: 'get', params }) as Promise<UserInfo[]>
+    return request({ url: '/system/user/list', method: 'get', params }) as Promise<PageResult<UserInfo>>
   },
 
   detail(id: number) {

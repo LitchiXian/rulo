@@ -6,7 +6,7 @@ use axum::{
 };
 use rulo_common::{
     constant::redis_constant,
-    model::{IdDto, IdsDto},
+    model::{IdDto, IdsDto, PageResult},
     result::R,
     util::redis_util,
 };
@@ -103,14 +103,14 @@ pub async fn detail_handler(
 #[utoipa::path(
     get, path = "/system/user/list",
     params(SysUserListDto),
-    responses((status = 200, description = "success", body = Vec<SysUser>)),
+    responses((status = 200, description = "success")),
     security(("bearer_auth" = []))
 )]
 #[perm("sys:user:list")]
 pub async fn list_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<SysUserListDto>,
-) -> R<Vec<SysUser>> {
+) -> R<PageResult<SysUser>> {
     service::list(&state.db_pool, &dto).await
 }
 

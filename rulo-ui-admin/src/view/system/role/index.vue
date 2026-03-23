@@ -12,22 +12,39 @@ import type { ElTree } from 'element-plus'
 
 // ---- 列表 ----
 const tableData = ref<SysRole[]>([])
+const total = ref(0)
 const loading = ref(false)
-const queryForm = ref<SysRoleListDto>({})
+const queryForm = ref<SysRoleListDto>({ page_num: 1, page_size: 10 })
 
 const fetchList = async () => {
   loading.value = true
   try {
-    tableData.value = await roleApi.list(queryForm.value)
+    const res = await roleApi.list(queryForm.value)
+    tableData.value = res.list
+    total.value = res.total
   } finally {
     loading.value = false
   }
 }
 
-const handleSearch = () => fetchList()
+const handleSearch = () => {
+  queryForm.value.page_num = 1
+  fetchList()
+}
 
 const handleReset = () => {
-  queryForm.value = {}
+  queryForm.value = { page_num: 1, page_size: 10 }
+  fetchList()
+}
+
+const handlePageChange = (page: number) => {
+  queryForm.value.page_num = page
+  fetchList()
+}
+
+const handleSizeChange = (size: number) => {
+  queryForm.value.page_size = size
+  queryForm.value.page_num = 1
   fetchList()
 }
 
@@ -111,7 +128,7 @@ const openMenuDialog = async (row: SysRole) => {
   currentRole.value = row
   try {
     const [menus, checkedIds] = await Promise.all([
-      menuApi.list(),
+      menuApi.listAll(),
       roleApi.listMenus(row.id),
     ])
     allMenus.value = menus
@@ -197,7 +214,7 @@ const openPermDialog = async (row: SysRole) => {
   permSearch.value = ''
   try {
     const [perms, checkedIds] = await Promise.all([
-      permissionApi.list({ perm_type: 1 }),
+      permissionApi.listAll({ perm_type: 1 }),
       roleApi.listPerms(row.id),
     ])
     allPerms.value = perms
@@ -272,7 +289,18 @@ onMounted(fetchList)
         </el-table-column>
       </el-table>
 
-      <!-- TODO: 后端 role/list 暂不支持分页，后续增加 PageDto 分页参数 -->
+      <div class="table-pagination">
+        <el-pagination
+          v-model:current-page="queryForm.page_num"
+          v-model:page-size="queryForm.page_size"
+          background
+          layout="total, sizes, prev, pager, next, jumper"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="total"
+          @current-change="handlePageChange"
+          @size-change="handleSizeChange"
+        />
+      </div>
     </el-card>
 
     <!-- 新增/编辑弹窗 -->
@@ -358,6 +386,7 @@ onMounted(fetchList)
 .page-container { display: flex; flex-direction: column; gap: 16px; }
 .search-card :deep(.el-card__body) { padding-bottom: 0; }
 .table-toolbar { display: flex; justify-content: flex-start; margin-bottom: 16px; }
+.table-pagination { display: flex; justify-content: flex-end; margin-top: 16px; }
 
 /* 菜单树：子节点横排 4 个一行 */
 .menu-tree :deep(.el-tree-node__children) {

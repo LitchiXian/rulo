@@ -79,4 +79,6 @@ pub struct SysRoleListDto {
     pub is_active: Option<bool>,
     pub create_start_time: Option<DateTime<Utc>>,
     pub create_end_time: Option<DateTime<Utc>>,
+    pub page_num: Option<u64>,
+    pub page_size: Option<u64>,
 }

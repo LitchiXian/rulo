@@ -71,6 +71,8 @@ export interface SysUserListDto {
   create_start_time?: string
   create_end_time?: string
   remark?: string
+  page_num?: number
+  page_size?: number
 }
 
 export interface BindRolesDto {

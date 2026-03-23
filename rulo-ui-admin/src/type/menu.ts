@@ -49,4 +49,6 @@ export interface SysMenuListDto {
   parent_id?: number
   create_start_time?: string
   create_end_time?: string
+  page_num?: number
+  page_size?: number
 }

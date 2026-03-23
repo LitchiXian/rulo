@@ -14,22 +14,39 @@ const PERM_TYPE_MAP: Record<number, string> = { 1: 'API权限', 2: '菜单入口
 
 // ---- 列表 ----
 const tableData = ref<SysPermission[]>([])
+const total = ref(0)
 const loading = ref(false)
-const queryForm = ref<SysPermissionListDto>({})
+const queryForm = ref<SysPermissionListDto>({ page_num: 1, page_size: 10 })
 
 const fetchList = async () => {
   loading.value = true
   try {
-    tableData.value = await permissionApi.list(queryForm.value)
+    const res = await permissionApi.list(queryForm.value)
+    tableData.value = res.list
+    total.value = res.total
   } finally {
     loading.value = false
   }
 }
 
-const handleSearch = () => fetchList()
+const handleSearch = () => {
+  queryForm.value.page_num = 1
+  fetchList()
+}
 
 const handleReset = () => {
-  queryForm.value = {}
+  queryForm.value = { page_num: 1, page_size: 10 }
+  fetchList()
+}
+
+const handlePageChange = (page: number) => {
+  queryForm.value.page_num = page
+  fetchList()
+}
+
+const handleSizeChange = (size: number) => {
+  queryForm.value.page_size = size
+  queryForm.value.page_num = 1
   fetchList()
 }
 
@@ -133,7 +150,18 @@ onMounted(fetchList)
         </el-table-column>
       </el-table>
 
-      <!-- TODO: 后端 permission/list 暂不支持分页 -->
+      <div class="table-pagination">
+        <el-pagination
+          v-model:current-page="queryForm.page_num"
+          v-model:page-size="queryForm.page_size"
+          background
+          layout="total, sizes, prev, pager, next, jumper"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="total"
+          @current-change="handlePageChange"
+          @size-change="handleSizeChange"
+        />
+      </div>
     </el-card>
 
     <!-- 新增/编辑弹窗 -->
@@ -167,4 +195,5 @@ onMounted(fetchList)
 .page-container { display: flex; flex-direction: column; gap: 16px; }
 .search-card :deep(.el-card__body) { padding-bottom: 0; }
 .table-toolbar { display: flex; justify-content: flex-start; margin-bottom: 16px; }
+.table-pagination { display: flex; justify-content: flex-end; margin-top: 16px; }
 </style>

@@ -6,10 +6,15 @@ import type {
   SysPermissionListDto,
 } from '@/type/permission'
 import type { IdsDto } from '@/type/user'
+import type { PageResult } from '@/type/common'
 
 const permissionApi = {
   list(params?: SysPermissionListDto) {
-    return request({ url: '/system/permission/list', method: 'get', params }) as Promise<SysPermission[]>
+    return request({ url: '/system/permission/list', method: 'get', params }) as Promise<PageResult<SysPermission>>
+  },
+
+  listAll(params?: SysPermissionListDto) {
+    return request({ url: '/system/permission/list-all', method: 'get', params }) as Promise<SysPermission[]>
   },
 
   detail(id: number) {

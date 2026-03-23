@@ -5,7 +5,7 @@ use axum::{
     extract::{Query, State},
 };
 use rulo_common::{
-    model::{IdDto, IdsDto},
+    model::{IdDto, IdsDto, PageResult},
     result::R,
 };
 
@@ -71,13 +71,27 @@ pub async fn detail_handler(
 #[utoipa::path(
     get, path = "/system/menu/list",
     params(SysMenuListDto),
-    responses((status = 200, description = "success", body = Vec<SysMenu>)),
+    responses((status = 200, description = "success")),
     security(("bearer_auth" = []))
 )]
 #[perm("sys:menu:list")]
 pub async fn list_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<SysMenuListDto>,
-) -> R<Vec<SysMenu>> {
+) -> R<PageResult<SysMenu>> {
     service::list(&state.db_pool, &dto).await
+}
+
+#[utoipa::path(
+    get, path = "/system/menu/list-all",
+    params(SysMenuListDto),
+    responses((status = 200, description = "success", body = Vec<SysMenu>)),
+    security(("bearer_auth" = []))
+)]
+#[perm("sys:menu:list")]
+pub async fn list_all_handler(
+    State(state): State<Arc<AppState>>,
+    Query(dto): Query<SysMenuListDto>,
+) -> R<Vec<SysMenu>> {
+    service::list_all(&state.db_pool, &dto).await
 }
