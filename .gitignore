@@ -40,3 +40,4 @@ logs/
 **/Cargo.lock
 .sqlx/
 demo*
+default.toml
