@@ -99,8 +99,9 @@ pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysPermission> {
         "select * from sys_permission where id = $1 AND is_deleted = false",
         dto.id
     )
-    .fetch_one(pool)
-    .await?;
+    .fetch_optional(pool)
+    .await?
+    .ok_or_else(|| AppError::NotFound("权限不存在".to_string()))?;
     success(data)
 }
 

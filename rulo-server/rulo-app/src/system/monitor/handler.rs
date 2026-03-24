@@ -10,5 +10,7 @@ use crate::system::monitor::{model::ServerInfo, service};
 )]
 #[perm("sys:monitor:server-info")]
 pub async fn server_info_handler() -> R<ServerInfo> {
-    service::get_server_info()
+    tokio::task::spawn_blocking(service::get_server_info)
+        .await
+        .map_err(|e| rulo_common::error::AppError::Internal(e.to_string()))?
 }

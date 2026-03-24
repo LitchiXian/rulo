@@ -7,6 +7,7 @@ use crate::system::{
 };
 use deadpool_redis::Pool;
 use rulo_common::{
+    config::JwtConfig,
     constant::redis_constant,
     error::AppError,
     result::{R, success},
@@ -17,13 +18,8 @@ use tracing::info;
 
 use crate::system::auth::model::AuthUserDto;
 
-pub async fn login(db_pool: &PgPool, redis_pool: &Pool, dto: &AuthUserDto) -> R<String> {
-    info!("login auth_user {:?}", &dto);
-
-    // validate input parameters
-    if dto.password.is_empty() || dto.username.is_empty() {
-        return Err(AppError::ServiceError("用户名或密码不能为空".to_string()));
-    }
+pub async fn login(db_pool: &PgPool, redis_pool: &Pool, jwt_config: &JwtConfig, dto: &AuthUserDto) -> R<String> {
+    info!("login attempt: username={}", &dto.username);
 
     // validate user existence
     let db_user = query_as!(
@@ -48,11 +44,12 @@ pub async fn login(db_pool: &PgPool, redis_pool: &Pool, dto: &AuthUserDto) -> R<
         return Err(AppError::ServiceError("用户名或密码有误".to_string()));
     }
 
-    info!("login user {:?}", &db_user);
+    info!("login success: user_id={}, user_name={}", db_user.id, &db_user.user_name);
 
     // generate token
     let token =
-        jwt_util::generate_token(db_user.id).map_err(|e| AppError::Internal(e.to_string()))?;
+        jwt_util::generate_token(db_user.id, &jwt_config.secret, jwt_config.expire_hours)
+            .map_err(|e| AppError::Internal(e.to_string()))?;
 
     // save token to Redis
     redis_util::set_obj(
@@ -96,12 +93,7 @@ pub async fn login(db_pool: &PgPool, redis_pool: &Pool, dto: &AuthUserDto) -> R<
 }
 
 pub async fn register(db_pool: &PgPool, dto: &AuthUserDto) -> R<()> {
-    info!("register auth_user {:?}", &dto);
-
-    // validate input parameters
-    if dto.password.is_empty() || dto.username.is_empty() {
-        return Err(AppError::ServiceError("用户名或密码不能为空".to_string()));
-    }
+    info!("register attempt: username={}", &dto.username);
 
     // validate user existence
     if query_as!(
@@ -119,13 +111,11 @@ pub async fn register(db_pool: &PgPool, dto: &AuthUserDto) -> R<()> {
         ));
     }
 
-    // generate hash password
-    let hash_password = password_util::hash_password(&dto.password)?;
-
-    // create user account
+    // create user account（service::save 内部会 hash 密码）
     let user_save_dto = SysUserSaveDto {
+        user_name: dto.username.clone(),
         nick_name: dto.username.clone(),
-        password: hash_password,
+        password: dto.password.clone(),
         email: dto.email.clone(),
         remark: None,
     };
@@ -149,7 +139,7 @@ pub async fn info(db_pool: &PgPool, redis_pool: &Pool, user_id: i64) -> R<LoginI
         Some(u) => u,
         None => {
             // Redis 无缓存, 查 DB 回填
-            let u = query_as!(SysUser, "SELECT * FROM sys_user WHERE id = $1", user_id)
+            let u = query_as!(SysUser, "SELECT * FROM sys_user WHERE id = $1 AND is_deleted = false", user_id)
                 .fetch_optional(db_pool)
                 .await?
                 .ok_or_else(|| AppError::Unauthorized("用户不存在".to_string()))?;
@@ -187,6 +177,7 @@ pub async fn info(db_pool: &PgPool, redis_pool: &Pool, user_id: i64) -> R<LoginI
         email: db_user.email,
         is_active: db_user.is_active,
         remark: db_user.remark,
+        avatar_url: db_user.avatar_url,
     };
 
     success(LoginInfoVo {

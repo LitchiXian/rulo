@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use utoipa::{IntoParams, ToSchema};
+use validator::Validate;
 
 #[derive(Serialize, FromRow, ToSchema)]
 pub struct SysRole {
@@ -20,11 +21,7 @@ pub struct SysRole {
 
 impl SysRole {
     pub fn new_role_from_save_dto(dto: &SysRoleSaveDto) -> Self {
-        // todo 生成 雪花ID
-        let role_id: i64 = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as i64;
+        let role_id: i64 = rulo_common::util::id_util::next_id();
 
         let now_time = Utc::now();
 
@@ -44,29 +41,35 @@ impl SysRole {
     }
 }
 
-#[derive(Deserialize, Debug, ToSchema)]
+#[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct SysRoleSaveDto {
+    #[validate(length(min = 1, max = 30, message = "角色名称长度必须在 1-30 之间"))]
     pub role_name: String,
+    #[validate(length(min = 1, max = 50, message = "角色标识长度必须在 1-50 之间"))]
     pub role_key: String,
+    #[validate(length(max = 500, message = "备注长度不能超过 500"))]
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Debug, ToSchema)]
+#[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct SysRoleUpdateDto {
     pub id: i64,
+    #[validate(length(min = 1, max = 30, message = "角色名称长度必须在 1-30 之间"))]
     pub role_name: Option<String>,
+    #[validate(length(min = 1, max = 50, message = "角色标识长度必须在 1-50 之间"))]
     pub role_key: Option<String>,
     pub is_active: Option<bool>,
+    #[validate(length(max = 500, message = "备注长度不能超过 500"))]
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Debug, ToSchema)]
+#[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct BindMenusDto {
     pub role_id: i64,
     pub menu_ids: Vec<i64>,
 }
 
-#[derive(Deserialize, Debug, ToSchema)]
+#[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct BindPermsDto {
     pub role_id: i64,
     pub perm_ids: Vec<i64>,

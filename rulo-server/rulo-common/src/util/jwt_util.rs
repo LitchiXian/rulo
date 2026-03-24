@@ -1,10 +1,6 @@
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 
-const SECRET: &[u8] = b"rulo_jwt_secret_key";
-// 1 天
-const EXPIRE_SECONDS: u64 = 1 * 24 * 3600;
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     // user_id
@@ -13,25 +9,25 @@ pub struct Claims {
     pub exp: u64,
 }
 
-pub fn generate_token(user_id: i64) -> Result<String, jsonwebtoken::errors::Error> {
+pub fn generate_token(user_id: i64, secret: &str, expire_hours: u64) -> Result<String, jsonwebtoken::errors::Error> {
     let exp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_secs()
-        + EXPIRE_SECONDS;
+        + expire_hours * 3600;
 
     let claims = Claims { sub: user_id, exp };
     encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(SECRET),
+        &EncodingKey::from_secret(secret.as_bytes()),
     )
 }
 
-pub fn verify_token(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
+pub fn verify_token(token: &str, secret: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
     let data = decode::<Claims>(
         token,
-        &DecodingKey::from_secret(SECRET),
+        &DecodingKey::from_secret(secret.as_bytes()),
         &Validation::default(),
     )?;
     Ok(data.claims)

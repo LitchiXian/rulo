@@ -1,21 +1,9 @@
+pub mod bootstrap;
+pub mod config;
 pub mod constant;
 pub mod error;
+pub mod extractor;
 pub mod model;
 pub mod result;
 pub mod state;
 pub mod util;
-
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}

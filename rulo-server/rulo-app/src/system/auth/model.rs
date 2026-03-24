@@ -1,10 +1,14 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use validator::Validate;
 
-#[derive(Debug, Deserialize, ToSchema)]
+#[derive(Debug, Deserialize, ToSchema, Validate)]
 pub struct AuthUserDto {
+    #[validate(length(min = 2, max = 30, message = "用户名长度必须在 2-30 之间"))]
     pub username: String,
+    #[validate(length(min = 6, max = 64, message = "密码长度必须在 6-64 之间"))]
     pub password: String,
+    #[validate(email(message = "邮箱格式不正确"))]
     pub email: Option<String>,
 }
 
@@ -46,4 +50,5 @@ pub struct UserInfoVo {
     pub email: Option<String>,
     pub is_active: bool,
     pub remark: Option<String>,
+    pub avatar_url: Option<String>,
 }

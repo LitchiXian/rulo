@@ -59,7 +59,7 @@ async fn jwt_auth(
         None => return AppError::Unauthorized("未登录, 请先登录".to_string()).into_response(),
     };
 
-    if jwt_util::verify_token(&token).is_err() {
+    if jwt_util::verify_token(&token, &state.jwt_config.secret).is_err() {
         return AppError::Unauthorized("认证失败, token无效或已过期".to_string()).into_response();
     }
 

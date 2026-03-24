@@ -80,6 +80,19 @@ pub async fn update(pool: &PgPool, dto: &SysRoleUpdateDto) -> R<()> {
 }
 
 pub async fn update_bind_menus(pool: &PgPool, dto: &BindMenusDto) -> R<()> {
+    // 校验目标菜单是否存在
+    if !dto.menu_ids.is_empty() {
+        let valid_count: i64 = query_scalar!(
+            "SELECT COUNT(*) FROM sys_menu WHERE id = ANY($1) AND is_deleted = false",
+            &dto.menu_ids
+        )
+        .fetch_one(pool)
+        .await?
+        .unwrap_or(0);
+        if valid_count != dto.menu_ids.len() as i64 {
+            return Err(AppError::ServiceError("部分菜单不存在或已删除".to_string()));
+        }
+    }
     // 把 menu_ids 转换为 perm_ids（只取有关联权限的菜单）
     let perm_ids: Vec<i64> = query_scalar!(
         "SELECT DISTINCT perm_id FROM sys_menu WHERE id = ANY($1) AND perm_id IS NOT NULL AND is_deleted = false",
@@ -113,6 +126,19 @@ pub async fn update_bind_menus(pool: &PgPool, dto: &BindMenusDto) -> R<()> {
 }
 
 pub async fn update_bind_perms(pool: &PgPool, dto: &BindPermsDto) -> R<()> {
+    // 校验目标权限是否存在
+    if !dto.perm_ids.is_empty() {
+        let valid_count: i64 = query_scalar!(
+            "SELECT COUNT(*) FROM sys_permission WHERE id = ANY($1) AND is_deleted = false AND perm_type = 1",
+            &dto.perm_ids
+        )
+        .fetch_one(pool)
+        .await?
+        .unwrap_or(0);
+        if valid_count != dto.perm_ids.len() as i64 {
+            return Err(AppError::ServiceError("部分权限不存在或已删除".to_string()));
+        }
+    }
     let mut tx = pool.begin().await?;
     // 只删除 perm_type=1（API权限）的绑定，不影响菜单权限
     query!(
@@ -136,8 +162,9 @@ pub async fn update_bind_perms(pool: &PgPool, dto: &BindPermsDto) -> R<()> {
 
 pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysRole> {
     let data = query_as!(SysRole, "select * from sys_role where id = $1 AND is_deleted = false", dto.id)
-        .fetch_one(pool)
-        .await?;
+        .fetch_optional(pool)
+        .await?
+        .ok_or_else(|| AppError::NotFound("角色不存在".to_string()))?;
     success(data)
 }
 

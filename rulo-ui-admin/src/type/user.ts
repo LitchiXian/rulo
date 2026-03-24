@@ -6,6 +6,7 @@ export interface UserInfoVo {
   email: string | null
   is_active: boolean
   remark: string | null
+  avatar_url: string | null
 }
 
 // 菜单树节点（对应后端 MenuTreeNode）
@@ -42,6 +43,7 @@ export interface UserInfo {
   update_id: number
   update_time: string
   remark: string | null
+  avatar_url: string | null
 }
 
 // 登录参数
@@ -51,6 +53,7 @@ export interface LoginDto {
 }
 
 export interface SysUserSaveDto {
+  user_name: string
   nick_name: string
   password: string
   email?: string
@@ -63,6 +66,7 @@ export interface SysUserUpdateDto {
   password?: string
   email?: string
   remark?: string
+  avatar_url?: string
 }
 
 export interface SysUserListDto {

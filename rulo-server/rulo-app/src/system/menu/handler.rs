@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use axum::{
-    Json,
     extract::{Query, State},
 };
 use rulo_common::{
+    extractor::ValidatedJson,
     model::{IdDto, IdsDto, PageResult},
     result::R,
 };
@@ -24,7 +24,7 @@ use rulo_macro::perm;
 #[perm("sys:menu:save")]
 pub async fn save_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<SysMenuSaveDto>,
+    ValidatedJson(dto): ValidatedJson<SysMenuSaveDto>,
 ) -> R<SysMenu> {
     service::save(&state.db_pool, &dto).await
 }
@@ -36,7 +36,7 @@ pub async fn save_handler(
     security(("bearer_auth" = []))
 )]
 #[perm("sys:menu:remove")]
-pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
+pub async fn remove_handler(State(state): State<Arc<AppState>>, ValidatedJson(dto): ValidatedJson<IdsDto>) -> R<()> {
     service::remove(&state.db_pool, &dto).await
 }
 
@@ -49,7 +49,7 @@ pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<
 #[perm("sys:menu:update")]
 pub async fn update_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<SysMenuUpdateDto>,
+    ValidatedJson(dto): ValidatedJson<SysMenuUpdateDto>,
 ) -> R<()> {
     service::update(&state.db_pool, &dto).await
 }

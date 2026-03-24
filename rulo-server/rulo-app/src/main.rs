@@ -1,101 +1,46 @@
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 use axum::{Router, middleware::from_fn, routing::get};
-use config::Config;
-use deadpool_redis::Runtime;
-use serde::Deserialize;
-use sqlx::postgres::PgPoolOptions;
 use tower_http::trace::TraceLayer;
 use tracing::info;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use deadpool_redis::Config as RedisConfig;
-use rulo_common::{error, state::AppState};
+use rulo_common::{
+    bootstrap,
+    config::AppConfig,
+    error,
+    state::AppState,
+};
 mod ai;
 mod router;
 mod swagger;
 mod system;
 
-#[derive(Debug, Deserialize)]
-struct ServerConfig {
-    ipaddr: String,
-    port: u16,
-}
-
-#[derive(Debug, Deserialize)]
-struct AppConfig {
-    server: ServerConfig,
-}
-
 #[tokio::main]
 async fn main() {
-    println!("Hello, world!");
+    // 初始化日志（必须持有 _guard 到 main 结束，否则文件日志丢失）
+    let _guard = bootstrap::init_tracing("logs", "app.log");
 
-    // 记录日志到本地
-    let file_appender = tracing_appender::rolling::daily("logs", "app.log");
-    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+    // 加载配置
+    let cfg = AppConfig::load();
+    info!("server config: {:?}", cfg.server);
 
-    // 日志输出配置
-    tracing_subscriber::registry()
-        .with(
-            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-                // axum logs rejections from built-in extractors with the `axum::rejection`
-                // target, at `TRACE` level. `axum::rejection=trace` enables showing those events
-                "rulo=debug,tower_http=debug,axum::rejection=trace"
-                    .to_string()
-                    .into()
-            }),
-        )
-        // 输出到terminal
-        .with(tracing_subscriber::fmt::layer())
-        // 输出到文件
-        .with(tracing_subscriber::fmt::layer().with_writer(non_blocking))
-        .init();
+    // 建立数据库连接池
+    let db_pool = bootstrap::connect_db(&cfg.database).await;
 
-    let app_config = Config::builder()
-        .add_source(config::File::with_name("config/default"))
-        .build()
-        .unwrap()
-        .try_deserialize::<AppConfig>()
-        .unwrap();
-    println!("{:?}", app_config);
+    // 建立 Redis 连接池（含 PING 验证）
+    let redis_pool = bootstrap::connect_redis(&cfg.redis).await;
 
-    let db_connection_str = std::env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "postgres://rulo:123456@127.0.0.1:5432/rulo".to_string());
+    // 建立 S3 对象存储客户端
+    let s3_bucket = bootstrap::connect_s3(&cfg.storage).await;
 
-    info!("db_connection_str: {db_connection_str}");
-
-    // set up connection db pool
-    let db_pool = PgPoolOptions::new()
-        .max_connections(5)
-        .acquire_timeout(Duration::from_secs(3))
-        .connect(&db_connection_str)
-        .await
-        .expect("can't connect to database");
-
-    // redis pool
-    let redis_pool = RedisConfig::from_url("redis://127.0.0.1:6379/6")
-        .create_pool(Some(Runtime::Tokio1))
-        .expect("Cannot create redis pool");
-    // 连接池都是延迟连接,即使失败也能启动. 所以马上连接,连接失败就启动失败
-    let mut conn = match redis_pool.get().await {
-        Ok(conn) => conn,
-        Err(err) => {
-            tracing::error!(error = ?err, "failed to get redis connection");
-            panic!("starup failed");
-        }
-    };
-    let _pong: String = redis::cmd("PING")
-        .query_async(&mut conn)
-        .await
-        .expect("Redis ping failed");
-
-    // 共享状态配置
+    // 共享状态
     let state = Arc::new(AppState {
-        db_pool: db_pool,
-        redis_pool: redis_pool,
-        // users: HashMap::new(),
-        // next_id: 1,
+        db_pool,
+        redis_pool,
+        ai_config: cfg.ai.clone(),
+        jwt_config: cfg.jwt.clone(),
+        storage_config: cfg.storage.clone(),
+        s3_bucket,
     });
 
     let app = Router::new()
@@ -107,12 +52,12 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind(format!(
         "{}:{}",
-        app_config.server.ipaddr, app_config.server.port
+        cfg.server.ipaddr, cfg.server.port
     ))
     .await
     .unwrap();
 
-    println!("listener on {}", listener.local_addr().unwrap());
+    info!("listener on {}", listener.local_addr().unwrap());
 
     axum::serve(listener, app).await.unwrap();
 }

@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use utoipa::{IntoParams, ToSchema};
+use validator::Validate;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, ToSchema)]
 pub struct SysMenu {
@@ -25,11 +26,7 @@ pub struct SysMenu {
 
 impl SysMenu {
     pub fn new_menu_from_save_dto(dto: &SysMenuSaveDto) -> Self {
-        // todo 生成 雪花ID
-        let menu_id: i64 = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as i64;
+        let menu_id: i64 = rulo_common::util::id_util::next_id();
 
         let now_time = Utc::now();
 
@@ -54,29 +51,41 @@ impl SysMenu {
     }
 }
 
-#[derive(Deserialize, Debug, ToSchema)]
+#[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct SysMenuSaveDto {
     pub parent_id: Option<i64>,
+    #[validate(length(min = 1, max = 50, message = "菜单名称长度必须在 1-50 之间"))]
     pub name: String,
+    #[validate(range(min = 1, max = 2, message = "菜单类型仅支持 1(目录) 或 2(菜单)"))]
     pub menu_type: i16,
+    #[validate(length(max = 200, message = "路由路径长度不能超过 200"))]
     pub path: Option<String>,
+    #[validate(length(max = 200, message = "组件路径长度不能超过 200"))]
     pub component: Option<String>,
+    #[validate(length(max = 100, message = "图标长度不能超过 100"))]
     pub icon: Option<String>,
     pub sort_order: Option<i32>,
+    #[validate(length(max = 500, message = "备注长度不能超过 500"))]
     pub remark: Option<String>,
     /// 仅 menu_type=2 时有效，填写则自动新建 perm_type=2 的菜单权限并关联
+    #[validate(length(max = 100, message = "权限码长度不能超过 100"))]
     pub auto_perm_code: Option<String>,
 }
 
-#[derive(Deserialize, Debug, ToSchema)]
+#[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct SysMenuUpdateDto {
     pub id: i64,
+    #[validate(length(min = 1, max = 50, message = "菜单名称长度必须在 1-50 之间"))]
     pub name: Option<String>,
+    #[validate(length(max = 200, message = "路由路径长度不能超过 200"))]
     pub path: Option<String>,
+    #[validate(length(max = 200, message = "组件路径长度不能超过 200"))]
     pub component: Option<String>,
+    #[validate(length(max = 100, message = "图标长度不能超过 100"))]
     pub icon: Option<String>,
     pub sort_order: Option<i32>,
     pub is_hidden: Option<bool>,
+    #[validate(length(max = 500, message = "备注长度不能超过 500"))]
     pub remark: Option<String>,
 }
 

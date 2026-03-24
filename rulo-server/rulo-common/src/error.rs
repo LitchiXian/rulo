@@ -8,6 +8,7 @@ use axum::{
     middleware::Next,
     response::{IntoResponse, Response},
 };
+use validator::ValidationErrors;
 
 use crate::result::ApiResult;
 
@@ -23,6 +24,7 @@ pub enum AppError {
     RedisPoolError(deadpool_redis::PoolError),
     Internal(String),
     PasswordHashError(password_hash::Error),
+    ValidationError(ValidationErrors),
 }
 
 impl AppError {
@@ -37,6 +39,7 @@ impl AppError {
             Self::RedisPoolError(_) => StatusCode::OK,
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::PasswordHashError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::ValidationError(_) => StatusCode::BAD_REQUEST,
         }
     }
 
@@ -51,6 +54,7 @@ impl AppError {
             Self::RedisPoolError(_) => 50003,
             Self::Internal(_) => 50000,
             Self::PasswordHashError(_) => 50001,
+            Self::ValidationError(_) => 40000,
         }
     }
 
@@ -64,7 +68,15 @@ impl AppError {
             Self::RedisError(_) => "缓存异常".to_string(),
             Self::RedisPoolError(_) => "缓存连接池异常".to_string(),
             Self::Internal(msg) => msg.clone(),
-            Self::PasswordHashError(_) => "密码加密失败,请稍后充实".to_string(),
+            Self::PasswordHashError(_) => "密码加密失败,请稍后重试".to_string(),
+            Self::ValidationError(errs) => {
+                // 提取第一个校验错误信息
+                errs.field_errors()
+                    .values()
+                    .flat_map(|v| v.iter())
+                    .find_map(|e| e.message.as_ref().map(|m| m.to_string()))
+                    .unwrap_or_else(|| "参数校验失败".to_string())
+            }
         }
     }
 }

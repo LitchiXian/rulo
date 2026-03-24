@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use utoipa::{IntoParams, ToSchema};
+use validator::Validate;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, ToSchema)]
 pub struct SysPermission {
@@ -19,11 +20,7 @@ pub struct SysPermission {
 
 impl SysPermission {
     pub fn new_permission_from_save_dto(dto: &SysPermissionSaveDto) -> Self {
-        // todo 生成 雪花ID
-        let perm_id: i64 = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as i64;
+        let perm_id: i64 = rulo_common::util::id_util::next_id();
 
         let now_time = Utc::now();
 
@@ -42,18 +39,24 @@ impl SysPermission {
     }
 }
 
-#[derive(Deserialize, Debug, ToSchema)]
+#[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct SysPermissionSaveDto {
+    #[validate(length(min = 1, max = 100, message = "权限码长度必须在 1-100 之间"))]
     pub perm_code: String,
+    #[validate(length(min = 1, max = 50, message = "权限名称长度必须在 1-50 之间"))]
     pub perm_name: String,
+    #[validate(range(min = 1, max = 2, message = "权限类型仅支持 1(API权限) 或 2(菜单权限)"))]
     pub perm_type: i16,
+    #[validate(length(max = 500, message = "备注长度不能超过 500"))]
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Debug, ToSchema)]
+#[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct SysPermissionUpdateDto {
     pub id: i64,
+    #[validate(length(min = 1, max = 50, message = "权限名称长度必须在 1-50 之间"))]
     pub perm_name: Option<String>,
+    #[validate(length(max = 500, message = "备注长度不能超过 500"))]
     pub remark: Option<String>,
 }
 

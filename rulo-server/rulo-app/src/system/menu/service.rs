@@ -8,11 +8,19 @@ use sqlx::{PgPool, Postgres, QueryBuilder, query, query_as};
 use crate::system::menu::model::{SysMenu, SysMenuListDto, SysMenuSaveDto, SysMenuUpdateDto};
 
 pub async fn save(pool: &PgPool, dto: &SysMenuSaveDto) -> R<SysMenu> {
-    if dto.name.trim().is_empty() {
-        return Err(AppError::ServiceError("菜单名称不能为空".to_string()));
-    }
-    if dto.menu_type != 1 && dto.menu_type != 2 {
-        return Err(AppError::ServiceError("菜单类型仅支持 1(目录) 或 2(菜单)".to_string()));
+    // 校验 parent_id 有效性
+    if let Some(parent_id) = dto.parent_id {
+        let parent = query_as!(
+            SysMenu,
+            "SELECT * FROM sys_menu WHERE id = $1 AND is_deleted = false",
+            parent_id
+        )
+        .fetch_optional(pool)
+        .await?
+        .ok_or_else(|| AppError::ServiceError("父级菜单不存在或已删除".to_string()))?;
+        if parent.menu_type != 1 {
+            return Err(AppError::ServiceError("父级菜单必须为目录类型".to_string()));
+        }
     }
     // menu_type=2 必须提供路由路径、组件路径和菜单权限码
     if dto.menu_type == 2 {
@@ -48,7 +56,7 @@ pub async fn save(pool: &PgPool, dto: &SysMenuSaveDto) -> R<SysMenu> {
                 if exists > 0 {
                     return Err(AppError::ServiceError(format!("权限码 {} 已存在，请更换", perm_code)));
                 }
-                let perm_id = new_menu.id - 1;
+                let perm_id = rulo_common::util::id_util::next_id();
                 let perm_name = format!("{}-页面入口", dto.name);
                 let perm_type: i16 = 2;
                 let is_deleted = false;
@@ -132,21 +140,6 @@ pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
 }
 
 pub async fn update(pool: &PgPool, dto: &SysMenuUpdateDto) -> R<()> {
-    if let Some(ref name) = dto.name {
-        if name.trim().is_empty() {
-            return Err(AppError::ServiceError("菜单名称不能为空字符串".to_string()));
-        }
-    }
-    if let Some(ref path) = dto.path {
-        if path.trim().is_empty() {
-            return Err(AppError::ServiceError("路由路径不能为空字符串".to_string()));
-        }
-    }
-    if let Some(ref component) = dto.component {
-        if component.trim().is_empty() {
-            return Err(AppError::ServiceError("组件路径不能为空字符串".to_string()));
-        }
-    }
     sqlx::query!(
         "UPDATE sys_menu SET
             name = COALESCE($2, name),
@@ -174,8 +167,9 @@ pub async fn update(pool: &PgPool, dto: &SysMenuUpdateDto) -> R<()> {
 
 pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysMenu> {
     let data = query_as!(SysMenu, "select * from sys_menu where id = $1 AND is_deleted = false", dto.id)
-        .fetch_one(pool)
-        .await?;
+        .fetch_optional(pool)
+        .await?
+        .ok_or_else(|| AppError::NotFound("菜单不存在".to_string()))?;
     success(data)
 }
 

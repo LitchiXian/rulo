@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use axum::{Extension, Json, extract::State};
-use rulo_common::{result::R, state::AppState};
+use axum::{Extension, extract::State};
+use rulo_common::{extractor::ValidatedJson, result::R, state::AppState};
 
 use crate::system::auth::{
     model::{AuthUserDto, LoginInfoVo, UserId, UserToken},
@@ -15,9 +15,9 @@ use crate::system::auth::{
 )]
 pub async fn login_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<AuthUserDto>,
+    ValidatedJson(dto): ValidatedJson<AuthUserDto>,
 ) -> R<String> {
-    service::login(&state.db_pool, &state.redis_pool, &dto).await
+    service::login(&state.db_pool, &state.redis_pool, &state.jwt_config, &dto).await
 }
 
 #[utoipa::path(
@@ -27,7 +27,7 @@ pub async fn login_handler(
 )]
 pub async fn register_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<AuthUserDto>,
+    ValidatedJson(dto): ValidatedJson<AuthUserDto>,
 ) -> R<()> {
     service::register(&state.db_pool, &dto).await
 }

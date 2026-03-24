@@ -2,6 +2,7 @@ use rulo_common::{
     error::AppError,
     model::{IdDto, IdsDto, PageResult, normalize_page},
     result::{R, success},
+    util::password_util,
 };
 use sqlx::{PgPool, Postgres, QueryBuilder, query, query_as, query_scalar};
 
@@ -10,19 +11,32 @@ use crate::system::user::model::{
 };
 
 pub async fn save(pool: &PgPool, dto: &SysUserSaveDto) -> R<SysUser> {
-    if dto.nick_name.trim().is_empty() {
-        return Err(AppError::ServiceError("昵称不能为空".to_string()));
+    // 检查用户名是否已存在
+    let exists: i64 = sqlx::query_scalar!(
+        "SELECT COUNT(*) FROM sys_user WHERE user_name = $1 AND is_deleted = false",
+        &dto.user_name
+    )
+    .fetch_one(pool)
+    .await?
+    .unwrap_or(0);
+    if exists > 0 {
+        return Err(AppError::ServiceError("用户名已存在".to_string()));
     }
-    if dto.password.trim().is_empty() {
-        return Err(AppError::ServiceError("密码不能为空".to_string()));
-    }
-    let new_user = SysUser::new_user_from_save_dto(&dto);
+    // 密码加密
+    let hashed_dto = SysUserSaveDto {
+        user_name: dto.user_name.clone(),
+        nick_name: dto.nick_name.clone(),
+        password: password_util::hash_password(&dto.password)?,
+        email: dto.email.clone(),
+        remark: dto.remark.clone(),
+    };
+    let new_user = SysUser::new_user_from_save_dto(&hashed_dto);
     query!(
         "insert into sys_user(
         id, user_name, nick_name, password, email,
         is_active, is_deleted, create_id, create_time,
-         update_id, update_time, remark
-         ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+         update_id, update_time, remark, avatar_url
+         ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
         new_user.id,
         &new_user.user_name,
         &new_user.nick_name,
@@ -34,7 +48,8 @@ pub async fn save(pool: &PgPool, dto: &SysUserSaveDto) -> R<SysUser> {
         new_user.create_time,
         new_user.update_id,
         new_user.update_time,
-        new_user.remark.as_deref()
+        new_user.remark.as_deref(),
+        new_user.avatar_url.as_deref()
     )
     .execute(pool)
     .await?;
@@ -52,31 +67,71 @@ pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
 }
 
 pub async fn update(pool: &PgPool, dto: &SysUserUpdateDto) -> R<()> {
-    if let Some(ref nick_name) = dto.nick_name {
-        if nick_name.trim().is_empty() {
-            return Err(AppError::ServiceError("昵称不能为空字符串".to_string()));
+    // avatar_url 特殊处理：None=不修改, Some("")=清空, Some(url)=更新
+    let avatar_url_value: Option<Option<&str>> = match &dto.avatar_url {
+        None => None,                                  // 不修改
+        Some(url) if url.is_empty() => Some(None),     // 清空 → NULL
+        Some(url) => Some(Some(url.as_str())),          // 更新
+    };
+
+    // 对 avatar_url 使用独立的 SQL 分支，避免 COALESCE 无法区分"不传"和"清空"
+    match avatar_url_value {
+        None => {
+            sqlx::query!(
+                "UPDATE sys_user SET 
+                    nick_name = COALESCE($2, nick_name),
+                    password = COALESCE($3, password),
+                    email = COALESCE($4, email),
+                    remark = COALESCE($5, remark),
+                    update_time = now() 
+                WHERE id = $1 AND is_deleted = false",
+                dto.id,
+                dto.nick_name.as_deref(),
+                dto.password.as_deref(),
+                dto.email.as_deref(),
+                dto.remark.as_deref(),
+            )
+            .execute(pool)
+            .await?;
+        }
+        Some(url) => {
+            sqlx::query!(
+                "UPDATE sys_user SET 
+                    nick_name = COALESCE($2, nick_name),
+                    password = COALESCE($3, password),
+                    email = COALESCE($4, email),
+                    remark = COALESCE($5, remark),
+                    avatar_url = $6,
+                    update_time = now() 
+                WHERE id = $1 AND is_deleted = false",
+                dto.id,
+                dto.nick_name.as_deref(),
+                dto.password.as_deref(),
+                dto.email.as_deref(),
+                dto.remark.as_deref(),
+                url,
+            )
+            .execute(pool)
+            .await?;
         }
     }
-    sqlx::query!(
-        "UPDATE sys_user SET 
-            nick_name = COALESCE($2, nick_name),
-            password = COALESCE($3, password),
-            email = COALESCE($4, email),
-            remark = COALESCE($5, remark),
-            update_time = now() 
-        WHERE id = $1 AND is_deleted = false",
-        dto.id,
-        dto.nick_name.as_deref(),
-        dto.password.as_deref(),
-        dto.email.as_deref(),
-        dto.remark.as_deref()
-    )
-    .execute(pool)
-    .await?;
     success(())
 }
 
 pub async fn update_bind_roles(pool: &PgPool, dto: &BindRolesDto) -> R<()> {
+    // 校验目标角色是否存在
+    if !dto.role_ids.is_empty() {
+        let valid_count: i64 = query_scalar!(
+            "SELECT COUNT(*) FROM sys_role WHERE id = ANY($1) AND is_deleted = false",
+            &dto.role_ids
+        )
+        .fetch_one(pool)
+        .await?
+        .unwrap_or(0);
+        if valid_count != dto.role_ids.len() as i64 {
+            return Err(AppError::ServiceError("部分角色不存在或已删除".to_string()));
+        }
+    }
     let mut tx = pool.begin().await?;
     query!("DELETE FROM sys_user_role WHERE user_id = $1", dto.user_id)
         .execute(&mut *tx)
@@ -96,8 +151,9 @@ pub async fn update_bind_roles(pool: &PgPool, dto: &BindRolesDto) -> R<()> {
 
 pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysUser> {
     let data = query_as!(SysUser, "select * from sys_user where id = $1 AND is_deleted = false", dto.id)
-        .fetch_one(pool)
-        .await?;
+        .fetch_optional(pool)
+        .await?
+        .ok_or_else(|| AppError::NotFound("用户不存在".to_string()))?;
     success(data)
 }
 

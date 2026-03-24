@@ -24,5 +24,9 @@ sysinfo = { workspace = true }
 utoipa = { workspace = true }
 utoipa-scalar = { version = "0.3.0", features = ["axum"] }
 reqwest = { workspace = true }
+validator = { workspace = true }
 futures-util = { workspace = true }
+axum-extra = { workspace = true }
+uuid = { workspace = true }
+rust-s3 = { workspace = true }
 async-stream = "0.3"

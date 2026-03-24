@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use axum::{
-    Json,
     extract::{Query, State},
 };
 use deadpool_redis::Pool as RedisPool;
 use rulo_common::{
     constant::redis_constant,
+    extractor::ValidatedJson,
     model::{IdDto, IdsDto, PageResult},
     result::R,
     util::redis_util,
@@ -27,7 +27,7 @@ use rulo_macro::perm;
 #[perm("sys:role:save")]
 pub async fn save_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<SysRoleSaveDto>,
+    ValidatedJson(dto): ValidatedJson<SysRoleSaveDto>,
 ) -> R<SysRole> {
     service::save(&state.db_pool, &dto).await
 }
@@ -39,7 +39,7 @@ pub async fn save_handler(
     security(("bearer_auth" = []))
 )]
 #[perm("sys:role:remove")]
-pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
+pub async fn remove_handler(State(state): State<Arc<AppState>>, ValidatedJson(dto): ValidatedJson<IdsDto>) -> R<()> {
     let result = service::remove(&state.db_pool, &dto).await;
     if result.is_ok() {
         for role_id in &dto.ids {
@@ -58,7 +58,7 @@ pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<
 #[perm("sys:role:update")]
 pub async fn update_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<SysRoleUpdateDto>,
+    ValidatedJson(dto): ValidatedJson<SysRoleUpdateDto>,
 ) -> R<()> {
     service::update(&state.db_pool, &dto).await
 }
@@ -72,7 +72,7 @@ pub async fn update_handler(
 #[perm("sys:role:update-bind-menus")]
 pub async fn update_bind_menus_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<BindMenusDto>,
+    ValidatedJson(dto): ValidatedJson<BindMenusDto>,
 ) -> R<()> {
     let result = service::update_bind_menus(&state.db_pool, &dto).await;
     clear_role_user_cache(&state.redis_pool, &state.db_pool, dto.role_id).await;
@@ -88,7 +88,7 @@ pub async fn update_bind_menus_handler(
 #[perm("sys:role:update-bind-perms")]
 pub async fn update_bind_perms_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<BindPermsDto>,
+    ValidatedJson(dto): ValidatedJson<BindPermsDto>,
 ) -> R<()> {
     let result = service::update_bind_perms(&state.db_pool, &dto).await;
     clear_role_user_cache(&state.redis_pool, &state.db_pool, dto.role_id).await;

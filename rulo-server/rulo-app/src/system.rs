@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod file;
 pub mod menu;
 pub mod monitor;
 pub mod permission;

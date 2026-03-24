@@ -3,24 +3,20 @@ use futures_util::StreamExt;
 use reqwest::Client;
 
 use crate::ai::chat::model::{ChatMessage, ZhipuRequest, ZhipuResponse};
-use rulo_common::error::AppError;
-
-const ZHIPU_API_URL: &str = "";
-const ZHIPU_API_KEY: &str = "";
-const ZHIPU_MODEL: &str = "";
+use rulo_common::{config::AiConfig, error::AppError};
 
 /// 非流式调用智谱 API
-pub async fn chat(messages: Vec<ChatMessage>) -> Result<String, AppError> {
+pub async fn chat(messages: Vec<ChatMessage>, ai_config: &AiConfig) -> Result<String, AppError> {
     let client = Client::new();
     let body = ZhipuRequest {
-        model: ZHIPU_MODEL.to_string(),
+        model: ai_config.model.clone(),
         messages,
         stream: false,
     };
 
     let resp = client
-        .post(ZHIPU_API_URL)
-        .header("Authorization", format!("Bearer {}", ZHIPU_API_KEY))
+        .post(&ai_config.base_url)
+        .header("Authorization", format!("Bearer {}", ai_config.api_key))
         .json(&body)
         .send()
         .await
@@ -53,18 +49,21 @@ pub async fn chat(messages: Vec<ChatMessage>) -> Result<String, AppError> {
 }
 
 /// 流式调用智谱 API，返回 SSE Body
-pub fn chat_stream(messages: Vec<ChatMessage>) -> Body {
+pub fn chat_stream(messages: Vec<ChatMessage>, ai_config: &AiConfig) -> Body {
+    let api_url = ai_config.base_url.clone();
+    let api_key = ai_config.api_key.clone();
+    let model = ai_config.model.clone();
     let stream = async_stream::stream! {
         let client = Client::new();
         let body = ZhipuRequest {
-            model: ZHIPU_MODEL.to_string(),
+            model,
             messages,
             stream: true,
         };
 
         let resp = client
-            .post(ZHIPU_API_URL)
-            .header("Authorization", format!("Bearer {}", ZHIPU_API_KEY))
+            .post(&api_url)
+            .header("Authorization", format!("Bearer {}", api_key))
             .json(&body)
             .send()
             .await;

@@ -4,6 +4,19 @@ import { Promotion, Delete, Switch } from '@element-plus/icons-vue'
 import { chatComplete, chatStream } from '@/api/admin/ai'
 import type { ChatMessage } from '@/api/admin/ai'
 import { ElMessage } from 'element-plus'
+import { marked } from 'marked'
+
+// marked 配置：启用 GFM、换行识别
+marked.setOptions({
+  gfm: true,
+  breaks: true,
+})
+
+/** 将 markdown 文本渲染为 HTML（对用户消息原样输出） */
+function renderMarkdown(content: string, role: string): string {
+  if (role === 'user') return content
+  return marked.parse(content) as string
+}
 
 // 对话消息列表
 const messages = ref<ChatMessage[]>([])
@@ -149,7 +162,11 @@ function handleKeydown(e: KeyboardEvent | Event) {
           {{ msg.role === 'user' ? '🧑' : '🤖' }}
         </div>
         <div class="msg-bubble">
-          <div class="msg-content" v-text="msg.content" />
+          <div
+            class="msg-content"
+            :class="{ 'md-body': msg.role === 'assistant' }"
+            v-html="renderMarkdown(msg.content, msg.role)"
+          />
         </div>
       </div>
       <!-- 加载指示器 -->
@@ -287,6 +304,83 @@ function handleKeydown(e: KeyboardEvent | Event) {
 .msg-content {
   white-space: pre-wrap;
   font-size: 14px;
+}
+
+/* Markdown 内容样式 */
+.md-body {
+  white-space: normal;
+}
+.md-body :deep(h1),
+.md-body :deep(h2),
+.md-body :deep(h3),
+.md-body :deep(h4) {
+  margin: 12px 0 6px;
+  line-height: 1.4;
+}
+.md-body :deep(h1) { font-size: 1.3em; }
+.md-body :deep(h2) { font-size: 1.15em; }
+.md-body :deep(h3) { font-size: 1.05em; }
+.md-body :deep(p) {
+  margin: 6px 0;
+}
+.md-body :deep(ul),
+.md-body :deep(ol) {
+  padding-left: 1.5em;
+  margin: 6px 0;
+}
+.md-body :deep(li) {
+  margin: 2px 0;
+}
+.md-body :deep(code) {
+  background: var(--el-fill-color);
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-family: 'Courier New', Courier, monospace;
+}
+.md-body :deep(pre) {
+  background: var(--el-fill-color-dark);
+  padding: 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+.md-body :deep(pre code) {
+  background: none;
+  padding: 0;
+  font-size: 0.85em;
+  color: var(--el-text-color-primary);
+}
+.md-body :deep(blockquote) {
+  border-left: 3px solid var(--el-color-primary);
+  padding-left: 12px;
+  margin: 8px 0;
+  color: var(--el-text-color-secondary);
+}
+.md-body :deep(table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+}
+.md-body :deep(th),
+.md-body :deep(td) {
+  border: 1px solid var(--el-border-color);
+  padding: 6px 10px;
+  text-align: left;
+}
+.md-body :deep(th) {
+  background: var(--el-fill-color-lighter);
+}
+.md-body :deep(strong) {
+  font-weight: 600;
+}
+.md-body :deep(a) {
+  color: var(--el-color-primary);
+}
+.md-body :deep(hr) {
+  border: none;
+  border-top: 1px solid var(--el-border-color-lighter);
+  margin: 10px 0;
 }
 
 /* 打字动画 */

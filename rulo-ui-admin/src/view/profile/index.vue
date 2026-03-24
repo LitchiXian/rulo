@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { EditPen, Lock, Picture, RefreshLeft, UploadFilled, UserFilled } from '@element-plus/icons-vue'
 import userApi from '@/api/admin/user'
+import fileApi from '@/api/admin/file'
 import { useUserStore } from '@/store/user'
 import { showMessage } from '@/util/message'
 import { clearProfileDecor, loadProfileDecor, saveProfileDecor } from '@/util/profileDecor'
@@ -10,6 +11,7 @@ const userStore = useUserStore()
 
 const basicLoading = ref(false)
 const passwordLoading = ref(false)
+const avatarLoading = ref(false)
 const basicForm = reactive({
   nick_name: '',
   email: '',
@@ -24,7 +26,7 @@ const avatarInputRef = ref<HTMLInputElement | null>(null)
 const coverInputRef = ref<HTMLInputElement | null>(null)
 
 const currentUser = computed(() => userStore.userInfo)
-const displayAvatar = computed(() => decor.value.avatar)
+const displayAvatar = computed(() => currentUser.value?.avatar_url || decor.value.avatar)
 const displayCover = computed(() => decor.value.cover)
 
 const syncFromUser = () => {
@@ -89,10 +91,17 @@ const handleAvatarChange = async (event: Event) => {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
-  const avatar = await readFileAsDataUrl(file)
-  decor.value = saveProfileDecor({ avatar })
-  input.value = ''
-  showMessage('头像已本地保存', 'success')
+  if (!currentUser.value) return
+  avatarLoading.value = true
+  try {
+    const url = await fileApi.upload(file)
+    await userApi.update({ id: currentUser.value.id, avatar_url: url })
+    await userStore.initUser()
+    showMessage('头像已更新', 'success')
+  } finally {
+    avatarLoading.value = false
+    input.value = ''
+  }
 }
 
 const handleCoverChange = async (event: Event) => {
@@ -105,7 +114,12 @@ const handleCoverChange = async (event: Event) => {
   showMessage('背景图已本地保存', 'success')
 }
 
-const resetAvatar = () => {
+const resetAvatar = async () => {
+  if (!currentUser.value) return
+  // 清除后端头像（传空字符串让 COALESCE 保持，实际需 SQL 处理 null）
+  // 直接通过 SQL 设置为 null 需要特殊处理，这里用空字符串标记清空
+  await userApi.update({ id: currentUser.value.id, avatar_url: '' })
+  await userStore.initUser()
   decor.value = clearProfileDecor('avatar')
   showMessage('头像已清空', 'success')
 }
@@ -218,14 +232,14 @@ onMounted(async () => {
               <input ref="avatarInputRef" type="file" accept="image/*" class="hidden-input" @change="handleAvatarChange" />
               <input ref="coverInputRef" type="file" accept="image/*" class="hidden-input" @change="handleCoverChange" />
 
-              <el-button type="primary" plain :icon="UploadFilled" @click="triggerAvatarPick">上传头像</el-button>
+              <el-button type="primary" plain :icon="UploadFilled" :loading="avatarLoading" @click="triggerAvatarPick">上传头像</el-button>
               <el-button plain :icon="Picture" @click="triggerCoverPick">设置背景图</el-button>
               <el-button plain :icon="RefreshLeft" @click="resetAvatar">清空头像</el-button>
               <el-button plain :icon="RefreshLeft" @click="resetCover">清空背景图</el-button>
             </div>
 
             <el-alert
-              title="头像与背景图当前仅保存在本地浏览器，后端暂未提供字段。基础资料与密码仍通过 update 接口保存。"
+              title="头像通过后端对象存储持久化保存；背景图仅保存在本地浏览器。"
               type="info"
               :closable="false"
               show-icon

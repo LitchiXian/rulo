@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use axum::{
-    Json,
     extract::{Query, State},
 };
 use rulo_common::{
+    extractor::ValidatedJson,
     model::{IdDto, IdsDto, PageResult},
     result::R,
 };
@@ -24,7 +24,7 @@ use rulo_macro::perm;
 #[perm("sys:permission:save")]
 pub async fn save_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<SysPermissionSaveDto>,
+    ValidatedJson(dto): ValidatedJson<SysPermissionSaveDto>,
 ) -> R<SysPermission> {
     service::save(&state.db_pool, &dto).await
 }
@@ -36,7 +36,7 @@ pub async fn save_handler(
     security(("bearer_auth" = []))
 )]
 #[perm("sys:permission:remove")]
-pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
+pub async fn remove_handler(State(state): State<Arc<AppState>>, ValidatedJson(dto): ValidatedJson<IdsDto>) -> R<()> {
     let result = service::remove(&state.db_pool, &dto).await;
     // 清除所有受影响角色的用户缓存
     if result.is_ok() {
@@ -54,7 +54,7 @@ pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<
 #[perm("sys:permission:update")]
 pub async fn update_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<SysPermissionUpdateDto>,
+    ValidatedJson(dto): ValidatedJson<SysPermissionUpdateDto>,
 ) -> R<()> {
     let result = service::update(&state.db_pool, &dto).await;
     if result.is_ok() {

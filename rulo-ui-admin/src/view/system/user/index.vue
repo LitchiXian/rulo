@@ -49,13 +49,14 @@ const handleSizeChange = (size: number) => {
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formData = ref<SysUserSaveDto & { id?: number }>({
+  user_name: '',
   nick_name: '',
   password: '',
 })
 
 const openAdd = () => {
   isEdit.value = false
-  formData.value = { nick_name: '', password: '' }
+  formData.value = { user_name: '', nick_name: '', password: '' }
   dialogVisible.value = true
 }
 
@@ -63,6 +64,7 @@ const openEdit = (row: UserInfo) => {
   isEdit.value = true
   formData.value = {
     id: row.id,
+    user_name: row.user_name,
     nick_name: row.nick_name,
     password: '',
     email: row.email ?? undefined,
@@ -190,6 +192,9 @@ onMounted(fetchList)
     <!-- 新增/编辑弹窗 -->
     <el-dialog :title="isEdit ? '编辑用户' : '新增用户'" v-model="dialogVisible" width="500px">
       <el-form :model="formData" label-width="80px">
+        <el-form-item label="用户名" required>
+          <el-input v-model="formData.user_name" placeholder="请输入用户名" :disabled="isEdit" />
+        </el-form-item>
         <el-form-item label="昵称" required>
           <el-input v-model="formData.nick_name" placeholder="请输入昵称" />
         </el-form-item>

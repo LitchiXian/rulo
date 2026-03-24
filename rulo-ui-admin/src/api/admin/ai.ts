@@ -11,7 +11,7 @@ export interface ChatResponse {
 
 /** 非流式 AI 对话 */
 export function chatComplete(messages: ChatMessage[]): Promise<ChatResponse> {
-  return request({ url: '/ai/chat', method: 'post', data: { messages } }) as Promise<ChatResponse>
+  return request({ url: '/ai/chat', method: 'post', data: { messages }, timeout: 50000 }) as Promise<ChatResponse>
 }
 
 /**

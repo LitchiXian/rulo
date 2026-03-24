@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use utoipa::{IntoParams, ToSchema};
+use validator::Validate;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, ToSchema)]
 pub struct SysUser {
@@ -20,22 +21,17 @@ pub struct SysUser {
     pub update_id: i64,
     pub update_time: DateTime<Utc>,
     pub remark: Option<String>,
+    pub avatar_url: Option<String>,
 }
 
 impl SysUser {
     pub fn new_user_from_save_dto(dto: &SysUserSaveDto) -> Self {
-        // todo 生成 雪花ID
-        let user_id: i64 = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis() as i64;
-
-        // todo 密码加密
+        let user_id: i64 = rulo_common::util::id_util::next_id();
         let now_time = Utc::now();
 
         SysUser {
             id: user_id,
-            user_name: user_id.to_string(),
+            user_name: dto.user_name.clone(),
             nick_name: dto.nick_name.clone(),
             password: dto.password.clone(),
             email: dto.email.clone(),
@@ -46,25 +42,38 @@ impl SysUser {
             update_id: user_id,
             update_time: now_time.clone(),
             remark: dto.remark.clone(),
+            avatar_url: None,
         }
     }
 }
 
-#[derive(Deserialize, Debug, ToSchema)]
+#[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct SysUserSaveDto {
+    #[validate(length(min = 2, max = 30, message = "用户名长度必须在 2-30 之间"))]
+    pub user_name: String,
+    #[validate(length(min = 1, max = 30, message = "昵称长度必须在 1-30 之间"))]
     pub nick_name: String,
+    #[validate(length(min = 6, max = 64, message = "密码长度必须在 6-64 之间"))]
     pub password: String,
+    #[validate(email(message = "邮箱格式不正确"))]
     pub email: Option<String>,
+    #[validate(length(max = 500, message = "备注长度不能超过 500"))]
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Debug, ToSchema)]
+#[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct SysUserUpdateDto {
     pub id: i64,
+    #[validate(length(min = 1, max = 30, message = "昵称长度必须在 1-30 之间"))]
     pub nick_name: Option<String>,
+    #[validate(length(min = 6, max = 64, message = "密码长度必须在 6-64 之间"))]
     pub password: Option<String>,
+    #[validate(email(message = "邮箱格式不正确"))]
     pub email: Option<String>,
+    #[validate(length(max = 500, message = "备注长度不能超过 500"))]
     pub remark: Option<String>,
+    #[validate(length(max = 500, message = "头像 URL 长度不能超过 500"))]
+    pub avatar_url: Option<String>,
 }
 
 #[derive(Deserialize, Debug, IntoParams, ToSchema)]
@@ -78,7 +87,7 @@ pub struct SysUserListDto {
     pub page_size: Option<u64>,
 }
 
-#[derive(Deserialize, Debug, ToSchema)]
+#[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct BindRolesDto {
     pub user_id: i64,
     pub role_ids: Vec<i64>,

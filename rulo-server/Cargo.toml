@@ -41,3 +41,13 @@ utoipa-swagger-ui = { version = "9", features = ["axum"] }
 reqwest = { version = "0.12", features = ["json", "stream"] }
 # 异步流工具
 futures-util = "0.3"
+# 雪花 ID
+rs-snowflake = "0.6.0"
+# 输入校验
+validator = { version = "0.19", features = ["derive"] }
+# S3 对象存储（兼容 MinIO / RustFS）
+rust-s3 = { version = "0.35", default-features = false, features = ["tokio-rustls-tls"] }
+# UUID（文件名生成）
+uuid = { version = "1", features = ["v4"] }
+# Multipart 文件上传
+axum-extra = { version = "0.10", features = ["multipart"] }

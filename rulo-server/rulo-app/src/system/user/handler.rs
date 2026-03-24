@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use axum::{
-    Json,
     extract::{Query, State},
 };
 use rulo_common::{
     constant::redis_constant,
+    extractor::ValidatedJson,
     model::{IdDto, IdsDto, PageResult},
     result::R,
     util::redis_util,
@@ -26,7 +26,7 @@ use rulo_common::state::AppState;
 #[perm("sys:user:save")]
 pub async fn save_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<SysUserSaveDto>,
+    ValidatedJson(dto): ValidatedJson<SysUserSaveDto>,
 ) -> R<SysUser> {
     service::save(&state.db_pool, &dto).await
 }
@@ -38,7 +38,7 @@ pub async fn save_handler(
     security(("bearer_auth" = []))
 )]
 #[perm("sys:user:remove")]
-pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<IdsDto>) -> R<()> {
+pub async fn remove_handler(State(state): State<Arc<AppState>>, ValidatedJson(dto): ValidatedJson<IdsDto>) -> R<()> {
     let result = service::remove(&state.db_pool, &dto).await;
     if result.is_ok() {
         for user_id in &dto.ids {
@@ -60,7 +60,7 @@ pub async fn remove_handler(State(state): State<Arc<AppState>>, Json(dto): Json<
 #[perm("sys:user:update")]
 pub async fn update_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<SysUserUpdateDto>,
+    ValidatedJson(dto): ValidatedJson<SysUserUpdateDto>,
 ) -> R<()> {
     service::update(&state.db_pool, &dto).await
 }
@@ -74,7 +74,7 @@ pub async fn update_handler(
 #[perm("sys:user:update-bind-roles")]
 pub async fn update_bind_roles_handler(
     State(state): State<Arc<AppState>>,
-    Json(dto): Json<BindRolesDto>,
+    ValidatedJson(dto): ValidatedJson<BindRolesDto>,
 ) -> R<()> {
     let user_id = dto.user_id;
     let result = service::update_bind_roles(&state.db_pool, &dto).await;
