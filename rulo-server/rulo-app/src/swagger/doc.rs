@@ -36,6 +36,8 @@ use crate::system;
         system::menu::handler::detail_handler,
         system::menu::handler::list_handler,
         system::monitor::handler::server_info_handler,
+        system::monitor::handler::health_handler,
+        system::audit::handler::list_handler,
     ),
     components(
         schemas(
@@ -70,6 +72,9 @@ use crate::system;
             system::monitor::model::SysInfo,
             system::monitor::model::DiskInfo,
             system::monitor::model::RustInfo,
+            system::monitor::handler::HealthResponse,
+            system::audit::model::SysAuditLog,
+            system::audit::model::AuditLogListDto,
         )
     ),
     modifiers(&SecurityAddon),

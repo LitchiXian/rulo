@@ -2,7 +2,7 @@ use deadpool_redis::Pool as RedisPool;
 use s3::Bucket;
 use sqlx::{Pool, Postgres};
 
-use crate::config::{AiConfig, JwtConfig, StorageConfig};
+use crate::config::{AiConfig, JwtConfig, RateLimitConfig, StorageConfig};
 
 pub struct AppState {
     pub db_pool: Pool<Postgres>,
@@ -11,4 +11,5 @@ pub struct AppState {
     pub jwt_config: JwtConfig,
     pub storage_config: StorageConfig,
     pub s3_bucket: Box<Bucket>,
+    pub rate_limit_config: RateLimitConfig,
 }

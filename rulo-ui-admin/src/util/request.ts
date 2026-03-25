@@ -45,6 +45,12 @@ request.interceptors.response.use(
       return Promise.reject(new Error('登录过期'))
     }
 
+    // 限流 (TooManyRequests: 42900)
+    if (code === 42900) {
+      ElMessage.warning(res.message || '请求过于频繁，请稍后再试')
+      return Promise.reject(new Error('请求限流'))
+    }
+
     // 业务成功
     if (code === 200) {
       return res.data
@@ -61,6 +67,10 @@ request.interceptors.response.use(
       ElMessage.error('登录已过期，请重新登录')
       localStorage.removeItem('admin-user')
       window.location.href = '/login'
+      return Promise.reject(error)
+    }
+    if (code === 42900) {
+      ElMessage.warning(error.response?.data?.message || '请求过于频繁，请稍后再试')
       return Promise.reject(error)
     }
     const msg = error.response?.data?.message || error.message || '请求失败'

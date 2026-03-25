@@ -70,3 +70,37 @@ pub struct SysPermissionListDto {
     pub page_num: Option<u64>,
     pub page_size: Option<u64>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_permission_from_save_dto_sets_defaults() {
+        let dto = SysPermissionSaveDto {
+            perm_code: "user:list".to_string(),
+            perm_name: "用户列表".to_string(),
+            perm_type: 1,
+            remark: None,
+        };
+        let perm = SysPermission::new_permission_from_save_dto(&dto);
+        assert_eq!(perm.perm_code, "user:list");
+        assert_eq!(perm.perm_name, "用户列表");
+        assert_eq!(perm.perm_type, 1);
+        assert!(!perm.is_deleted);
+        assert!(perm.id != 0);
+    }
+
+    #[test]
+    fn new_permission_generates_unique_ids() {
+        let dto = SysPermissionSaveDto {
+            perm_code: "c".to_string(),
+            perm_name: "n".to_string(),
+            perm_type: 2,
+            remark: None,
+        };
+        let p1 = SysPermission::new_permission_from_save_dto(&dto);
+        let p2 = SysPermission::new_permission_from_save_dto(&dto);
+        assert_ne!(p1.id, p2.id);
+    }
+}

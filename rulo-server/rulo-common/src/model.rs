@@ -36,3 +36,34 @@ pub fn normalize_page(page_num: Option<u64>, page_size: Option<u64>) -> (u64, u6
 // 权限码集合, 存入 request Extension
 #[derive(Debug, Clone)]
 pub struct PermCodes(pub Vec<String>);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normalize_page_defaults() {
+        assert_eq!(normalize_page(None, None), (1, 10));
+    }
+
+    #[test]
+    fn normalize_page_zero_becomes_one() {
+        assert_eq!(normalize_page(Some(0), Some(0)), (1, 1));
+    }
+
+    #[test]
+    fn normalize_page_clamps_upper_bound() {
+        assert_eq!(normalize_page(Some(5), Some(200)), (5, 100));
+    }
+
+    #[test]
+    fn normalize_page_normal_values() {
+        assert_eq!(normalize_page(Some(3), Some(20)), (3, 20));
+    }
+
+    #[test]
+    fn normalize_page_boundary() {
+        assert_eq!(normalize_page(Some(1), Some(1)), (1, 1));
+        assert_eq!(normalize_page(Some(1), Some(100)), (1, 100));
+    }
+}

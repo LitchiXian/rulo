@@ -352,3 +352,96 @@ fn build_menu_tree(rows: &[MenuRow], parent_id: i64) -> Vec<MenuTreeNode> {
     }
     nodes
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_row(id: i64, parent_id: i64, name: &str, menu_type: i16, sort_order: i32) -> MenuRow {
+        MenuRow {
+            id,
+            parent_id,
+            name: name.to_string(),
+            menu_type,
+            path: Some(format!("/{name}")),
+            component: Some(format!("{name}.vue")),
+            icon: None,
+            sort_order,
+            is_hidden: false,
+        }
+    }
+
+    #[test]
+    fn build_menu_tree_empty_rows() {
+        let result = build_menu_tree(&[], 0);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn build_menu_tree_flat_menus() {
+        // menu_type=2 为叶子菜单，不会因无子节点被过滤
+        let rows = vec![
+            make_row(1, 0, "home", 2, 1),
+            make_row(2, 0, "about", 2, 2),
+        ];
+        let tree = build_menu_tree(&rows, 0);
+        assert_eq!(tree.len(), 2);
+        assert_eq!(tree[0].name, "home");
+        assert_eq!(tree[1].name, "about");
+    }
+
+    #[test]
+    fn build_menu_tree_nested() {
+        // 目录(1) -> 菜单(2)
+        let rows = vec![
+            make_row(1, 0, "system", 1, 1),   // 目录
+            make_row(2, 1, "user", 2, 1),      // 菜单
+            make_row(3, 1, "role", 2, 2),      // 菜单
+        ];
+        let tree = build_menu_tree(&rows, 0);
+        assert_eq!(tree.len(), 1);
+        assert_eq!(tree[0].name, "system");
+        assert_eq!(tree[0].children.len(), 2);
+        assert_eq!(tree[0].children[0].name, "user");
+        assert_eq!(tree[0].children[1].name, "role");
+    }
+
+    #[test]
+    fn build_menu_tree_empty_directory_filtered() {
+        // 目录没有子菜单时应被过滤
+        let rows = vec![
+            make_row(1, 0, "empty_dir", 1, 1),
+        ];
+        let tree = build_menu_tree(&rows, 0);
+        assert!(tree.is_empty());
+    }
+
+    #[test]
+    fn build_menu_tree_sort_order_preserved() {
+        let rows = vec![
+            make_row(1, 0, "c", 2, 3),
+            make_row(2, 0, "a", 2, 1),
+            make_row(3, 0, "b", 2, 2),
+        ];
+        // build_menu_tree 按数组顺序遍历，排序由 SQL ORDER BY 保证
+        let tree = build_menu_tree(&rows, 0);
+        assert_eq!(tree.len(), 3);
+        assert_eq!(tree[0].name, "c");
+        assert_eq!(tree[1].name, "a");
+        assert_eq!(tree[2].name, "b");
+    }
+
+    #[test]
+    fn build_menu_tree_deeply_nested() {
+        let rows = vec![
+            make_row(1, 0, "l1", 1, 1),
+            make_row(2, 1, "l2", 1, 1),
+            make_row(3, 2, "l3", 2, 1),
+        ];
+        let tree = build_menu_tree(&rows, 0);
+        assert_eq!(tree.len(), 1);
+        assert_eq!(tree[0].children.len(), 1);
+        assert_eq!(tree[0].children[0].children.len(), 1);
+        assert_eq!(tree[0].children[0].children[0].name, "l3");
+    }
+}

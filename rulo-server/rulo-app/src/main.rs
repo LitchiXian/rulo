@@ -1,3 +1,4 @@
+use std::net::SocketAddr;
 use std::sync::Arc;
 
 use axum::{Router, middleware::from_fn, routing::get};
@@ -10,10 +11,7 @@ use rulo_common::{
     error,
     state::AppState,
 };
-mod ai;
-mod router;
-mod swagger;
-mod system;
+use rulo_app::router;
 
 #[tokio::main]
 async fn main() {
@@ -41,6 +39,7 @@ async fn main() {
         jwt_config: cfg.jwt.clone(),
         storage_config: cfg.storage.clone(),
         s3_bucket,
+        rate_limit_config: cfg.rate_limit.clone(),
     });
 
     let app = Router::new()
@@ -59,5 +58,10 @@ async fn main() {
 
     info!("listener on {}", listener.local_addr().unwrap());
 
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await
+    .unwrap();
 }

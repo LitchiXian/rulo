@@ -2,7 +2,6 @@ use rulo_common::{
     config::StorageConfig,
     error::AppError,
     result::{R, success},
-    util::storage_util,
 };
 use s3::Bucket;
 use uuid::Uuid;
@@ -46,5 +45,5 @@ pub async fn upload(
         .await
         .map_err(|e| AppError::Internal(format!("文件上传失败: {}", e)))?;
 
-    success(storage_util::extract_object_key(storage_config, &key))
+    success(key)
 }

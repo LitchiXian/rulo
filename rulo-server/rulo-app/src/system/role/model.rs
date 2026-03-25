@@ -85,3 +85,37 @@ pub struct SysRoleListDto {
     pub page_num: Option<u64>,
     pub page_size: Option<u64>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_role_from_save_dto_sets_defaults() {
+        let dto = SysRoleSaveDto {
+            role_name: "管理员".to_string(),
+            role_key: "admin".to_string(),
+            remark: Some("test remark".to_string()),
+        };
+        let role = SysRole::new_role_from_save_dto(&dto);
+        assert_eq!(role.role_name, "管理员");
+        assert_eq!(role.role_key, "admin");
+        assert!(!role.is_super);
+        assert!(role.is_active);
+        assert!(!role.is_deleted);
+        assert_eq!(role.remark, Some("test remark".to_string()));
+        assert!(role.id != 0);
+    }
+
+    #[test]
+    fn new_role_generates_unique_ids() {
+        let dto = SysRoleSaveDto {
+            role_name: "r".to_string(),
+            role_key: "k".to_string(),
+            remark: None,
+        };
+        let r1 = SysRole::new_role_from_save_dto(&dto);
+        let r2 = SysRole::new_role_from_save_dto(&dto);
+        assert_ne!(r1.id, r2.id);
+    }
+}

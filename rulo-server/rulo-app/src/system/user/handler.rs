@@ -62,7 +62,13 @@ pub async fn update_handler(
     State(state): State<Arc<AppState>>,
     ValidatedJson(dto): ValidatedJson<SysUserUpdateDto>,
 ) -> R<()> {
-    service::update(&state.db_pool, &state.storage_config, &dto).await
+    let user_id = dto.id;
+    let result = service::update(&state.db_pool, &state.storage_config, &dto).await;
+    if result.is_ok() {
+        let info_key = redis_constant::USER_INFO.to_owned() + &user_id.to_string();
+        let _ = redis_util::del(&state.redis_pool, &info_key).await;
+    }
+    result
 }
 
 #[utoipa::path(

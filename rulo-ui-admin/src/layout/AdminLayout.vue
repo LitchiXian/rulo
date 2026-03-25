@@ -1,7 +1,7 @@
 <script setup lang="ts" name="AdminLayout">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Fold, Expand, Odometer, User, SwitchButton, Setting, UserFilled, Key, Menu as MenuIcon, Lock, MoreFilled, InfoFilled, Link, Sunny, Moon, FullScreen, Notebook, Monitor, DataLine, ChatDotRound } from '@element-plus/icons-vue'
+import { Fold, Expand, Odometer, User, SwitchButton, Setting, UserFilled, Key, Menu as MenuIcon, Lock, MoreFilled, InfoFilled, Link, Sunny, Moon, FullScreen, Notebook, Monitor, DataLine, ChatDotRound, Tickets } from '@element-plus/icons-vue'
 import type { Component } from 'vue'
 import type { MenuTreeNode } from '@/type/user'
 
@@ -18,7 +18,7 @@ const layoutStore = useLayoutStore()
 // 图标名 → 组件映射
 const iconMap: Record<string, Component> = {
   Odometer, User, Setting, UserFilled, Key, Menu: MenuIcon, Lock,
-  MoreFilled, InfoFilled, Link, Notebook, Monitor, DataLine, SwitchButton, Expand, Fold, Sunny, Moon, FullScreen,
+  MoreFilled, InfoFilled, Link, Notebook, Monitor, DataLine, SwitchButton, Expand, Fold, Sunny, Moon, FullScreen, Tickets,
 }
 
 // 可见菜单树（过滤 is_hidden）
@@ -66,7 +66,7 @@ const activeTopMenu = computed(() => {
 const activeTopKey = ref(activeTopMenu.value)
 watch(activeTopMenu, (v) => { activeTopKey.value = v })
 
-const headerAvatar = ref(loadProfileDecor().avatar)
+const headerAvatar = ref(userStore.userInfo?.avatar_url || loadProfileDecor().avatar)
 
 const handleCommand = async (cmd: string) => {
   if (cmd === 'profile') {
@@ -96,8 +96,12 @@ const onFullscreenChange = () => {
   isFullscreen.value = !!document.fullscreenElement
 }
 const syncHeaderAvatar = () => {
-  headerAvatar.value = loadProfileDecor().avatar
+  headerAvatar.value = userStore.userInfo?.avatar_url || loadProfileDecor().avatar
 }
+
+watch(() => userStore.userInfo, () => {
+  syncHeaderAvatar()
+}, { deep: true })
 
 onMounted(() => {
   document.addEventListener('fullscreenchange', onFullscreenChange)

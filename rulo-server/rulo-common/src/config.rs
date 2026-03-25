@@ -51,6 +51,17 @@ pub struct StorageConfig {
     pub allowed_types: Vec<String>,
 }
 
+/// 限流配置
+#[derive(Debug, Deserialize, Clone)]
+pub struct RateLimitConfig {
+    /// 登录/注册：每 IP 每分钟最大请求数
+    pub login_per_minute: u64,
+    /// AI 聊天：每用户每分钟最大请求数
+    pub ai_per_minute: u64,
+    /// 全局：每 IP 每分钟最大请求数
+    pub global_per_minute: u64,
+}
+
 /// 总配置，对应 config/default.toml 的完整结构
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
@@ -60,16 +71,29 @@ pub struct AppConfig {
     pub redis: RedisConfig,
     pub ai: AiConfig,
     pub storage: StorageConfig,
+    pub rate_limit: RateLimitConfig,
 }
 
 impl AppConfig {
-    /// 从 `config/default.toml` 加载配置，失败则 panic
+    /// 从 `config/default.toml` 加载配置，环境变量可覆盖（双下划线分隔层级）
+    ///
+    /// 环境变量命名规则：`RULO__<SECTION>__<KEY>`，例如：
+    /// - `RULO__DATABASE__URL` → database.url
+    /// - `RULO__REDIS__URL` → redis.url
+    /// - `RULO__SERVER__PORT` → server.port
+    /// - `RULO__JWT__SECRET` → jwt.secret
+    /// - `RULO__STORAGE__ENDPOINT` → storage.endpoint
     pub fn load() -> Self {
         Config::builder()
             .add_source(config::File::with_name("config/default"))
+            .add_source(
+                config::Environment::with_prefix("RULO")
+                    .separator("__")
+                    .try_parsing(true),
+            )
             .build()
-            .expect("读取配置文件失败: config/default.toml")
+            .expect("配置加载失败（TOML + 环境变量）")
             .try_deserialize::<AppConfig>()
-            .expect("配置反序列化失败，请检查 config/default.toml 字段是否完整")
+            .expect("配置反序列化失败，请检查 config/default.toml 和环境变量是否正确")
     }
 }

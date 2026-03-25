@@ -31,20 +31,49 @@ pub fn build_s3_credentials(cfg: &StorageConfig) -> Credentials {
     .expect("S3 凭证创建失败")
 }
 
+/// 检查 Bucket 是否存在，不存在则创建，返回 Ok(true) 表示新建，Ok(false) 表示已存在
 pub async fn ensure_bucket_exists(cfg: &StorageConfig) -> Result<bool, String> {
+    let bucket = create_s3_bucket(cfg);
+
+    // 1) 先用 HEAD 检测 Bucket 是否已存在（list 也行，但 head_object 需要 key，这里用 list 限制 0）
+    match bucket.list("".to_string(), Some("/".to_string())).await {
+        Ok(_) => return Ok(false), // 能 list 说明 Bucket 已存在
+        Err(_) => {}               // 继续创建
+    }
+
+    // 2) 调用 S3 CreateBucket
     let response = Bucket::create_with_path_style(
         &cfg.bucket,
         build_s3_region(cfg),
         build_s3_credentials(cfg),
-        BucketConfiguration::private(),
+        BucketConfiguration::default(),
     )
     .await
-    .map_err(|e| e.to_string())?;
+    .map_err(|e| format!("CreateBucket 请求失败: {e}"))?;
+
+    tracing::debug!(
+        "CreateBucket 响应: code={}, body={}",
+        response.response_code,
+        response.response_text
+    );
 
     match response.response_code {
-        200 => Ok(true),
-        409 => Ok(false),
-        code => Err(format!("创建 Bucket 返回异常状态码: {code}")),
+        200 => {}
+        409 => return Ok(false), // 已存在（并发场景）
+        code => {
+            return Err(format!(
+                "CreateBucket 返回异常状态码: {code}, body: {}",
+                response.response_text
+            ))
+        }
+    }
+
+    // 3) 创建后再验证一次，确保真的存在
+    match bucket.list("".to_string(), Some("/".to_string())).await {
+        Ok(_) => Ok(true),
+        Err(e) => Err(format!(
+            "CreateBucket 返回 200，但验证 Bucket 仍不存在: {e}"
+        )),
     }
 }
 
@@ -89,12 +118,72 @@ pub async fn resolve_object_url(
     }
 
     let presigned_url = bucket
-        .presign_get(format!("/{}", key), 3600, None)
+        .presign_get(&key, 3600, None)
         .await
         .map_err(|e| e.to_string());
 
     match presigned_url {
         Ok(url) => Ok(Some(url)),
         Err(_) => Ok(Some(build_object_url(cfg, &key))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_storage_config() -> StorageConfig {
+        StorageConfig {
+            endpoint: "http://localhost:9000".to_string(),
+            bucket: "rulo".to_string(),
+            access_key: "test".to_string(),
+            secret_key: "test".to_string(),
+            region: "us-east-1".to_string(),
+            max_file_size: 10_485_760,
+            allowed_types: vec![],
+        }
+    }
+
+    #[test]
+    fn build_object_url_basic() {
+        let cfg = test_storage_config();
+        let url = build_object_url(&cfg, "avatar/test.png");
+        assert_eq!(url, "http://localhost:9000/rulo/avatar/test.png");
+    }
+
+    #[test]
+    fn build_object_url_strips_slashes() {
+        let mut cfg = test_storage_config();
+        cfg.endpoint = "http://localhost:9000/".to_string();
+        let url = build_object_url(&cfg, "/avatar/test.png");
+        assert_eq!(url, "http://localhost:9000/rulo/avatar/test.png");
+    }
+
+    #[test]
+    fn extract_object_key_full_url() {
+        let cfg = test_storage_config();
+        let key = extract_object_key(&cfg, "http://localhost:9000/rulo/avatar/test.png");
+        assert_eq!(key, "avatar/test.png");
+    }
+
+    #[test]
+    fn extract_object_key_with_query() {
+        let cfg = test_storage_config();
+        let key = extract_object_key(&cfg, "http://localhost:9000/rulo/avatar/test.png?token=abc");
+        assert_eq!(key, "avatar/test.png");
+    }
+
+    #[test]
+    fn extract_object_key_relative_path() {
+        let cfg = test_storage_config();
+        let key = extract_object_key(&cfg, "avatar/test.png");
+        assert_eq!(key, "avatar/test.png");
+    }
+
+    #[test]
+    fn extract_object_key_empty() {
+        let cfg = test_storage_config();
+        assert_eq!(extract_object_key(&cfg, ""), "");
+        assert_eq!(extract_object_key(&cfg, "   "), "");
     }
 }

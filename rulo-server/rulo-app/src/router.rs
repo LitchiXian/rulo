@@ -17,7 +17,9 @@ use rulo_common::{
 };
 
 use crate::{
-    ai, swagger,
+    ai,
+    middleware::rate_limit,
+    swagger,
     system::{
         self,
         auth::{
@@ -30,18 +32,37 @@ use crate::{
 // 顶层路由: 统一管理鉴权, 所有模块的公开/私密路由都在这里聚合
 // 新增模块时, 只需在这里 merge, 不用每个模块重复写逻辑鉴权逻辑
 pub fn routes(state: Arc<AppState>) -> Router<Arc<AppState>> {
-    // public API
+    // public API（登录/注册加 IP 限流）
     let public_routes = Router::new()
         .merge(swagger::router::routes())
-        .nest("/system", system::router::public_routes());
+        .nest(
+            "/system",
+            system::router::public_routes(state.clone()),
+        );
 
     // protected API: need authorization
     let protected_routes = Router::new()
         .nest("/system", system::router::protected_routes())
-        .nest("/ai", ai::router::routes())
-        .layer(middleware::from_fn_with_state(state, jwt_auth));
+        .nest(
+            "/ai",
+            ai::router::routes().layer(middleware::from_fn_with_state(
+                state.clone(),
+                rate_limit::ai_rate_limit,
+            )),
+        )
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            system::audit::middleware::audit_log,
+        ))
+        .layer(middleware::from_fn_with_state(state.clone(), jwt_auth));
 
-    Router::new().merge(public_routes).merge(protected_routes)
+    Router::new()
+        .merge(public_routes)
+        .merge(protected_routes)
+        .layer(middleware::from_fn_with_state(
+            state,
+            rate_limit::global_rate_limit,
+        ))
 }
 
 async fn jwt_auth(

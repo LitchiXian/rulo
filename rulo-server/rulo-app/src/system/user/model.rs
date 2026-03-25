@@ -92,3 +92,42 @@ pub struct BindRolesDto {
     pub user_id: i64,
     pub role_ids: Vec<i64>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_user_from_save_dto_sets_defaults() {
+        let dto = SysUserSaveDto {
+            user_name: "testuser".to_string(),
+            nick_name: "Test".to_string(),
+            password: "hashed_pw".to_string(),
+            email: Some("a@b.com".to_string()),
+            remark: None,
+        };
+        let user = SysUser::new_user_from_save_dto(&dto);
+        assert_eq!(user.user_name, "testuser");
+        assert_eq!(user.nick_name, "Test");
+        assert_eq!(user.password, "hashed_pw");
+        assert_eq!(user.email, Some("a@b.com".to_string()));
+        assert!(user.is_active);
+        assert!(!user.is_deleted);
+        assert!(user.avatar_url.is_none());
+        assert!(user.id != 0);
+    }
+
+    #[test]
+    fn new_user_generates_unique_ids() {
+        let dto = SysUserSaveDto {
+            user_name: "u1".to_string(),
+            nick_name: "N".to_string(),
+            password: "pw".to_string(),
+            email: None,
+            remark: None,
+        };
+        let u1 = SysUser::new_user_from_save_dto(&dto);
+        let u2 = SysUser::new_user_from_save_dto(&dto);
+        assert_ne!(u1.id, u2.id);
+    }
+}

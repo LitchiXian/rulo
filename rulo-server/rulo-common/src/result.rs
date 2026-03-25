@@ -42,4 +42,9 @@ impl<T: Serialize> ApiResult<T> {
             message: message.into(),
         }
     }
+
+    /// 提取 data 字段
+    pub fn take_data(self) -> Option<T> {
+        self.data
+    }
 }
