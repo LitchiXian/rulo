@@ -51,6 +51,18 @@ request.interceptors.response.use(
       return Promise.reject(new Error('请求限流'))
     }
 
+    // 权限不足 (Forbidden: 40300)
+    if (code === 40300) {
+      ElMessage.error('权限不足，拒绝访问')
+      return Promise.reject(new Error('权限不足'))
+    }
+
+    // 资源不存在 (NotFound: 40400)
+    if (code === 40400) {
+      ElMessage.warning('资源不存在')
+      return Promise.reject(new Error('资源不存在'))
+    }
+
     // 业务成功
     if (code === 200) {
       return res.data
@@ -71,6 +83,14 @@ request.interceptors.response.use(
     }
     if (code === 42900) {
       ElMessage.warning(error.response?.data?.message || '请求过于频繁，请稍后再试')
+      return Promise.reject(error)
+    }
+    if (code === 40300) {
+      ElMessage.error('权限不足，拒绝访问')
+      return Promise.reject(error)
+    }
+    if (code === 40400) {
+      ElMessage.warning('资源不存在')
       return Promise.reject(error)
     }
     const msg = error.response?.data?.message || error.message || '请求失败'

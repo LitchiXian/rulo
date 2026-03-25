@@ -1,6 +1,7 @@
 <script setup lang="ts" name="UserManage">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
 import { Search, Plus, Delete, Edit, User } from '@element-plus/icons-vue'
 import userApi from '@/api/admin/user'
 import roleApi from '@/api/admin/role'
@@ -12,11 +13,17 @@ const tableData = ref<UserInfo[]>([])
 const total = ref(0)
 const loading = ref(false)
 const queryForm = ref<SysUserListDto>({ page_num: 1, page_size: 10 })
+const dateRange = ref<string[]>([])
 
 const fetchList = async () => {
   loading.value = true
   try {
-    const res = await userApi.list(queryForm.value)
+    const params: SysUserListDto = { ...queryForm.value }
+    if (dateRange.value.length === 2) {
+      params.create_start_time = dateRange.value[0]
+      params.create_end_time = dateRange.value[1]
+    }
+    const res = await userApi.list(params)
     tableData.value = res.list
     total.value = res.total
   } finally {
@@ -31,6 +38,7 @@ const handleSearch = () => {
 
 const handleReset = () => {
   queryForm.value = { page_num: 1, page_size: 10 }
+  dateRange.value = []
   fetchList()
 }
 
@@ -54,10 +62,29 @@ const formData = ref<SysUserSaveDto & { id?: number }>({
   password: '',
 })
 
+const formRef = ref<FormInstance>()
+const formRules: FormRules = {
+  user_name: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  nick_name: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
+  password: [{
+    validator: (_rule: any, value: string, callback: any) => {
+      if (!isEdit.value && !value) {
+        callback(new Error('请输入密码'))
+      } else if (value && value.length < 6) {
+        callback(new Error('密码不少于 6 位'))
+      } else {
+        callback()
+      }
+    },
+    trigger: 'blur',
+  }],
+}
+
 const openAdd = () => {
   isEdit.value = false
   formData.value = { user_name: '', nick_name: '', password: '' }
   dialogVisible.value = true
+  nextTick(() => formRef.value?.clearValidate())
 }
 
 const openEdit = (row: UserInfo) => {
@@ -71,9 +98,11 @@ const openEdit = (row: UserInfo) => {
     remark: row.remark ?? undefined,
   }
   dialogVisible.value = true
+  nextTick(() => formRef.value?.clearValidate())
 }
 
 const handleSave = async () => {
+  await formRef.value?.validate()
   if (isEdit.value) {
     const dto: SysUserUpdateDto = {
       id: formData.value.id!,
@@ -141,6 +170,17 @@ onMounted(fetchList)
         <el-form-item label="邮箱">
           <el-input v-model="queryForm.email" placeholder="请输入邮箱" clearable />
         </el-form-item>
+        <el-form-item label="创建时间">
+          <el-date-picker
+            v-model="dateRange"
+            type="daterange"
+            value-format="YYYY-MM-DD"
+            range-separator="~"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            style="width: 240px"
+          />
+        </el-form-item>
         <el-form-item>
           <el-button v-auth="'sys:user:list'" type="primary" :icon="Search" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
@@ -154,7 +194,8 @@ onMounted(fetchList)
         <el-button v-auth="'sys:user:save'" type="primary" :icon="Plus" @click="openAdd">新增用户</el-button>
       </div>
 
-      <el-table :data="tableData" v-loading="loading" stripe border style="width: 100%">
+      <el-skeleton v-if="loading && !tableData.length" :rows="8" animated style="padding: 10px 0" />
+      <el-table v-else :data="tableData" v-loading="loading" stripe border style="width: 100%">
         <el-table-column prop="user_name" label="用户名" width="130" />
         <el-table-column prop="nick_name" label="昵称" width="130" />
         <el-table-column prop="email" label="邮箱" min-width="180" />
@@ -191,14 +232,14 @@ onMounted(fetchList)
 
     <!-- 新增/编辑弹窗 -->
     <el-dialog :title="isEdit ? '编辑用户' : '新增用户'" v-model="dialogVisible" width="500px">
-      <el-form :model="formData" label-width="80px">
-        <el-form-item label="用户名" required>
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="80px">
+        <el-form-item label="用户名" prop="user_name">
           <el-input v-model="formData.user_name" placeholder="请输入用户名" :disabled="isEdit" />
         </el-form-item>
-        <el-form-item label="昵称" required>
+        <el-form-item label="昵称" prop="nick_name">
           <el-input v-model="formData.nick_name" placeholder="请输入昵称" />
         </el-form-item>
-        <el-form-item label="密码" :required="!isEdit">
+        <el-form-item label="密码" prop="password">
           <el-input v-model="formData.password" type="password" show-password
             :placeholder="isEdit ? '不修改请留空' : '请输入密码'" />
         </el-form-item>

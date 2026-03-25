@@ -380,7 +380,7 @@ const sidebarMenuMode = computed(() => 'vertical' as const)
 
           <!-- 深色/浅色切换 -->
           <el-tooltip :content="layoutStore.isDark ? '切换浅色' : '切换深色'" placement="bottom">
-            <span class="header-icon-btn" @click="layoutStore.toggleDark()">
+            <span class="header-icon-btn" @click="layoutStore.toggleDark($event)">
               <el-icon :size="18">
                 <Moon v-if="!layoutStore.isDark" />
                 <Sunny v-else />

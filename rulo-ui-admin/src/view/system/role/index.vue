@@ -1,6 +1,7 @@
 <script setup lang="ts" name="RoleManage">
 import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
 import { Search, Plus, Delete, Edit, Menu, Key } from '@element-plus/icons-vue'
 import roleApi from '@/api/admin/role'
 import menuApi from '@/api/admin/menu'
@@ -56,10 +57,17 @@ const formData = ref<SysRoleSaveDto & { id?: number; is_active?: boolean }>({
   role_key: '',
 })
 
+const formRef = ref<FormInstance>()
+const formRules: FormRules = {
+  role_name: [{ required: true, message: '请输入角色名', trigger: 'blur' }],
+  role_key: [{ required: true, message: '请输入角色标识', trigger: 'blur' }],
+}
+
 const openAdd = () => {
   isEdit.value = false
   formData.value = { role_name: '', role_key: '' }
   dialogVisible.value = true
+  nextTick(() => formRef.value?.clearValidate())
 }
 
 const openEdit = (row: SysRole) => {
@@ -72,9 +80,11 @@ const openEdit = (row: SysRole) => {
     remark: row.remark ?? undefined,
   }
   dialogVisible.value = true
+  nextTick(() => formRef.value?.clearValidate())
 }
 
 const handleSave = async () => {
+  await formRef.value?.validate()
   if (isEdit.value) {
     const dto: SysRoleUpdateDto = {
       id: formData.value.id!,
@@ -262,7 +272,8 @@ onMounted(fetchList)
         <el-button v-auth="'sys:role:save'" type="primary" :icon="Plus" @click="openAdd">新增角色</el-button>
       </div>
 
-      <el-table :data="tableData" v-loading="loading" stripe border style="width: 100%">
+      <el-skeleton v-if="loading && !tableData.length" :rows="8" animated style="padding: 10px 0" />
+      <el-table v-else :data="tableData" v-loading="loading" stripe border style="width: 100%">
         <el-table-column prop="role_name" label="角色名" width="150" />
         <el-table-column prop="role_key" label="角色标识" width="150" />
         <el-table-column prop="is_super" label="超级管理" width="100" align="center">
@@ -305,11 +316,11 @@ onMounted(fetchList)
 
     <!-- 新增/编辑弹窗 -->
     <el-dialog :title="isEdit ? '编辑角色' : '新增角色'" v-model="dialogVisible" width="500px">
-      <el-form :model="formData" label-width="90px">
-        <el-form-item label="角色名" required>
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="90px">
+        <el-form-item label="角色名" prop="role_name">
           <el-input v-model="formData.role_name" placeholder="请输入角色名" />
         </el-form-item>
-        <el-form-item label="角色标识" required>
+        <el-form-item label="角色标识" prop="role_key">
           <el-input v-model="formData.role_key" placeholder="如 admin / editor" :disabled="isEdit" />
         </el-form-item>
         <el-form-item label="状态" v-if="isEdit">

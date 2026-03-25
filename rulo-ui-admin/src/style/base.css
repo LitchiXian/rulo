@@ -47,8 +47,37 @@ body,
   --rulo-text-secondary: #7b8794;
 }
 
+/* ══════ Theme Switch Animation (View Transition API) ══════ */
+html::view-transition-old(*) {
+  animation: none;
+}
+html::view-transition-new(*) {
+  animation: theme-clip 0.5s ease-in both;
+}
+html::view-transition-old(root) {
+  z-index: 1;
+}
+html::view-transition-new(root) {
+  z-index: 9999;
+}
+html.dark::view-transition-old(*) {
+  animation: theme-clip 0.5s ease-in reverse both;
+}
+html.dark::view-transition-new(*) {
+  animation: none;
+}
+html.dark::view-transition-old(root) {
+  z-index: 9999;
+}
+html.dark::view-transition-new(root) {
+  z-index: 1;
+}
+@keyframes theme-clip {
+  from { clip-path: circle(0% at var(--theme-x) var(--theme-y)); }
+  to   { clip-path: circle(var(--theme-r) at var(--theme-x) var(--theme-y)); }
+}
+
 html.dark {
-  /* 侧边栏 */
   --rulo-sidebar-bg: #161618;
   --rulo-sidebar-border: rgba(255, 255, 255, 0.08);
   --rulo-sidebar-logo-color: #e0e4e8;

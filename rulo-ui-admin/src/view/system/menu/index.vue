@@ -1,6 +1,7 @@
 <script setup lang="ts" name="MenuManage">
-import { ref, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, onMounted, nextTick } from 'vue'
+import { ElMessageBox } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
 import { Search, Plus, Delete, Edit } from '@element-plus/icons-vue'
 import menuApi from '@/api/admin/menu'
 import type { SysMenu, SysMenuSaveDto, SysMenuUpdateDto, SysMenuListDto } from '@/type/menu'
@@ -85,6 +86,41 @@ const formData = ref<SysMenuSaveDto & { id?: number; is_hidden?: boolean }>({
   sort_order: 100,
 })
 
+const formRef = ref<FormInstance>()
+const formRules: FormRules = {
+  name: [{ required: true, message: '请输入菜单名', trigger: 'blur' }],
+  path: [{
+    validator: (_rule: any, value: string, callback: any) => {
+      if (formData.value.menu_type === 2 && !value?.trim()) {
+        callback(new Error('路由路径不能为空'))
+      } else {
+        callback()
+      }
+    },
+    trigger: 'blur',
+  }],
+  component: [{
+    validator: (_rule: any, value: string, callback: any) => {
+      if (formData.value.menu_type === 2 && !value?.trim()) {
+        callback(new Error('组件路径不能为空'))
+      } else {
+        callback()
+      }
+    },
+    trigger: 'blur',
+  }],
+  auto_perm_code: [{
+    validator: (_rule: any, value: string, callback: any) => {
+      if (!isEdit.value && formData.value.menu_type === 2 && !value) {
+        callback(new Error('菜单权限码不能为空'))
+      } else {
+        callback()
+      }
+    },
+    trigger: 'blur',
+  }],
+}
+
 // 父级菜单树选项（编辑时排除自身及其后代）
 const parentTreeOptions = computed(() => {
   const excludeIds = new Set<number>()
@@ -122,6 +158,7 @@ const openAdd = () => {
   isEdit.value = false
   formData.value = { name: '', menu_type: 2, sort_order: 100, auto_perm_code: '' }
   dialogVisible.value = true
+  nextTick(() => formRef.value?.clearValidate())
 }
 
 const openEdit = (row: SysMenu) => {
@@ -140,20 +177,12 @@ const openEdit = (row: SysMenu) => {
     remark: row.remark ?? undefined,
   }
   dialogVisible.value = true
+  nextTick(() => formRef.value?.clearValidate())
 }
 
 const handleSave = async () => {
+  await formRef.value?.validate()
   if (isEdit.value) {
-    if (formData.value.menu_type === 2) {
-      if (!formData.value.path?.trim()) {
-        ElMessage.error('路由路径不能为空')
-        return
-      }
-      if (!formData.value.component?.trim()) {
-        ElMessage.error('组件路径不能为空')
-        return
-      }
-    }
     const dto: SysMenuUpdateDto = {
       id: formData.value.id!,
       name: formData.value.name || undefined,
@@ -166,20 +195,6 @@ const handleSave = async () => {
     }
     await menuApi.update(dto)
   } else {
-    if (formData.value.menu_type === 2) {
-      if (!formData.value.path?.trim()) {
-        ElMessage.error('路由路径不能为空')
-        return
-      }
-      if (!formData.value.component?.trim()) {
-        ElMessage.error('组件路径不能为空')
-        return
-      }
-      if (!formData.value.auto_perm_code) {
-        ElMessage.error('菜单类型为菜单时，菜单权限码不能为空')
-        return
-      }
-    }
     const saveDto = { ...formData.value } as SysMenuSaveDto
     if (!saveDto.auto_perm_code) delete saveDto.auto_perm_code
     await menuApi.save(saveDto)
@@ -226,7 +241,8 @@ onMounted(fetchList)
         <el-button @click="toggleExpandAll">{{ isExpandAll ? '全部折叠' : '全部展开' }}</el-button>
       </div>
 
-      <el-table :key="tableKey" :data="treeData" v-loading="loading" stripe border style="width: 100%" row-key="id" :tree-props="{ children: 'children' }" :default-expand-all="isExpandAll">
+      <el-skeleton v-if="loading && !tableData.length" :rows="8" animated style="padding: 10px 0" />
+      <el-table v-else :key="tableKey" :data="treeData" v-loading="loading" stripe border style="width: 100%" row-key="id" :tree-props="{ children: 'children' }" :default-expand-all="isExpandAll">
         <el-table-column prop="name" label="菜单名" width="200" />
         <el-table-column prop="menu_type" label="类型" width="80" align="center">
           <template #default="{ row }">
@@ -268,17 +284,17 @@ onMounted(fetchList)
 
     <!-- 新增/编辑弹窗 -->
     <el-dialog :title="isEdit ? '编辑菜单' : '新增菜单'" v-model="dialogVisible" width="560px">
-      <el-form :model="formData" label-width="90px">
-        <el-form-item label="菜单名" required>
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="90px">
+        <el-form-item label="菜单名" prop="name">
           <el-input v-model="formData.name" placeholder="请输入菜单名" />
         </el-form-item>
-        <el-form-item label="类型" required>
+        <el-form-item label="类型">
           <el-radio-group v-model="formData.menu_type">
             <el-radio :value="1">目录</el-radio>
             <el-radio :value="2">菜单</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-if="!isEdit && formData.menu_type === 2" label="菜单权限码">
+        <el-form-item v-if="!isEdit && formData.menu_type === 2" label="菜单权限码" prop="auto_perm_code">
           <el-input v-model="formData.auto_perm_code" placeholder="如 sys:user:menu，留空则不自动关联菜单权限" clearable />
         </el-form-item>
         <el-form-item label="父级菜单">
@@ -290,10 +306,10 @@ onMounted(fetchList)
             clearable
           />
         </el-form-item>
-        <el-form-item label="路由路径">
+        <el-form-item label="路由路径" prop="path">
           <el-input v-model="formData.path" placeholder="如 /system/user" />
         </el-form-item>
-        <el-form-item label="组件路径" v-if="formData.menu_type === 2">
+        <el-form-item label="组件路径" v-if="formData.menu_type === 2" prop="component">
           <el-input v-model="formData.component" placeholder="如 view/system/user/index.vue" />
         </el-form-item>
         <el-form-item label="图标">

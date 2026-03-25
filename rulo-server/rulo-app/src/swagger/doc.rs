@@ -1,6 +1,6 @@
 use utoipa::OpenApi;
 
-use crate::system;
+use crate::{ai, system};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -37,7 +37,13 @@ use crate::system;
         system::menu::handler::list_handler,
         system::monitor::handler::server_info_handler,
         system::monitor::handler::health_handler,
+        system::role::handler::list_all_handler,
+        system::permission::handler::list_all_handler,
+        system::menu::handler::list_all_handler,
+        system::file::handler::upload_handler,
         system::audit::handler::list_handler,
+        ai::chat::handler::chat_handler,
+        ai::chat::handler::chat_stream_handler,
     ),
     components(
         schemas(
@@ -75,6 +81,9 @@ use crate::system;
             system::monitor::handler::HealthResponse,
             system::audit::model::SysAuditLog,
             system::audit::model::AuditLogListDto,
+            ai::chat::model::ChatRequest,
+            ai::chat::model::ChatMessage,
+            ai::chat::model::ChatResponse,
         )
     ),
     modifiers(&SecurityAddon),

@@ -25,8 +25,8 @@ const selectLayout = (mode: LayoutMode) => {
   layoutStore.setMode(mode)
 }
 
-const selectTheme = (mode: ThemeMode) => {
-  layoutStore.setThemeMode(mode)
+const selectTheme = (mode: ThemeMode, e: MouseEvent) => {
+  layoutStore.setThemeMode(mode, e)
 }
 </script>
 
@@ -98,7 +98,7 @@ const selectTheme = (mode: ThemeMode) => {
           :key="item.mode"
           class="theme-item"
           :class="{ active: layoutStore.themeMode === item.mode }"
-          @click="selectTheme(item.mode)"
+          @click="selectTheme(item.mode, $event)"
         >
           <el-icon :size="20"><component :is="item.icon" /></el-icon>
           <span>{{ item.label }}</span>

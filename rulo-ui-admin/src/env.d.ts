@@ -21,6 +21,18 @@ interface ImportMeta {
 // 否则 declare module 'vue-router' 会变成 ambient 声明，替换掉整个 vue-router！
 export {}
 
+// View Transition API 类型扩展
+interface ViewTransition {
+  finished: Promise<void>
+  ready: Promise<void>
+  updateCallbackDone: Promise<void>
+}
+declare global {
+  interface Document {
+    startViewTransition?: (callback: () => void | Promise<void>) => ViewTransition
+  }
+}
+
 // 扩展 Vue Router 的 meta 类型，避免访问时需要 as any
 declare module 'vue-router' {
   interface RouteMeta {

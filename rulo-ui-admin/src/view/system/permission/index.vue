@@ -1,6 +1,7 @@
 <script setup lang="ts" name="PermissionManage">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { ElMessageBox } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
 import { Search, Plus, Delete, Edit } from '@element-plus/icons-vue'
 import permissionApi from '@/api/admin/permission'
 import type {
@@ -59,10 +60,17 @@ const formData = ref<SysPermissionSaveDto & { id?: number }>({
   perm_type: 1,
 })
 
+const formRef = ref<FormInstance>()
+const formRules: FormRules = {
+  perm_code: [{ required: true, message: '请输入权限编码', trigger: 'blur' }],
+  perm_name: [{ required: true, message: '请输入权限名', trigger: 'blur' }],
+}
+
 const openAdd = () => {
   isEdit.value = false
   formData.value = { perm_code: '', perm_name: '', perm_type: 1 }
   dialogVisible.value = true
+  nextTick(() => formRef.value?.clearValidate())
 }
 
 const openEdit = (row: SysPermission) => {
@@ -75,9 +83,11 @@ const openEdit = (row: SysPermission) => {
     remark: row.remark ?? undefined,
   }
   dialogVisible.value = true
+  nextTick(() => formRef.value?.clearValidate())
 }
 
 const handleSave = async () => {
+  await formRef.value?.validate()
   if (isEdit.value) {
     const dto: SysPermissionUpdateDto = {
       id: formData.value.id!,
@@ -133,7 +143,8 @@ onMounted(fetchList)
         <el-button v-auth="'sys:permission:save'" type="primary" :icon="Plus" @click="openAdd">新增权限</el-button>
       </div>
 
-      <el-table :data="tableData" v-loading="loading" stripe border style="width: 100%">
+      <el-skeleton v-if="loading && !tableData.length" :rows="8" animated style="padding: 10px 0" />
+      <el-table v-else :data="tableData" v-loading="loading" stripe border style="width: 100%">
         <el-table-column prop="perm_code" label="权限编码" min-width="150" />
         <el-table-column prop="perm_name" label="权限名" width="150" />
         <el-table-column prop="perm_type" label="类型" width="90" align="center">
@@ -166,11 +177,11 @@ onMounted(fetchList)
 
     <!-- 新增/编辑弹窗 -->
     <el-dialog :title="isEdit ? '编辑权限' : '新增权限'" v-model="dialogVisible" width="500px">
-      <el-form :model="formData" label-width="90px">
-        <el-form-item label="权限编码" required>
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="90px">
+        <el-form-item label="权限编码" prop="perm_code">
           <el-input v-model="formData.perm_code" placeholder="如 sys:user:list" :disabled="isEdit" />
         </el-form-item>
-        <el-form-item label="权限名" required>
+        <el-form-item label="权限名" prop="perm_name">
           <el-input v-model="formData.perm_name" placeholder="请输入权限名" />
         </el-form-item>
         <el-form-item label="类型" required>

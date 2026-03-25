@@ -28,13 +28,49 @@ export const useLayoutStore = defineStore(
       mode.value = m
     }
 
-    const setThemeMode = (m: ThemeMode) => {
-      themeMode.value = m
+    const setThemeMode = (m: ThemeMode, e?: MouseEvent) => {
+      const apply = () => { themeMode.value = m }
+
+      if (!e || !document.startViewTransition) {
+        apply()
+        return
+      }
+
+      const x = e.clientX
+      const y = e.clientY
+      const endRadius = Math.hypot(
+        Math.max(x, innerWidth - x),
+        Math.max(y, innerHeight - y),
+      )
+      document.documentElement.style.setProperty('--theme-x', x + 'px')
+      document.documentElement.style.setProperty('--theme-y', y + 'px')
+      document.documentElement.style.setProperty('--theme-r', endRadius + 'px')
+
+      document.startViewTransition(() => apply())
     }
 
-    const toggleDark = () => {
-      // 循环切换: light -> dark -> light
-      themeMode.value = isDark.value ? 'light' : 'dark'
+    const toggleDark = (e?: MouseEvent) => {
+      const toggle = () => {
+        themeMode.value = isDark.value ? 'light' : 'dark'
+      }
+
+      // 无事件或浏览器不支持 View Transition → 直接切换
+      if (!e || !document.startViewTransition) {
+        toggle()
+        return
+      }
+
+      const x = e.clientX
+      const y = e.clientY
+      const endRadius = Math.hypot(
+        Math.max(x, innerWidth - x),
+        Math.max(y, innerHeight - y),
+      )
+      document.documentElement.style.setProperty('--theme-x', x + 'px')
+      document.documentElement.style.setProperty('--theme-y', y + 'px')
+      document.documentElement.style.setProperty('--theme-r', endRadius + 'px')
+
+      document.startViewTransition(() => toggle())
     }
 
     // 同步 dark class 到 html 元素
