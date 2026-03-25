@@ -53,5 +53,12 @@ pub async fn info_handler(
     State(state): State<Arc<AppState>>,
     Extension(UserId(user_id)): Extension<UserId>,
 ) -> R<LoginInfoVo> {
-    service::info(&state.db_pool, &state.redis_pool, user_id).await
+    service::info(
+        &state.db_pool,
+        &state.redis_pool,
+        &state.s3_bucket,
+        &state.storage_config,
+        user_id,
+    )
+    .await
 }

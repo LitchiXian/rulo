@@ -1,7 +1,7 @@
 import request from '@/util/request'
 
 const fileApi = {
-  /** 上传文件，返回文件访问 URL */
+  /** 上传文件，返回对象 key */
   upload(file: File): Promise<string> {
     const formData = new FormData()
     formData.append('file', file)

@@ -60,12 +60,15 @@ pub async fn connect_redis(cfg: &RedisConfig) -> RedisPool {
 pub async fn connect_s3(cfg: &StorageConfig) -> Box<s3::Bucket> {
     let bucket = crate::util::storage_util::create_s3_bucket(cfg);
 
-    // 尝试列出 bucket 验证连通性（head_object 简单高效）
-    match bucket.list("".to_string(), Some("/".to_string())).await {
-        Ok(_) => {}
+    match crate::util::storage_util::ensure_bucket_exists(cfg).await {
+        Ok(true) => {
+            tracing::info!("S3 Bucket 不存在，已自动创建: {}", cfg.bucket);
+        }
+        Ok(false) => {
+            tracing::info!("S3 Bucket 已存在: {}", cfg.bucket);
+        }
         Err(e) => {
-            tracing::warn!("S3 Bucket 连接测试失败（Bucket 可能不存在）: {e}, 尝试自动创建...");
-            // 尝试创建 bucket（对于 RustFS/MinIO，需手动建或设 auto-create）
+            tracing::warn!("S3 Bucket 自动创建检查失败: {e}");
         }
     }
 

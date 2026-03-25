@@ -7,12 +7,13 @@ use crate::system::{
 };
 use deadpool_redis::Pool;
 use rulo_common::{
-    config::JwtConfig,
+    config::{JwtConfig, StorageConfig},
     constant::redis_constant,
     error::AppError,
     result::{R, success},
-    util::{jwt_util, password_util, redis_util},
+    util::{jwt_util, password_util, redis_util, storage_util},
 };
+use s3::Bucket;
 use sqlx::{PgPool, query_as, query_scalar};
 use tracing::info;
 
@@ -132,7 +133,13 @@ pub async fn logout(redis_pool: &Pool, token: &str) -> R<()> {
     }
 }
 
-pub async fn info(db_pool: &PgPool, redis_pool: &Pool, user_id: i64) -> R<LoginInfoVo> {
+pub async fn info(
+    db_pool: &PgPool,
+    redis_pool: &Pool,
+    bucket: &Bucket,
+    storage_config: &StorageConfig,
+    user_id: i64,
+) -> R<LoginInfoVo> {
     // 1.用户信息 -- 优先 Redis
     let user_info_key = redis_constant::USER_INFO.to_owned() + &user_id.to_string();
     let db_user = match redis_util::get_obj::<SysUser>(redis_pool, &user_info_key).await? {
@@ -177,7 +184,13 @@ pub async fn info(db_pool: &PgPool, redis_pool: &Pool, user_id: i64) -> R<LoginI
         email: db_user.email,
         is_active: db_user.is_active,
         remark: db_user.remark,
-        avatar_url: db_user.avatar_url,
+        avatar_url: storage_util::resolve_object_url(
+            bucket,
+            storage_config,
+            db_user.avatar_url.as_deref(),
+        )
+        .await
+        .map_err(AppError::Internal)?,
     };
 
     success(LoginInfoVo {

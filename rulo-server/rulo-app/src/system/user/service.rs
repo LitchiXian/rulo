@@ -1,9 +1,11 @@
 use rulo_common::{
+    config::StorageConfig,
     error::AppError,
     model::{IdDto, IdsDto, PageResult, normalize_page},
     result::{R, success},
-    util::password_util,
+    util::{password_util, storage_util},
 };
+use s3::Bucket;
 use sqlx::{PgPool, Postgres, QueryBuilder, query, query_as, query_scalar};
 
 use crate::system::user::model::{
@@ -66,12 +68,12 @@ pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
     success(())
 }
 
-pub async fn update(pool: &PgPool, dto: &SysUserUpdateDto) -> R<()> {
+pub async fn update(pool: &PgPool, storage_config: &StorageConfig, dto: &SysUserUpdateDto) -> R<()> {
     // avatar_url 特殊处理：None=不修改, Some("")=清空, Some(url)=更新
-    let avatar_url_value: Option<Option<&str>> = match &dto.avatar_url {
+    let avatar_url_value: Option<Option<String>> = match &dto.avatar_url {
         None => None,                                  // 不修改
         Some(url) if url.is_empty() => Some(None),     // 清空 → NULL
-        Some(url) => Some(Some(url.as_str())),          // 更新
+        Some(url) => Some(Some(storage_util::extract_object_key(storage_config, url))),
     };
 
     // 对 avatar_url 使用独立的 SQL 分支，避免 COALESCE 无法区分"不传"和"清空"
@@ -109,7 +111,7 @@ pub async fn update(pool: &PgPool, dto: &SysUserUpdateDto) -> R<()> {
                 dto.password.as_deref(),
                 dto.email.as_deref(),
                 dto.remark.as_deref(),
-                url,
+                url.as_deref(),
             )
             .execute(pool)
             .await?;
@@ -149,15 +151,28 @@ pub async fn update_bind_roles(pool: &PgPool, dto: &BindRolesDto) -> R<()> {
     success(())
 }
 
-pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysUser> {
-    let data = query_as!(SysUser, "select * from sys_user where id = $1 AND is_deleted = false", dto.id)
+pub async fn detail(
+    pool: &PgPool,
+    bucket: &Bucket,
+    storage_config: &StorageConfig,
+    dto: &IdDto,
+) -> R<SysUser> {
+    let mut data = query_as!(SysUser, "select * from sys_user where id = $1 AND is_deleted = false", dto.id)
         .fetch_optional(pool)
         .await?
         .ok_or_else(|| AppError::NotFound("用户不存在".to_string()))?;
+    data.avatar_url = storage_util::resolve_object_url(bucket, storage_config, data.avatar_url.as_deref())
+        .await
+        .map_err(AppError::Internal)?;
     success(data)
 }
 
-pub async fn list(pool: &PgPool, dto: &SysUserListDto) -> R<PageResult<SysUser>> {
+pub async fn list(
+    pool: &PgPool,
+    bucket: &Bucket,
+    storage_config: &StorageConfig,
+    dto: &SysUserListDto,
+) -> R<PageResult<SysUser>> {
     let (page_num, page_size) = normalize_page(dto.page_num, dto.page_size);
     let offset = ((page_num - 1) * page_size) as i64;
 
@@ -178,10 +193,16 @@ pub async fn list(pool: &PgPool, dto: &SysUserListDto) -> R<PageResult<SysUser>>
         .push(" OFFSET ")
         .push_bind(offset);
 
-    let list = data_builder
+    let mut list = data_builder
         .build_query_as::<SysUser>()
         .fetch_all(pool)
         .await?;
+
+    for user in &mut list {
+        user.avatar_url = storage_util::resolve_object_url(bucket, storage_config, user.avatar_url.as_deref())
+            .await
+            .map_err(AppError::Internal)?;
+    }
 
     success(PageResult {
         list,

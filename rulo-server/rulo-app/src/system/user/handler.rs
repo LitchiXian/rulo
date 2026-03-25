@@ -62,7 +62,7 @@ pub async fn update_handler(
     State(state): State<Arc<AppState>>,
     ValidatedJson(dto): ValidatedJson<SysUserUpdateDto>,
 ) -> R<()> {
-    service::update(&state.db_pool, &dto).await
+    service::update(&state.db_pool, &state.storage_config, &dto).await
 }
 
 #[utoipa::path(
@@ -97,7 +97,7 @@ pub async fn detail_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<IdDto>,
 ) -> R<SysUser> {
-    service::detail(&state.db_pool, &dto).await
+    service::detail(&state.db_pool, &state.s3_bucket, &state.storage_config, &dto).await
 }
 
 #[utoipa::path(
@@ -111,7 +111,7 @@ pub async fn list_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<SysUserListDto>,
 ) -> R<PageResult<SysUser>> {
-    service::list(&state.db_pool, &dto).await
+    service::list(&state.db_pool, &state.s3_bucket, &state.storage_config, &dto).await
 }
 
 #[utoipa::path(

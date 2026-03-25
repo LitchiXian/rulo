@@ -116,8 +116,6 @@ const handleCoverChange = async (event: Event) => {
 
 const resetAvatar = async () => {
   if (!currentUser.value) return
-  // 清除后端头像（传空字符串让 COALESCE 保持，实际需 SQL 处理 null）
-  // 直接通过 SQL 设置为 null 需要特殊处理，这里用空字符串标记清空
   await userApi.update({ id: currentUser.value.id, avatar_url: '' })
   await userStore.initUser()
   decor.value = clearProfileDecor('avatar')

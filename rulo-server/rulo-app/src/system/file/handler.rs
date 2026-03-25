@@ -8,7 +8,7 @@ use crate::system::file::service;
 
 #[utoipa::path(
     post, path = "/system/file/upload",
-    responses((status = 200, description = "上传成功，返回文件 URL", body = String)),
+    responses((status = 200, description = "上传成功，返回对象 key", body = String)),
     security(("bearer_auth" = []))
 )]
 pub async fn upload_handler(

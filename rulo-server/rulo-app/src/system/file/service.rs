@@ -2,11 +2,12 @@ use rulo_common::{
     config::StorageConfig,
     error::AppError,
     result::{R, success},
+    util::storage_util,
 };
 use s3::Bucket;
 use uuid::Uuid;
 
-/// 上传文件到 S3，返回文件的访问 URL
+/// 上传文件到 S3，返回文件 key
 pub async fn upload(
     bucket: &Bucket,
     storage_config: &StorageConfig,
@@ -45,7 +46,5 @@ pub async fn upload(
         .await
         .map_err(|e| AppError::Internal(format!("文件上传失败: {}", e)))?;
 
-    // 返回访问 URL
-    let url = format!("{}/{}/{}", storage_config.endpoint, storage_config.bucket, key);
-    success(url)
+    success(storage_util::extract_object_key(storage_config, &key))
 }
