@@ -406,7 +406,7 @@ let router = router.merge(Scalar::with_url("/scalar", ApiDoc::openapi()));
 用 `ValidatedJson<T>` 替代 `Json<T>`，自动完成反序列化 + 字段校验：
 
 ```rust
-// 定义在 rulo-common/src/extractor.rs
+// 定义在 common/src/extractor.rs
 pub struct ValidatedJson<T>(pub T);
 ```
 
@@ -662,7 +662,7 @@ Bootstrap 启动时自动检查并创建 bucket。
 写在对应逻辑的 `.rs` 文件底部，`#[cfg(test)]` 保证不编入生产产物：
 
 ```rust
-// rulo-common/src/util/jwt_util.rs
+// common/src/util/jwt_util.rs
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -702,7 +702,7 @@ mod tests {
 放在 `rulo-app/tests/` 目录，使用 `#[sqlx::test]` 宏自动管理数据库：
 
 ```rust
-// rulo-app/tests/role_service_test.rs
+// app/tests/role_service_test.rs
 use rulo_app::system::role::{model::*, service};
 use rulo_common::model::*;
 use sqlx::PgPool;
@@ -744,16 +744,16 @@ cd rulo-server
 cargo test
 
 # 仅单元测试（不需数据库）
-cargo test -p rulo-common                                      # 19 个
-cargo test -p rulo-app -- "model::tests" "auth::service::tests" # 12 个
+cargo test -p common                                      # 19 个
+cargo test -p app -- "model::tests" "auth::service::tests" # 12 个
 
 # 仅集成测试（需要 DATABASE_URL）
-cargo test -p rulo-app --test role_service_test
-cargo test -p rulo-app --test permission_service_test
-cargo test -p rulo-app --test user_service_test
+cargo test -p app --test role_service_test
+cargo test -p app --test permission_service_test
+cargo test -p app --test user_service_test
 
 # 运行单个测试
-cargo test -p rulo-app --test user_service_test test_user_save_and_remove
+cargo test -p app --test user_service_test test_user_save_and_remove
 
 # 显示 println! 输出
 cargo test -- --nocapture

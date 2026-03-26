@@ -113,7 +113,7 @@ export DATABASE_URL=postgres://username:password@127.0.0.1:5432/your_db
 
 ```bash
 cd rulo-server
-cargo run -p rulo-app
+cargo run -p app
 ```
 
 说明：

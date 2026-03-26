@@ -113,7 +113,7 @@ Then start the backend:
 
 ```bash
 cd rulo-server
-cargo run -p rulo-app
+cargo run -p app
 ```
 
 Notes:

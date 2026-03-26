@@ -1,5 +1,5 @@
 [workspace]
-members = ["rulo-app","rulo-common", "rulo-macro"]
+members = ["app", "common", "macros"]
 resolver = "3"
 
 [workspace.dependencies]

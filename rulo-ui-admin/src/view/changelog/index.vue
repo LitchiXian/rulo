@@ -57,7 +57,7 @@ const logs = [
     tag: '项目初始化',
     items: [
       '初始化 Rust 后端项目（Axum + Tokio），Cargo Workspace 结构',
-      '搭建 rulo-app（应用入口）与 rulo-common（公共模块）',
+      '搭建 app（应用入口）与 rulo-common（公共模块）',
       '接入 PostgreSQL 连接池（sqlx）',
       '接入 Redis（bb8-redis）',
       '实现统一响应体 ApiResult 与统一错误处理',
