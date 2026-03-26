@@ -58,7 +58,7 @@ const handleLogin = async () => {
         size="large"
         @keyup.enter="handleLogin"
       >
-        <el-form-item label="账号" prop="userName">
+        <el-form-item label="账号" prop="username">
           <el-input
             v-model="form.username"
             placeholder="请输入账号"

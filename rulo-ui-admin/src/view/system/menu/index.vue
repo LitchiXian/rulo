@@ -266,6 +266,7 @@ onMounted(fetchList)
             <el-button v-auth="'sys:menu:remove'" link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
+        <template #empty><el-empty description="暂无数据" /></template>
       </el-table>
 
       <div class="table-pagination">

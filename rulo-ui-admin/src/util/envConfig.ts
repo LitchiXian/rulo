@@ -23,8 +23,6 @@ export async function loadEnvConfig() {
     // dev 模式走 Vite 正向代理 /api → 后端地址，避免跨域
     // prod 模式直接用 config.json 中配置的地址（由 nginx 等处理）
     request.defaults.baseURL = env === 'development' ? '/api' : envConfig.service.apiBaseUrl
-
-    console.log(`[envConfig] 已加载 ${configName} 环境:`, envConfig.service)
   } catch (error) {
     console.error('[envConfig] 加载失败:', error)
   }

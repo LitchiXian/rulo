@@ -40,12 +40,15 @@ pub async fn save(pool: &PgPool, dto: &SysRoleSaveDto) -> R<SysRole> {
 }
 
 pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
-    sqlx::query!(
+    let result = sqlx::query!(
         "UPDATE sys_role SET is_deleted = true, update_time = now() WHERE id = ANY($1)",
         &dto.ids
     )
     .execute(pool)
     .await?;
+    if result.rows_affected() == 0 {
+        return Err(AppError::NotFound("角色不存在或已删除".to_string()));
+    }
     success(())
 }
 
@@ -60,7 +63,7 @@ pub async fn update(pool: &PgPool, dto: &SysRoleUpdateDto) -> R<()> {
             return Err(AppError::ServiceError("角色标识不能为空字符串".to_string()));
         }
     }
-    sqlx::query!(
+    let result = sqlx::query!(
         "UPDATE sys_role SET
             role_name = COALESCE($2, role_name),
             role_key = COALESCE($3, role_key),
@@ -76,6 +79,9 @@ pub async fn update(pool: &PgPool, dto: &SysRoleUpdateDto) -> R<()> {
     )
     .execute(pool)
     .await?;
+    if result.rows_affected() == 0 {
+        return Err(AppError::NotFound("角色不存在或已删除".to_string()));
+    }
     success(())
 }
 

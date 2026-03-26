@@ -5,7 +5,8 @@ use axum::{
     extract::State,
     response::{IntoResponse, Response},
 };
-use rulo_common::{result::R, state::AppState};
+use rulo_common::{error::AppError, result::R, state::AppState};
+use rulo_macro::perm;
 
 use crate::ai::chat::{
     model::{ChatRequest, ChatResponse},
@@ -20,6 +21,7 @@ use crate::ai::chat::{
     security(("bearer_auth" = []))
 )]
 /// 非流式 AI 对话
+#[perm("ai:ask:chat")]
 pub async fn chat_handler(
     State(state): State<Arc<AppState>>,
     Json(req): Json<ChatRequest>,
@@ -38,10 +40,11 @@ pub async fn chat_handler(
     security(("bearer_auth" = []))
 )]
 /// 流式 AI 对话 (SSE)
+#[perm("ai:ask:chat")]
 pub async fn chat_stream_handler(
     State(state): State<Arc<AppState>>,
     Json(req): Json<ChatRequest>,
-) -> Response {
+) -> Result<Response, AppError> {
     let body = service::chat_stream(req.messages, &state.ai_config);
 
     Response::builder()
@@ -49,6 +52,6 @@ pub async fn chat_stream_handler(
         .header("Cache-Control", "no-cache")
         .header("Connection", "keep-alive")
         .body(body)
-        .unwrap()
-        .into_response()
+        .map(|r| r.into_response())
+        .map_err(|e| AppError::Internal(e.to_string()))
 }

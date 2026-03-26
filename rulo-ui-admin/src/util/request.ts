@@ -31,70 +31,56 @@ request.interceptors.request.use(
   (error) => Promise.reject(error),
 )
 
+// 统一处理业务错误码
+function handleBizError(code: number, message?: string): boolean {
+  if (code === 40100) {
+    ElMessage.error('登录已过期，请重新登录')
+    localStorage.removeItem('admin-user')
+    window.location.href = '/login'
+    return true
+  }
+  if (code === 42900) {
+    ElMessage.warning(message || '请求过于频繁，请稍后再试')
+    return true
+  }
+  if (code === 40300) {
+    ElMessage.error('权限不足，拒绝访问')
+    return true
+  }
+  if (code === 40400) {
+    ElMessage.warning('资源不存在')
+    return true
+  }
+  return false
+}
+
 // 响应拦截器：统一处理业务码和错误
 request.interceptors.response.use(
   (response) => {
     const res = response.data
     const code = res.code
 
-    // 登录过期 (Unauthorized: 40100)
-    if (code === 40100) {
-      ElMessage.error('登录已过期，请重新登录')
-      localStorage.removeItem('admin-user')
-      window.location.href = '/login'
-      return Promise.reject(new Error('登录过期'))
+    if (handleBizError(code, res.message)) {
+      return Promise.reject(new Error(res.message || '请求错误'))
     }
 
-    // 限流 (TooManyRequests: 42900)
-    if (code === 42900) {
-      ElMessage.warning(res.message || '请求过于频繁，请稍后再试')
-      return Promise.reject(new Error('请求限流'))
-    }
-
-    // 权限不足 (Forbidden: 40300)
-    if (code === 40300) {
-      ElMessage.error('权限不足，拒绝访问')
-      return Promise.reject(new Error('权限不足'))
-    }
-
-    // 资源不存在 (NotFound: 40400)
-    if (code === 40400) {
-      ElMessage.warning('资源不存在')
-      return Promise.reject(new Error('资源不存在'))
-    }
-
-    // 业务成功
     if (code === 200) {
       return res.data
     }
 
-    // 业务失败
     const msg = res.message || '操作失败'
     ElMessage.error(msg)
     return Promise.reject(new Error(msg))
   },
   (error) => {
     const code = error.response?.data?.code
-    if (code === 40100) {
-      ElMessage.error('登录已过期，请重新登录')
-      localStorage.removeItem('admin-user')
-      window.location.href = '/login'
+    const message = error.response?.data?.message
+
+    if (code && handleBizError(code, message)) {
       return Promise.reject(error)
     }
-    if (code === 42900) {
-      ElMessage.warning(error.response?.data?.message || '请求过于频繁，请稍后再试')
-      return Promise.reject(error)
-    }
-    if (code === 40300) {
-      ElMessage.error('权限不足，拒绝访问')
-      return Promise.reject(error)
-    }
-    if (code === 40400) {
-      ElMessage.warning('资源不存在')
-      return Promise.reject(error)
-    }
-    const msg = error.response?.data?.message || error.message || '请求失败'
-    ElMessage.error(msg)
+
+    ElMessage.error(message || error.message || '请求失败')
     return Promise.reject(error)
   },
 )

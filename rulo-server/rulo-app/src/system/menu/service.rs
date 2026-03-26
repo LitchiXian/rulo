@@ -118,12 +118,15 @@ pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
     .collect();
 
     // 逻辑删除菜单
-    sqlx::query!(
+    let result = sqlx::query!(
         "UPDATE sys_menu SET is_deleted = true, update_time = now() WHERE id = ANY($1)",
         &dto.ids
     )
     .execute(&mut *tx)
     .await?;
+    if result.rows_affected() == 0 {
+        return Err(AppError::NotFound("菜单不存在或已删除".to_string()));
+    }
 
     // 级联逻辑删除对应的菜单权限
     if !perm_ids.is_empty() {
@@ -140,7 +143,7 @@ pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
 }
 
 pub async fn update(pool: &PgPool, dto: &SysMenuUpdateDto) -> R<()> {
-    sqlx::query!(
+    let result = sqlx::query!(
         "UPDATE sys_menu SET
             name = COALESCE($2, name),
             path = COALESCE($3, path),
@@ -162,6 +165,9 @@ pub async fn update(pool: &PgPool, dto: &SysMenuUpdateDto) -> R<()> {
     )
     .execute(pool)
     .await?;
+    if result.rows_affected() == 0 {
+        return Err(AppError::NotFound("菜单不存在或已删除".to_string()));
+    }
     success(())
 }
 

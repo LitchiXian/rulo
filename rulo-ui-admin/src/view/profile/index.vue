@@ -1,6 +1,7 @@
 <script setup lang="ts" name="ProfileCenter">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { EditPen, Lock, Picture, RefreshLeft, UploadFilled, UserFilled } from '@element-plus/icons-vue'
+import type { FormInstance, FormRules } from 'element-plus'
 import userApi from '@/api/admin/user'
 import fileApi from '@/api/admin/file'
 import { useUserStore } from '@/store/user'
@@ -21,6 +22,26 @@ const passwordForm = reactive({
   password: '',
   confirmPassword: '',
 })
+const passwordFormRef = ref<FormInstance>()
+const passwordRules: FormRules = {
+  password: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 4, message: '密码不能少于 4 位', trigger: 'blur' },
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认新密码', trigger: 'blur' },
+    {
+      validator: (_rule, value, callback) => {
+        if (value !== passwordForm.password) {
+          callback(new Error('两次输入的密码不一致'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+}
 const decor = ref(loadProfileDecor())
 const avatarInputRef = ref<HTMLInputElement | null>(null)
 const coverInputRef = ref<HTMLInputElement | null>(null)
@@ -61,27 +82,22 @@ const handleBasicSave = async () => {
 }
 
 const handlePasswordSave = async () => {
-  if (!currentUser.value) return
-  if (!passwordForm.password) {
-    showMessage('请输入新密码', 'warning')
-    return
-  }
-  if (passwordForm.password !== passwordForm.confirmPassword) {
-    showMessage('两次输入的密码不一致', 'warning')
-    return
-  }
-  passwordLoading.value = true
-  try {
-    await userApi.update({
-      id: currentUser.value.id,
-      password: passwordForm.password,
-    })
-    passwordForm.password = ''
-    passwordForm.confirmPassword = ''
-    showMessage('密码已更新', 'success')
-  } finally {
-    passwordLoading.value = false
-  }
+  if (!currentUser.value || !passwordFormRef.value) return
+  await passwordFormRef.value.validate(async (valid) => {
+    if (!valid) return
+    passwordLoading.value = true
+    try {
+      await userApi.update({
+        id: currentUser.value!.id,
+        password: passwordForm.password,
+      })
+      passwordForm.password = ''
+      passwordForm.confirmPassword = ''
+      showMessage('密码已更新', 'success')
+    } finally {
+      passwordLoading.value = false
+    }
+  })
 }
 
 const triggerAvatarPick = () => avatarInputRef.value?.click()
@@ -192,12 +208,12 @@ onMounted(async () => {
               <span>修改密码</span>
             </div>
           </template>
-          <el-form label-width="88px" class="profile-form">
-            <el-form-item label="新密码">
-              <el-input v-model="passwordForm.password" type="password" show-password placeholder="请输入新密码" />
+          <el-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules" label-width="88px" class="profile-form">
+            <el-form-item label="新密码" prop="password">
+              <el-input v-model="passwordForm.password" type="password" show-password placeholder="请输入新密码" maxlength="30" />
             </el-form-item>
-            <el-form-item label="确认密码">
-              <el-input v-model="passwordForm.confirmPassword" type="password" show-password placeholder="请再次输入新密码" />
+            <el-form-item label="确认密码" prop="confirmPassword">
+              <el-input v-model="passwordForm.confirmPassword" type="password" show-password placeholder="请再次输入新密码" maxlength="30" />
             </el-form-item>
             <el-form-item>
               <el-button type="primary" :loading="passwordLoading" @click="handlePasswordSave">更新密码</el-button>

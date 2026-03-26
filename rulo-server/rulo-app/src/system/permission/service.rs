@@ -63,12 +63,15 @@ pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
     if menu_perm_count > 0 {
         return Err(AppError::ServiceError("菜单权限不能直接删除，请通过删除对应菜单来级联删除".to_string()));
     }
-    sqlx::query!(
+    let result = sqlx::query!(
         "UPDATE sys_permission SET is_deleted = true, update_time = now() WHERE id = ANY($1)",
         &dto.ids
     )
     .execute(pool)
     .await?;
+    if result.rows_affected() == 0 {
+        return Err(AppError::NotFound("权限不存在或已删除".to_string()));
+    }
     success(())
 }
 
@@ -78,7 +81,7 @@ pub async fn update(pool: &PgPool, dto: &SysPermissionUpdateDto) -> R<()> {
             return Err(AppError::ServiceError("权限名称不能为空字符串".to_string()));
         }
     }
-    sqlx::query!(
+    let result = sqlx::query!(
         "UPDATE sys_permission SET
             perm_name = COALESCE($2, perm_name),
             remark = COALESCE($3, remark),
@@ -90,6 +93,9 @@ pub async fn update(pool: &PgPool, dto: &SysPermissionUpdateDto) -> R<()> {
     )
     .execute(pool)
     .await?;
+    if result.rows_affected() == 0 {
+        return Err(AppError::NotFound("权限不存在或已删除".to_string()));
+    }
     success(())
 }
 

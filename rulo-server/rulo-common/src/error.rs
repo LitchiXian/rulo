@@ -138,36 +138,3 @@ impl From<password_hash::Error> for AppError {
         Self::PasswordHashError(err)
     }
 }
-
-// Imagine this is some third party library that we're using, It sometimes returns errors which we
-// want to log
-pub mod time_library {
-    use serde::Serialize;
-    use std::sync::atomic::{AtomicU64, Ordering};
-
-    #[derive(Serialize, Debug)]
-    pub struct Timestamp(pub u64);
-
-    impl Timestamp {
-        pub fn now() -> Result<Self, Error> {
-            static COUNTER: AtomicU64 = AtomicU64::new(0);
-
-            if COUNTER.fetch_add(1, Ordering::SeqCst).is_multiple_of(3) {
-                Err(Error::FailedToGetTime)
-            } else {
-                Ok(Self(1337))
-            }
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub enum Error {
-        FailedToGetTime,
-    }
-
-    impl std::fmt::Display for Error {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            write!(f, "failed to get time")
-        }
-    }
-}

@@ -59,12 +59,15 @@ pub async fn save(pool: &PgPool, dto: &SysUserSaveDto) -> R<SysUser> {
 }
 
 pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
-    sqlx::query!(
+    let result = sqlx::query!(
         "UPDATE sys_user SET is_deleted = true, update_time = now() WHERE id = ANY($1)",
         &dto.ids
     )
     .execute(pool)
     .await?;
+    if result.rows_affected() == 0 {
+        return Err(AppError::NotFound("用户不存在或已删除".to_string()));
+    }
     success(())
 }
 
@@ -76,8 +79,14 @@ pub async fn update(pool: &PgPool, storage_config: &StorageConfig, dto: &SysUser
         Some(url) => Some(Some(storage_util::extract_object_key(storage_config, url))),
     };
 
+    // 密码加密处理
+    let hashed_password = match &dto.password {
+        Some(pwd) => Some(password_util::hash_password(pwd)?),
+        None => None,
+    };
+
     // 对 avatar_url 使用独立的 SQL 分支，避免 COALESCE 无法区分"不传"和"清空"
-    match avatar_url_value {
+    let result = match avatar_url_value {
         None => {
             sqlx::query!(
                 "UPDATE sys_user SET 
@@ -89,12 +98,12 @@ pub async fn update(pool: &PgPool, storage_config: &StorageConfig, dto: &SysUser
                 WHERE id = $1 AND is_deleted = false",
                 dto.id,
                 dto.nick_name.as_deref(),
-                dto.password.as_deref(),
+                hashed_password.as_deref(),
                 dto.email.as_deref(),
                 dto.remark.as_deref(),
             )
             .execute(pool)
-            .await?;
+            .await?
         }
         Some(url) => {
             sqlx::query!(
@@ -108,14 +117,17 @@ pub async fn update(pool: &PgPool, storage_config: &StorageConfig, dto: &SysUser
                 WHERE id = $1 AND is_deleted = false",
                 dto.id,
                 dto.nick_name.as_deref(),
-                dto.password.as_deref(),
+                hashed_password.as_deref(),
                 dto.email.as_deref(),
                 dto.remark.as_deref(),
                 url.as_deref(),
             )
             .execute(pool)
-            .await?;
+            .await?
         }
+    };
+    if result.rows_affected() == 0 {
+        return Err(AppError::NotFound("用户不存在或已删除".to_string()));
     }
     success(())
 }

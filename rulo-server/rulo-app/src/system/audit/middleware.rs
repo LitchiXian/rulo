@@ -108,20 +108,6 @@ pub async fn audit_log(
 
     let status = response.status().as_u16() as i16;
 
-    // 查询用户名（从 DB，只在有 user_id 时查）
-    let user_name = if let Some(uid) = user_id {
-        sqlx::query_scalar::<_, String>(
-            "SELECT user_name FROM sys_user WHERE id = $1",
-        )
-        .bind(uid)
-        .fetch_optional(&state.db_pool)
-        .await
-        .ok()
-        .flatten()
-    } else {
-        None
-    };
-
     // 异步写入审计日志，不阻塞响应
     let pool = state.db_pool.clone();
     tokio::spawn(async move {
@@ -129,7 +115,6 @@ pub async fn audit_log(
             &pool,
             id_util::next_id(),
             user_id,
-            user_name,
             &method,
             &path,
             params,
