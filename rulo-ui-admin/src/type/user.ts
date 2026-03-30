@@ -1,6 +1,6 @@
 // 脱敏用户信息（对应后端 UserInfoVo，info 接口返回）
 export interface UserInfoVo {
-  id: number
+  id: string
   user_name: string
   nick_name: string
   email: string | null
@@ -11,8 +11,8 @@ export interface UserInfoVo {
 
 // 菜单树节点（对应后端 MenuTreeNode）
 export interface MenuTreeNode {
-  id: number
-  parent_id: number
+  id: string
+  parent_id: string
   name: string
   menu_type: number // 1=目录 2=菜单 3=外链
   path: string | null
@@ -32,15 +32,15 @@ export interface LoginInfoVo {
 
 // 完整用户信息（对应后端 SysUser，管理页面用）
 export interface UserInfo {
-  id: number
+  id: string
   user_name: string
   nick_name: string
   email: string | null
   is_active: boolean
   is_deleted: boolean
-  create_id: number
+  create_id: string
   create_time: string
-  update_id: number
+  update_id: string
   update_time: string
   remark: string | null
   avatar_url: string | null
@@ -61,7 +61,7 @@ export interface SysUserSaveDto {
 }
 
 export interface SysUserUpdateDto {
-  id: number
+  id: string
   nick_name?: string
   password?: string
   email?: string
@@ -80,17 +80,17 @@ export interface SysUserListDto {
 }
 
 export interface BindRolesDto {
-  user_id: number
-  role_ids: number[]
+  user_id: string
+  role_ids: string[]
 }
 
 // 通用 DTO（对应后端 IdDto / IdsDto）
 export interface IdDto {
-  id: number
+  id: string
 }
 
 export interface IdsDto {
-  ids: number[]
+  ids: string[]
 }
 
 // 统一响应格式（与 Rust 后端对应）

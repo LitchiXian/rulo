@@ -1,4 +1,4 @@
-use rulo_common::{
+use common::{
     config::StorageConfig,
     error::AppError,
     model::{IdDto, IdsDto, PageResult, normalize_page},
@@ -71,11 +71,15 @@ pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
     success(())
 }
 
-pub async fn update(pool: &PgPool, storage_config: &StorageConfig, dto: &SysUserUpdateDto) -> R<()> {
+pub async fn update(
+    pool: &PgPool,
+    storage_config: &StorageConfig,
+    dto: &SysUserUpdateDto,
+) -> R<()> {
     // avatar_url 特殊处理：None=不修改, Some("")=清空, Some(url)=更新
     let avatar_url_value: Option<Option<String>> = match &dto.avatar_url {
-        None => None,                                  // 不修改
-        Some(url) if url.is_empty() => Some(None),     // 清空 → NULL
+        None => None,                              // 不修改
+        Some(url) if url.is_empty() => Some(None), // 清空 → NULL
         Some(url) => Some(Some(storage_util::extract_object_key(storage_config, url))),
     };
 
@@ -169,13 +173,18 @@ pub async fn detail(
     storage_config: &StorageConfig,
     dto: &IdDto,
 ) -> R<SysUser> {
-    let mut data = query_as!(SysUser, "select * from sys_user where id = $1 AND is_deleted = false", dto.id)
-        .fetch_optional(pool)
-        .await?
-        .ok_or_else(|| AppError::NotFound("用户不存在".to_string()))?;
-    data.avatar_url = storage_util::resolve_object_url(bucket, storage_config, data.avatar_url.as_deref())
-        .await
-        .map_err(AppError::Internal)?;
+    let mut data = query_as!(
+        SysUser,
+        "select * from sys_user where id = $1 AND is_deleted = false",
+        dto.id
+    )
+    .fetch_optional(pool)
+    .await?
+    .ok_or_else(|| AppError::NotFound("用户不存在".to_string()))?;
+    data.avatar_url =
+        storage_util::resolve_object_url(bucket, storage_config, data.avatar_url.as_deref())
+            .await
+            .map_err(AppError::Internal)?;
     success(data)
 }
 
@@ -192,11 +201,13 @@ pub async fn list(
         "SELECT COUNT(*)::bigint FROM sys_user WHERE is_deleted = false",
     );
     append_user_filters(&mut count_builder, dto);
-    let total = count_builder.build_query_scalar::<i64>().fetch_one(pool).await? as u64;
+    let total = count_builder
+        .build_query_scalar::<i64>()
+        .fetch_one(pool)
+        .await? as u64;
 
-    let mut data_builder = QueryBuilder::<Postgres>::new(
-        "SELECT * FROM sys_user WHERE is_deleted = false",
-    );
+    let mut data_builder =
+        QueryBuilder::<Postgres>::new("SELECT * FROM sys_user WHERE is_deleted = false");
     append_user_filters(&mut data_builder, dto);
     data_builder
         .push(" ORDER BY update_time DESC")
@@ -211,9 +222,10 @@ pub async fn list(
         .await?;
 
     for user in &mut list {
-        user.avatar_url = storage_util::resolve_object_url(bucket, storage_config, user.avatar_url.as_deref())
-            .await
-            .map_err(AppError::Internal)?;
+        user.avatar_url =
+            storage_util::resolve_object_url(bucket, storage_config, user.avatar_url.as_deref())
+                .await
+                .map_err(AppError::Internal)?;
     }
 
     success(PageResult {
@@ -225,20 +237,42 @@ pub async fn list(
 }
 
 fn append_user_filters(builder: &mut QueryBuilder<Postgres>, dto: &SysUserListDto) {
-    if let Some(nick_name) = dto.nick_name.as_deref().filter(|value| !value.trim().is_empty()) {
-        builder.push(" AND nick_name ILIKE ").push_bind(format!("%{}%", nick_name.trim()));
+    if let Some(nick_name) = dto
+        .nick_name
+        .as_deref()
+        .filter(|value| !value.trim().is_empty())
+    {
+        builder
+            .push(" AND nick_name ILIKE ")
+            .push_bind(format!("%{}%", nick_name.trim()));
     }
-    if let Some(email) = dto.email.as_deref().filter(|value| !value.trim().is_empty()) {
-        builder.push(" AND email ILIKE ").push_bind(format!("%{}%", email.trim()));
+    if let Some(email) = dto
+        .email
+        .as_deref()
+        .filter(|value| !value.trim().is_empty())
+    {
+        builder
+            .push(" AND email ILIKE ")
+            .push_bind(format!("%{}%", email.trim()));
     }
-    if let Some(remark) = dto.remark.as_deref().filter(|value| !value.trim().is_empty()) {
-        builder.push(" AND remark ILIKE ").push_bind(format!("%{}%", remark.trim()));
+    if let Some(remark) = dto
+        .remark
+        .as_deref()
+        .filter(|value| !value.trim().is_empty())
+    {
+        builder
+            .push(" AND remark ILIKE ")
+            .push_bind(format!("%{}%", remark.trim()));
     }
     if let Some(create_start_time) = dto.create_start_time {
-        builder.push(" AND create_time >= ").push_bind(create_start_time);
+        builder
+            .push(" AND create_time >= ")
+            .push_bind(create_start_time);
     }
     if let Some(create_end_time) = dto.create_end_time {
-        builder.push(" AND create_time <= ").push_bind(create_end_time);
+        builder
+            .push(" AND create_time <= ")
+            .push_bind(create_end_time);
     }
 }
 

@@ -41,3 +41,4 @@ logs/
 .sqlx/
 demo*
 default.toml
+bin/

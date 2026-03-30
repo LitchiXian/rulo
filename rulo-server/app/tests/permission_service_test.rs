@@ -1,8 +1,8 @@
-use rulo_app::system::permission::model::{
+use app::system::permission::model::{
     SysPermissionListDto, SysPermissionSaveDto, SysPermissionUpdateDto,
 };
-use rulo_app::system::permission::service;
-use rulo_common::model::IdsDto;
+use app::system::permission::service;
+use common::model::IdsDto;
 use sqlx::PgPool;
 
 #[sqlx::test(migrations = "../migrations")]
@@ -20,7 +20,7 @@ async fn test_permission_crud(pool: PgPool) {
     let perm_id = perm.id;
 
     // 2. detail
-    let detail_dto = rulo_common::model::IdDto { id: perm_id };
+    let detail_dto = common::model::IdDto { id: perm_id };
     let result = service::detail(&pool, &detail_dto).await.unwrap();
     assert_eq!(result.take_data().unwrap().perm_name, "测试读取");
 

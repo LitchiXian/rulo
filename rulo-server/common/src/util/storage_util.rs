@@ -123,7 +123,26 @@ pub async fn resolve_object_url(
         .map_err(|e| e.to_string());
 
     match presigned_url {
-        Ok(url) => Ok(Some(url)),
+        Ok(url) => {
+            // 将内部 endpoint 替换为对外公网 URL，使客户端通过 nginx 反向代理访问
+            // nginx 需配合 proxy_set_header Host <internal-endpoint-host> 保证预签名校验通过
+            if let Some(pub_url) = &cfg.pub_url {
+                let internal_prefix = format!(
+                    "{}/{}/",
+                    cfg.endpoint.trim_end_matches('/'),
+                    cfg.bucket.trim_matches('/')
+                );
+                let public_prefix = format!(
+                    "{}/{}/",
+                    pub_url.trim_end_matches('/'),
+                    cfg.bucket.trim_matches('/')
+                );
+                if let Some(rest) = url.strip_prefix(&internal_prefix) {
+                    return Ok(Some(format!("{}{}", public_prefix, rest)));
+                }
+            }
+            Ok(Some(url))
+        }
         Err(_) => Ok(Some(build_object_url(cfg, &key))),
     }
 }
@@ -141,6 +160,7 @@ mod tests {
             region: "us-east-1".to_string(),
             max_file_size: 10_485_760,
             allowed_types: vec![],
+            pub_url: None,
         }
     }
 

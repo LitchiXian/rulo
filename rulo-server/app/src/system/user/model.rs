@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use common::util::serde_util;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use utoipa::{IntoParams, ToSchema};
@@ -6,6 +7,7 @@ use validator::Validate;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, ToSchema)]
 pub struct SysUser {
+    #[serde(with = "serde_util::i64_str")]
     pub id: i64,
     pub user_name: String,
     pub nick_name: String,
@@ -16,8 +18,10 @@ pub struct SysUser {
     pub email: Option<String>,
     pub is_active: bool,
     pub is_deleted: bool,
+    #[serde(with = "serde_util::i64_str")]
     pub create_id: i64,
     pub create_time: DateTime<Utc>,
+    #[serde(with = "serde_util::i64_str")]
     pub update_id: i64,
     pub update_time: DateTime<Utc>,
     pub remark: Option<String>,
@@ -26,7 +30,7 @@ pub struct SysUser {
 
 impl SysUser {
     pub fn new_user_from_save_dto(dto: &SysUserSaveDto) -> Self {
-        let user_id: i64 = rulo_common::util::id_util::next_id();
+        let user_id: i64 = common::util::id_util::next_id();
         let now_time = Utc::now();
 
         SysUser {
@@ -63,6 +67,7 @@ pub struct SysUserSaveDto {
 
 #[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct SysUserUpdateDto {
+    #[serde(deserialize_with = "serde_util::i64_str::deserialize")]
     pub id: i64,
     #[validate(length(min = 1, max = 30, message = "昵称长度必须在 1-30 之间"))]
     pub nick_name: Option<String>,
@@ -89,7 +94,9 @@ pub struct SysUserListDto {
 
 #[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct BindRolesDto {
+    #[serde(deserialize_with = "serde_util::i64_str::deserialize")]
     pub user_id: i64,
+    #[serde(deserialize_with = "serde_util::vec_i64_str::deserialize")]
     pub role_ids: Vec<i64>,
 }
 

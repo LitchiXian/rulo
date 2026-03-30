@@ -1,4 +1,4 @@
-use rulo_common::result::{R, success};
+use common::result::{R, success};
 use sysinfo::{Disks, System};
 
 use crate::system::monitor::model::{CpuInfo, DiskInfo, MemInfo, RustInfo, ServerInfo, SysInfo};

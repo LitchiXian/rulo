@@ -1,22 +1,20 @@
 use std::sync::Arc;
 
-use axum::{
-    extract::{Query, State},
-};
-use deadpool_redis::Pool as RedisPool;
-use rulo_common::{
+use axum::extract::{Query, State};
+use common::{
     constant::redis_constant,
     extractor::ValidatedJson,
     model::{IdDto, IdsDto, PageResult},
     result::R,
     util::redis_util,
 };
+use deadpool_redis::Pool as RedisPool;
 
 use crate::system::role::service;
 
 use super::model::*;
-use rulo_common::state::AppState;
-use rulo_macro::perm;
+use common::state::AppState;
+use macros::perm;
 
 #[utoipa::path(
     post, path = "/system/role/save",
@@ -39,7 +37,10 @@ pub async fn save_handler(
     security(("bearer_auth" = []))
 )]
 #[perm("sys:role:remove")]
-pub async fn remove_handler(State(state): State<Arc<AppState>>, ValidatedJson(dto): ValidatedJson<IdsDto>) -> R<()> {
+pub async fn remove_handler(
+    State(state): State<Arc<AppState>>,
+    ValidatedJson(dto): ValidatedJson<IdsDto>,
+) -> R<()> {
     let result = service::remove(&state.db_pool, &dto).await;
     if result.is_ok() {
         for role_id in &dto.ids {

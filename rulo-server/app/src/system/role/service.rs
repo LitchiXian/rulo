@@ -1,4 +1,4 @@
-use rulo_common::{
+use common::{
     error::AppError,
     model::{IdDto, IdsDto, PageResult, normalize_page},
     result::{R, success},
@@ -167,10 +167,14 @@ pub async fn update_bind_perms(pool: &PgPool, dto: &BindPermsDto) -> R<()> {
 }
 
 pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysRole> {
-    let data = query_as!(SysRole, "select * from sys_role where id = $1 AND is_deleted = false", dto.id)
-        .fetch_optional(pool)
-        .await?
-        .ok_or_else(|| AppError::NotFound("角色不存在".to_string()))?;
+    let data = query_as!(
+        SysRole,
+        "select * from sys_role where id = $1 AND is_deleted = false",
+        dto.id
+    )
+    .fetch_optional(pool)
+    .await?
+    .ok_or_else(|| AppError::NotFound("角色不存在".to_string()))?;
     success(data)
 }
 
@@ -182,11 +186,13 @@ pub async fn list(pool: &PgPool, dto: &SysRoleListDto) -> R<PageResult<SysRole>>
         "SELECT COUNT(*)::bigint FROM sys_role WHERE is_deleted = false",
     );
     append_role_filters(&mut count_builder, dto);
-    let total = count_builder.build_query_scalar::<i64>().fetch_one(pool).await? as u64;
+    let total = count_builder
+        .build_query_scalar::<i64>()
+        .fetch_one(pool)
+        .await? as u64;
 
-    let mut data_builder = QueryBuilder::<Postgres>::new(
-        "SELECT * FROM sys_role WHERE is_deleted = false",
-    );
+    let mut data_builder =
+        QueryBuilder::<Postgres>::new("SELECT * FROM sys_role WHERE is_deleted = false");
     append_role_filters(&mut data_builder, dto);
     data_builder
         .push(" ORDER BY update_time DESC")
@@ -209,9 +215,8 @@ pub async fn list(pool: &PgPool, dto: &SysRoleListDto) -> R<PageResult<SysRole>>
 }
 
 pub async fn list_all(pool: &PgPool, dto: &SysRoleListDto) -> R<Vec<SysRole>> {
-    let mut data_builder = QueryBuilder::<Postgres>::new(
-        "SELECT * FROM sys_role WHERE is_deleted = false",
-    );
+    let mut data_builder =
+        QueryBuilder::<Postgres>::new("SELECT * FROM sys_role WHERE is_deleted = false");
     append_role_filters(&mut data_builder, dto);
     data_builder.push(" ORDER BY update_time DESC");
     let list = data_builder
@@ -222,20 +227,36 @@ pub async fn list_all(pool: &PgPool, dto: &SysRoleListDto) -> R<Vec<SysRole>> {
 }
 
 fn append_role_filters(builder: &mut QueryBuilder<Postgres>, dto: &SysRoleListDto) {
-    if let Some(role_name) = dto.role_name.as_deref().filter(|value| !value.trim().is_empty()) {
-        builder.push(" AND role_name ILIKE ").push_bind(format!("%{}%", role_name.trim()));
+    if let Some(role_name) = dto
+        .role_name
+        .as_deref()
+        .filter(|value| !value.trim().is_empty())
+    {
+        builder
+            .push(" AND role_name ILIKE ")
+            .push_bind(format!("%{}%", role_name.trim()));
     }
-    if let Some(role_key) = dto.role_key.as_deref().filter(|value| !value.trim().is_empty()) {
-        builder.push(" AND role_key ILIKE ").push_bind(format!("%{}%", role_key.trim()));
+    if let Some(role_key) = dto
+        .role_key
+        .as_deref()
+        .filter(|value| !value.trim().is_empty())
+    {
+        builder
+            .push(" AND role_key ILIKE ")
+            .push_bind(format!("%{}%", role_key.trim()));
     }
     if let Some(is_active) = dto.is_active {
         builder.push(" AND is_active = ").push_bind(is_active);
     }
     if let Some(create_start_time) = dto.create_start_time {
-        builder.push(" AND create_time >= ").push_bind(create_start_time);
+        builder
+            .push(" AND create_time >= ")
+            .push_bind(create_start_time);
     }
     if let Some(create_end_time) = dto.create_end_time {
-        builder.push(" AND create_time <= ").push_bind(create_end_time);
+        builder
+            .push(" AND create_time <= ")
+            .push_bind(create_end_time);
     }
 }
 

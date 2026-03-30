@@ -1,6 +1,6 @@
-use rulo_app::system::role::model::{SysRoleListDto, SysRoleSaveDto, SysRoleUpdateDto};
-use rulo_app::system::role::service;
-use rulo_common::model::IdsDto;
+use app::system::role::model::{SysRoleListDto, SysRoleSaveDto, SysRoleUpdateDto};
+use app::system::role::service;
+use common::model::IdsDto;
 use sqlx::PgPool;
 
 #[sqlx::test(migrations = "../migrations")]
@@ -18,7 +18,7 @@ async fn test_role_crud(pool: PgPool) {
     let role_id = role.id;
 
     // 2. detail
-    let detail_dto = rulo_common::model::IdDto { id: role_id };
+    let detail_dto = common::model::IdDto { id: role_id };
     let result = service::detail(&pool, &detail_dto).await.unwrap();
     let fetched = result.take_data().unwrap();
     assert_eq!(fetched.role_key, "test_role");

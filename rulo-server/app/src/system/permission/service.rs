@@ -1,4 +1,4 @@
-use rulo_common::{
+use common::{
     error::AppError,
     model::{IdDto, IdsDto, PageResult, normalize_page},
     result::{R, success},

@@ -12,7 +12,7 @@ pub fn perm(attr: TokenStream, item: TokenStream) -> TokenStream {
     // 插入一个提取器参数: Extension(__rulo_perms): Extension<PermCodes>
     // axum 要求 Json(body) 必须是最后一个参数, 所以不能 push 到末尾
     let extra_param: FnArg = syn::parse_quote! {
-        axum::Extension(__rulo_perms): axum::Extension<rulo_common::model::PermCodes>
+        axum::Extension(__rulo_perms): axum::Extension<common::model::PermCodes>
     };
     let mut inputs: Vec<FnArg> = input_fn.sig.inputs.into_iter().collect();
     inputs.insert(0, extra_param);
@@ -23,7 +23,7 @@ pub fn perm(attr: TokenStream, item: TokenStream) -> TokenStream {
     let new_block = syn::parse_quote! {
         {
             if !__rulo_perms.0.iter().any(|p| p==#perm_value) {
-                return Err(rulo_common::error::AppError::Forbidden(format!("缺少权限:{}", #perm_value)));
+                return Err(common::error::AppError::Forbidden(format!("缺少权限:{}", #perm_value)));
             }
             #original_block
         }

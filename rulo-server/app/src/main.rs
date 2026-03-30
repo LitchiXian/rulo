@@ -5,13 +5,8 @@ use axum::{Router, middleware::from_fn, routing::get};
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
-use rulo_common::{
-    bootstrap,
-    config::AppConfig,
-    error,
-    state::AppState,
-};
-use rulo_app::router;
+use app::router;
+use common::{bootstrap, config::AppConfig, error, state::AppState};
 
 #[tokio::main]
 async fn main() {
@@ -49,12 +44,10 @@ async fn main() {
         .layer(TraceLayer::new_for_http())
         .layer(from_fn(error::log_app_errors));
 
-    let listener = tokio::net::TcpListener::bind(format!(
-        "{}:{}",
-        cfg.server.ipaddr, cfg.server.port
-    ))
-    .await
-    .unwrap();
+    let listener =
+        tokio::net::TcpListener::bind(format!("{}:{}", cfg.server.ipaddr, cfg.server.port))
+            .await
+            .unwrap();
 
     info!("listener on {}", listener.local_addr().unwrap());
 

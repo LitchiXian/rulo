@@ -47,8 +47,8 @@ use crate::{ai, system};
     ),
     components(
         schemas(
-            rulo_common::model::IdDto,
-            rulo_common::model::IdsDto,
+            common::model::IdDto,
+            common::model::IdsDto,
             system::auth::model::AuthUserDto,
             system::auth::model::LoginInfoVo,
             system::auth::model::UserInfoVo,

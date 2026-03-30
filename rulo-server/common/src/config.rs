@@ -49,6 +49,9 @@ pub struct StorageConfig {
     pub max_file_size: usize,
     /// 允许上传的 MIME 类型
     pub allowed_types: Vec<String>,
+    /// 对外公网 URL 前缀（如 https://sosdan.cn/storage），设置后预签名 URL 的内部 endpoint 会被替换为此值
+    /// 需与 nginx /storage/ 代理的 proxy_set_header Host <internal-endpoint-host> 配合使用
+    pub pub_url: Option<String>,
 }
 
 /// 限流配置

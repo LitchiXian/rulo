@@ -1,21 +1,19 @@
 use std::sync::Arc;
 
-use axum::{
-    extract::{Query, State},
-};
-use rulo_common::{
+use axum::extract::{Query, State};
+use common::{
     constant::redis_constant,
     extractor::ValidatedJson,
     model::{IdDto, IdsDto, PageResult},
     result::R,
     util::redis_util,
 };
-use rulo_macro::perm;
+use macros::perm;
 
 use crate::system::user::service;
 
 use super::model::*;
-use rulo_common::state::AppState;
+use common::state::AppState;
 
 #[utoipa::path(
     post, path = "/system/user/save",
@@ -38,14 +36,19 @@ pub async fn save_handler(
     security(("bearer_auth" = []))
 )]
 #[perm("sys:user:remove")]
-pub async fn remove_handler(State(state): State<Arc<AppState>>, ValidatedJson(dto): ValidatedJson<IdsDto>) -> R<()> {
+pub async fn remove_handler(
+    State(state): State<Arc<AppState>>,
+    ValidatedJson(dto): ValidatedJson<IdsDto>,
+) -> R<()> {
     let result = service::remove(&state.db_pool, &dto).await;
     if result.is_ok() {
         for user_id in &dto.ids {
-            let perms_key = rulo_common::constant::redis_constant::USER_PERMS.to_owned() + &user_id.to_string();
-            let menus_key = rulo_common::constant::redis_constant::USER_MENUS.to_owned() + &user_id.to_string();
-            let _ = rulo_common::util::redis_util::del(&state.redis_pool, &perms_key).await;
-            let _ = rulo_common::util::redis_util::del(&state.redis_pool, &menus_key).await;
+            let perms_key =
+                common::constant::redis_constant::USER_PERMS.to_owned() + &user_id.to_string();
+            let menus_key =
+                common::constant::redis_constant::USER_MENUS.to_owned() + &user_id.to_string();
+            let _ = common::util::redis_util::del(&state.redis_pool, &perms_key).await;
+            let _ = common::util::redis_util::del(&state.redis_pool, &menus_key).await;
         }
     }
     result
@@ -103,7 +106,13 @@ pub async fn detail_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<IdDto>,
 ) -> R<SysUser> {
-    service::detail(&state.db_pool, &state.s3_bucket, &state.storage_config, &dto).await
+    service::detail(
+        &state.db_pool,
+        &state.s3_bucket,
+        &state.storage_config,
+        &dto,
+    )
+    .await
 }
 
 #[utoipa::path(
@@ -117,7 +126,13 @@ pub async fn list_handler(
     State(state): State<Arc<AppState>>,
     Query(dto): Query<SysUserListDto>,
 ) -> R<PageResult<SysUser>> {
-    service::list(&state.db_pool, &state.s3_bucket, &state.storage_config, &dto).await
+    service::list(
+        &state.db_pool,
+        &state.s3_bucket,
+        &state.storage_config,
+        &dto,
+    )
+    .await
 }
 
 #[utoipa::path(

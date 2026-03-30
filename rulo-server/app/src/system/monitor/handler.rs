@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use axum::{Json, extract::State};
-use rulo_common::{result::R, state::AppState};
-use rulo_macro::perm;
+use common::{result::R, state::AppState};
+use macros::perm;
 use serde::Serialize;
 use utoipa::ToSchema;
 
@@ -67,5 +67,5 @@ pub async fn health_handler(State(state): State<Arc<AppState>>) -> Json<HealthRe
 pub async fn server_info_handler() -> R<ServerInfo> {
     tokio::task::spawn_blocking(service::get_server_info)
         .await
-        .map_err(|e| rulo_common::error::AppError::Internal(e.to_string()))?
+        .map_err(|e| common::error::AppError::Internal(e.to_string()))?
 }

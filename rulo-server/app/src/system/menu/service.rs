@@ -1,4 +1,4 @@
-use rulo_common::{
+use common::{
     error::AppError,
     model::{IdDto, IdsDto, PageResult, normalize_page},
     result::{R, success},
@@ -56,7 +56,7 @@ pub async fn save(pool: &PgPool, dto: &SysMenuSaveDto) -> R<SysMenu> {
                 if exists > 0 {
                     return Err(AppError::ServiceError(format!("权限码 {} 已存在，请更换", perm_code)));
                 }
-                let perm_id = rulo_common::util::id_util::next_id();
+                let perm_id = common::util::id_util::next_id();
                 let perm_name = format!("{}-页面入口", dto.name);
                 let perm_type: i16 = 2;
                 let is_deleted = false;

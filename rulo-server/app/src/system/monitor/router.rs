@@ -3,7 +3,7 @@ use crate::system::monitor::handler;
 use std::sync::Arc;
 
 use axum::{Router, routing::get};
-use rulo_common::state::AppState;
+use common::state::AppState;
 
 /// 需要鉴权的监控路由
 pub fn routes() -> Router<Arc<AppState>> {

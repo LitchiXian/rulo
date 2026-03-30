@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use common::util::serde_util;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use utoipa::{IntoParams, ToSchema};
@@ -6,8 +7,11 @@ use validator::Validate;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, ToSchema)]
 pub struct SysMenu {
+    #[serde(with = "serde_util::i64_str")]
     pub id: i64,
+    #[serde(with = "serde_util::i64_str")]
     pub parent_id: i64,
+    #[serde(with = "serde_util::opt_i64_str")]
     pub perm_id: Option<i64>,
     pub name: String,
     pub menu_type: i16,
@@ -17,8 +21,10 @@ pub struct SysMenu {
     pub sort_order: i32,
     pub is_hidden: bool,
     pub is_deleted: bool,
+    #[serde(with = "serde_util::i64_str")]
     pub create_id: i64,
     pub create_time: DateTime<Utc>,
+    #[serde(with = "serde_util::i64_str")]
     pub update_id: i64,
     pub update_time: DateTime<Utc>,
     pub remark: Option<String>,
@@ -26,7 +32,7 @@ pub struct SysMenu {
 
 impl SysMenu {
     pub fn new_menu_from_save_dto(dto: &SysMenuSaveDto) -> Self {
-        let menu_id: i64 = rulo_common::util::id_util::next_id();
+        let menu_id: i64 = common::util::id_util::next_id();
 
         let now_time = Utc::now();
 
@@ -53,6 +59,7 @@ impl SysMenu {
 
 #[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct SysMenuSaveDto {
+    #[serde(default, deserialize_with = "serde_util::opt_i64_str::deserialize")]
     pub parent_id: Option<i64>,
     #[validate(length(min = 1, max = 50, message = "菜单名称长度必须在 1-50 之间"))]
     pub name: String,
@@ -74,6 +81,7 @@ pub struct SysMenuSaveDto {
 
 #[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct SysMenuUpdateDto {
+    #[serde(deserialize_with = "serde_util::i64_str::deserialize")]
     pub id: i64,
     #[validate(length(min = 1, max = 50, message = "菜单名称长度必须在 1-50 之间"))]
     pub name: Option<String>,

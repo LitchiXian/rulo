@@ -28,14 +28,21 @@ pub fn init_tracing(log_dir: &str, log_file: &str) -> WorkerGuard {
     guard
 }
 
-/// 建立 PostgreSQL 连接池
+/// 建立 PostgreSQL 连接池，并自动执行数据库迁移
 pub async fn connect_db(cfg: &DatabaseConfig) -> PgPool {
-    PgPoolOptions::new()
+    let pool = PgPoolOptions::new()
         .max_connections(cfg.max_connections)
         .acquire_timeout(Duration::from_secs(cfg.acquire_timeout_secs))
         .connect(&cfg.url)
         .await
-        .expect("无法连接数据库，请检查 [database] 配置")
+        .expect("无法连接数据库，请检查 [database] 配置");
+
+    sqlx::migrate!("../migrations")
+        .run(&pool)
+        .await
+        .expect("数据库迁移失败");
+
+    pool
 }
 
 /// 建立 Redis 连接池，并立即 PING 验证连通性

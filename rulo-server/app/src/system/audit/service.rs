@@ -1,4 +1,4 @@
-use rulo_common::{
+use common::{
     model::{PageResult, normalize_page},
     result::{R, success},
 };

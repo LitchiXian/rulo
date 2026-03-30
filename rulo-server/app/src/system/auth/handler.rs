@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{Extension, extract::State};
-use rulo_common::{extractor::ValidatedJson, result::R, state::AppState};
+use common::{extractor::ValidatedJson, result::R, state::AppState};
 
 use crate::system::auth::{
     model::{AuthUserDto, LoginInfoVo, UserId, UserToken},

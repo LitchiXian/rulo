@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use common::util::serde_util;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use utoipa::{IntoParams, ToSchema};
@@ -6,13 +7,16 @@ use validator::Validate;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, ToSchema)]
 pub struct SysPermission {
+    #[serde(with = "serde_util::i64_str")]
     pub id: i64,
     pub perm_code: String,
     pub perm_name: String,
     pub perm_type: i16,
     pub is_deleted: bool,
+    #[serde(with = "serde_util::i64_str")]
     pub create_id: i64,
     pub create_time: DateTime<Utc>,
+    #[serde(with = "serde_util::i64_str")]
     pub update_id: i64,
     pub update_time: DateTime<Utc>,
     pub remark: Option<String>,
@@ -20,7 +24,7 @@ pub struct SysPermission {
 
 impl SysPermission {
     pub fn new_permission_from_save_dto(dto: &SysPermissionSaveDto) -> Self {
-        let perm_id: i64 = rulo_common::util::id_util::next_id();
+        let perm_id: i64 = common::util::id_util::next_id();
 
         let now_time = Utc::now();
 
@@ -53,6 +57,7 @@ pub struct SysPermissionSaveDto {
 
 #[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct SysPermissionUpdateDto {
+    #[serde(deserialize_with = "serde_util::i64_str::deserialize")]
     pub id: i64,
     #[validate(length(min = 1, max = 50, message = "权限名称长度必须在 1-50 之间"))]
     pub perm_name: Option<String>,

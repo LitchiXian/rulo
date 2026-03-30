@@ -1,6 +1,6 @@
-use rulo_app::system::user::model::{BindRolesDto, SysUserSaveDto};
-use rulo_app::system::user::service;
-use rulo_common::model::IdsDto;
+use app::system::user::model::{BindRolesDto, SysUserSaveDto};
+use app::system::user::service;
+use common::model::IdsDto;
 use sqlx::PgPool;
 
 #[sqlx::test(migrations = "../migrations")]

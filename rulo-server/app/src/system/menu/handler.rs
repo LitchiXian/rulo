@@ -3,7 +3,7 @@ use std::sync::Arc;
 use axum::{
     extract::{Query, State},
 };
-use rulo_common::{
+use common::{
     extractor::ValidatedJson,
     model::{IdDto, IdsDto, PageResult},
     result::R,
@@ -12,8 +12,8 @@ use rulo_common::{
 use crate::system::menu::service;
 
 use super::model::*;
-use rulo_common::state::AppState;
-use rulo_macro::perm;
+use common::state::AppState;
+use macros::perm;
 
 #[utoipa::path(
     post, path = "/system/menu/save",

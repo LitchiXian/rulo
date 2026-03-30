@@ -1,14 +1,14 @@
 // 对应后端 SysRole
 export interface SysRole {
-  id: number
+  id: string
   role_name: string
   role_key: string
   is_super: boolean
   is_active: boolean
   is_deleted: boolean
-  create_id: number
+  create_id: string
   create_time: string
-  update_id: number
+  update_id: string
   update_time: string
   remark: string | null
 }
@@ -20,7 +20,7 @@ export interface SysRoleSaveDto {
 }
 
 export interface SysRoleUpdateDto {
-  id: number
+  id: string
   role_name?: string
   role_key?: string
   is_active?: boolean
@@ -38,11 +38,11 @@ export interface SysRoleListDto {
 }
 
 export interface BindMenusDto {
-  role_id: number
-  menu_ids: number[]
+  role_id: string
+  menu_ids: string[]
 }
 
 export interface BindPermsDto {
-  role_id: number
-  perm_ids: number[]
+  role_id: string
+  perm_ids: string[]
 }

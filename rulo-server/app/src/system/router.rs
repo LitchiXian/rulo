@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{Router, middleware as axum_mw};
-use rulo_common::state::AppState;
+use common::state::AppState;
 
 use crate::middleware::rate_limit;
 use crate::system::{audit, auth, file, menu, monitor, permission, role, user};

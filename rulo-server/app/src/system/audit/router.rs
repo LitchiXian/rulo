@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{Router, routing::get};
-use rulo_common::state::AppState;
+use common::state::AppState;
 
 use super::handler;
 

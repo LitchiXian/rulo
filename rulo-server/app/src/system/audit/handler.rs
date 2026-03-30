@@ -1,15 +1,15 @@
 use std::sync::Arc;
 
 use axum::extract::{Query, State};
-use rulo_common::{
+use common::{
     model::PageResult,
     result::R,
 };
-use rulo_macro::perm;
+use macros::perm;
 
 use super::model::*;
 use super::service;
-use rulo_common::state::AppState;
+use common::state::AppState;
 
 #[utoipa::path(
     get, path = "/system/audit/list",

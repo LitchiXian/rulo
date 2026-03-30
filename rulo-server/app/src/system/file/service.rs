@@ -1,4 +1,4 @@
-use rulo_common::{
+use common::{
     config::StorageConfig,
     error::AppError,
     result::{R, success},

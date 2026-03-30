@@ -1,15 +1,18 @@
+use crate::util::serde_util;
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 use validator::Validate;
 
 #[derive(Debug, Deserialize, ToSchema, IntoParams, Validate)]
 pub struct IdDto {
+    #[serde(deserialize_with = "serde_util::i64_str::deserialize")]
     pub id: i64,
 }
 
 #[derive(Debug, Deserialize, ToSchema, Validate)]
 pub struct IdsDto {
     #[validate(length(min = 1, message = "ID 列表不能为空"))]
+    #[serde(deserialize_with = "serde_util::vec_i64_str::deserialize")]
     pub ids: Vec<i64>,
 }
 

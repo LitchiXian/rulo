@@ -5,8 +5,8 @@ use axum::{
     extract::State,
     response::{IntoResponse, Response},
 };
-use rulo_common::{error::AppError, result::R, state::AppState};
-use rulo_macro::perm;
+use common::{error::AppError, result::R, state::AppState};
+use macros::perm;
 
 use crate::ai::chat::{
     model::{ChatRequest, ChatResponse},
@@ -27,7 +27,7 @@ pub async fn chat_handler(
     Json(req): Json<ChatRequest>,
 ) -> R<ChatResponse> {
     let content = service::chat(req.messages, &state.ai_config).await?;
-    rulo_common::result::success(ChatResponse { content })
+    common::result::success(ChatResponse { content })
 }
 
 #[utoipa::path(

@@ -6,7 +6,7 @@ use crate::system::{
     },
 };
 use deadpool_redis::Pool;
-use rulo_common::{
+use common::{
     config::{JwtConfig, StorageConfig},
     constant::redis_constant,
     error::AppError,

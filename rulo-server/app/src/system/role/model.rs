@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use common::util::serde_util;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use utoipa::{IntoParams, ToSchema};
@@ -6,14 +7,17 @@ use validator::Validate;
 
 #[derive(Serialize, FromRow, ToSchema)]
 pub struct SysRole {
+    #[serde(serialize_with = "serde_util::i64_str::serialize")]
     pub id: i64,
     pub role_name: String,
     pub role_key: String,
     pub is_super: bool,
     pub is_active: bool,
     pub is_deleted: bool,
+    #[serde(serialize_with = "serde_util::i64_str::serialize")]
     pub create_id: i64,
     pub create_time: DateTime<Utc>,
+    #[serde(serialize_with = "serde_util::i64_str::serialize")]
     pub update_id: i64,
     pub update_time: DateTime<Utc>,
     pub remark: Option<String>,
@@ -21,7 +25,7 @@ pub struct SysRole {
 
 impl SysRole {
     pub fn new_role_from_save_dto(dto: &SysRoleSaveDto) -> Self {
-        let role_id: i64 = rulo_common::util::id_util::next_id();
+        let role_id: i64 = common::util::id_util::next_id();
 
         let now_time = Utc::now();
 
@@ -53,6 +57,7 @@ pub struct SysRoleSaveDto {
 
 #[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct SysRoleUpdateDto {
+    #[serde(deserialize_with = "serde_util::i64_str::deserialize")]
     pub id: i64,
     #[validate(length(min = 1, max = 30, message = "角色名称长度必须在 1-30 之间"))]
     pub role_name: Option<String>,
@@ -65,13 +70,17 @@ pub struct SysRoleUpdateDto {
 
 #[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct BindMenusDto {
+    #[serde(deserialize_with = "serde_util::i64_str::deserialize")]
     pub role_id: i64,
+    #[serde(deserialize_with = "serde_util::vec_i64_str::deserialize")]
     pub menu_ids: Vec<i64>,
 }
 
 #[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct BindPermsDto {
+    #[serde(deserialize_with = "serde_util::i64_str::deserialize")]
     pub role_id: i64,
+    #[serde(deserialize_with = "serde_util::vec_i64_str::deserialize")]
     pub perm_ids: Vec<i64>,
 }
 

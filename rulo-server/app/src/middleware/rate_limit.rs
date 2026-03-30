@@ -10,7 +10,7 @@ use axum::{
 };
 use deadpool_redis::Pool;
 use redis::AsyncCommands;
-use rulo_common::{constant::redis_constant, error::AppError, state::AppState};
+use common::{constant::redis_constant, error::AppError, state::AppState};
 
 use crate::system::auth::model::UserId;
 

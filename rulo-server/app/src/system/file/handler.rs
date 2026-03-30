@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::extract::State;
 use axum_extra::extract::Multipart;
-use rulo_common::{error::AppError, result::R, state::AppState};
+use common::{error::AppError, result::R, state::AppState};
 
 use crate::system::file::service;
 

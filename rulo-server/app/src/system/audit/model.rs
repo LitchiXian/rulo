@@ -1,11 +1,14 @@
 use chrono::{DateTime, Utc};
+use common::util::serde_util;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use utoipa::{IntoParams, ToSchema};
 
 #[derive(Debug, Serialize, Deserialize, FromRow, ToSchema)]
 pub struct SysAuditLog {
+    #[serde(with = "serde_util::i64_str")]
     pub id: i64,
+    #[serde(with = "serde_util::opt_i64_str")]
     pub user_id: Option<i64>,
     pub user_name: Option<String>,
     pub method: String,

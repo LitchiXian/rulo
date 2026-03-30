@@ -3,7 +3,7 @@ use std::sync::Arc;
 use axum::{
     extract::{Query, State},
 };
-use rulo_common::{
+use common::{
     extractor::ValidatedJson,
     model::{IdDto, IdsDto, PageResult},
     result::R,
@@ -12,8 +12,8 @@ use rulo_common::{
 use crate::system::permission::service;
 
 use super::model::*;
-use rulo_common::state::AppState;
-use rulo_macro::perm;
+use common::state::AppState;
+use macros::perm;
 
 #[utoipa::path(
     post, path = "/system/permission/save",
@@ -67,10 +67,10 @@ async fn clear_all_role_user_cache(redis_pool: &deadpool_redis::Pool, db_pool: &
     let user_ids = sqlx::query_scalar!("SELECT DISTINCT user_id FROM sys_user_role").fetch_all(db_pool).await;
     if let Ok(ids) = user_ids {
         for uid in ids {
-            let perms_key = rulo_common::constant::redis_constant::USER_PERMS.to_owned() + &uid.to_string();
-            let menus_key = rulo_common::constant::redis_constant::USER_MENUS.to_owned() + &uid.to_string();
-            let _ = rulo_common::util::redis_util::del(redis_pool, &perms_key).await;
-            let _ = rulo_common::util::redis_util::del(redis_pool, &menus_key).await;
+            let perms_key = common::constant::redis_constant::USER_PERMS.to_owned() + &uid.to_string();
+            let menus_key = common::constant::redis_constant::USER_MENUS.to_owned() + &uid.to_string();
+            let _ = common::util::redis_util::del(redis_pool, &perms_key).await;
+            let _ = common::util::redis_util::del(redis_pool, &menus_key).await;
         }
     }
 }

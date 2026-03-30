@@ -1,6 +1,6 @@
 export interface SysAuditLog {
-  id: number
-  user_id: number | null
+  id: string
+  user_id: string | null
   user_name: string | null
   method: string
   path: string

@@ -3,7 +3,7 @@ use futures_util::StreamExt;
 use reqwest::Client;
 
 use crate::ai::chat::model::{ChatMessage, ZhipuRequest, ZhipuResponse};
-use rulo_common::{config::AiConfig, error::AppError};
+use common::{config::AiConfig, error::AppError};
 
 /// 非流式调用智谱 API
 pub async fn chat(messages: Vec<ChatMessage>, ai_config: &AiConfig) -> Result<String, AppError> {

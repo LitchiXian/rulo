@@ -8,7 +8,7 @@ use axum::{
     middleware::{self, Next},
     response::{IntoResponse, Response},
 };
-use rulo_common::{
+use common::{
     constant::redis_constant,
     error::AppError,
     model::PermCodes,
@@ -35,10 +35,7 @@ pub fn routes(state: Arc<AppState>) -> Router<Arc<AppState>> {
     // public API（登录/注册加 IP 限流）
     let public_routes = Router::new()
         .merge(swagger::router::routes())
-        .nest(
-            "/system",
-            system::router::public_routes(state.clone()),
-        );
+        .nest("/system", system::router::public_routes(state.clone()));
 
     // protected API: need authorization
     let protected_routes = Router::new()
