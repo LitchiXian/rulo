@@ -1,16 +1,15 @@
-use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Instant;
 
 use axum::{
     body::{self, Body},
-    extract::{ConnectInfo, State},
+    extract::State,
     http::Request,
     middleware::Next,
     response::Response,
 };
 use common::state::AppState;
-use common::util::id_util;
+use common::util::{id_util, ip_util};
 
 use crate::system::auth::model::UserId;
 
@@ -85,22 +84,7 @@ pub async fn audit_log(
     };
 
     // 获取客户端 IP（优先代理头，回退到连接地址）
-    let ip = req
-        .headers()
-        .get("x-forwarded-for")
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.split(',').next().unwrap_or("").trim().to_string())
-        .or_else(|| {
-            req.headers()
-                .get("x-real-ip")
-                .and_then(|v| v.to_str().ok())
-                .map(|s| s.to_string())
-        })
-        .or_else(|| {
-            req.extensions()
-                .get::<ConnectInfo<SocketAddr>>()
-                .map(|ci| ci.0.ip().to_string())
-        });
+    let ip = ip_util::extract_client_ip(&req);
 
     let start = Instant::now();
     let response = next.run(req).await;

@@ -1,52 +1,58 @@
-use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use axum::{
     body::Body,
-    extract::{ConnectInfo, State},
+    extract::State,
     http::Request,
     middleware::Next,
     response::{IntoResponse, Response},
 };
 use deadpool_redis::Pool;
 use redis::AsyncCommands;
-use common::{constant::redis_constant, error::AppError, state::AppState};
+use common::{constant::redis_constant, error::AppError, state::AppState, util::ip_util};
 
 use crate::system::auth::model::UserId;
 
-/// 从请求中提取客户端 IP
-fn extract_ip(req: &Request<Body>) -> String {
-    req.headers()
-        .get("x-forwarded-for")
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.split(',').next().unwrap_or("").trim().to_string())
-        .or_else(|| {
-            req.headers()
-                .get("x-real-ip")
-                .and_then(|v| v.to_str().ok())
-                .map(|s| s.to_string())
-        })
-        .or_else(|| {
-            req.extensions()
-                .get::<ConnectInfo<SocketAddr>>()
-                .map(|ci| ci.0.ip().to_string())
-        })
-        .unwrap_or_else(|| "unknown".to_string())
+fn now_millis() -> f64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as f64
 }
 
-/// Redis 固定窗口计数器：INCR key，首次设置 60s 过期
+// Redis 滑动窗口限流：基于 Sorted Set
+// - member = 当前时间戳（毫秒），score = 同一时间戳
+// - ZREMRANGEBYSCORE 清除窗口外记录，ZCARD 统计窗口内请求数
 async fn check_rate_limit(pool: &Pool, key: &str, max_requests: u64) -> Result<(), AppError> {
+    let now = now_millis();
+    let window_start = now - 60_000.0; // 60 秒滑动窗口
+
     let mut conn = pool.get().await?;
-    let count: u64 = conn.incr(key, 1u64).await?;
-    if count == 1 {
-        // 首次请求，设置 60 秒窗口
-        let _: () = conn.expire(key, 60).await?;
-    }
-    if count > max_requests {
+
+    // 清除窗口外的旧记录
+    let _: () = conn.zrembyscore(key, f64::NEG_INFINITY, window_start).await?;
+
+    // 统计窗口内请求数
+    let count: u64 = conn.zcard(key).await?;
+
+    if count >= max_requests {
         return Err(AppError::TooManyRequests(
             "请求过于频繁，请稍后再试".to_string(),
         ));
     }
+
+    // 添加当前请求记录（member 用纳秒避免同毫秒冲突）
+    let member = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos()
+        .to_string();
+    let _: () = conn.zadd(key, &member, now).await?;
+
+    // 设置 key 过期，防止冷 key 堆积
+    let _: () = conn.expire(key, 65).await?;
+
     Ok(())
 }
 
@@ -56,7 +62,7 @@ pub async fn login_rate_limit(
     req: Request<Body>,
     next: Next,
 ) -> Response {
-    let ip = extract_ip(&req);
+    let ip = ip_util::extract_client_ip(&req).unwrap_or_else(|| "unknown".into());
     let key = format!("{}login:{}", redis_constant::RATE_LIMIT, ip);
     let max = state.rate_limit_config.login_per_minute;
 
@@ -73,7 +79,6 @@ pub async fn ai_rate_limit(
     req: Request<Body>,
     next: Next,
 ) -> Response {
-    // 先按 IP 兜底（用户 ID 可能尚未注入）
     let user_key = req
         .extensions()
         .get::<UserId>()
@@ -82,7 +87,7 @@ pub async fn ai_rate_limit(
     let key = match user_key {
         Some(uk) => format!("{}ai:{}", redis_constant::RATE_LIMIT, uk),
         None => {
-            let ip = extract_ip(&req);
+            let ip = ip_util::extract_client_ip(&req).unwrap_or_else(|| "unknown".into());
             format!("{}ai:ip:{}", redis_constant::RATE_LIMIT, ip)
         }
     };
@@ -101,7 +106,7 @@ pub async fn global_rate_limit(
     req: Request<Body>,
     next: Next,
 ) -> Response {
-    let ip = extract_ip(&req);
+    let ip = ip_util::extract_client_ip(&req).unwrap_or_else(|| "unknown".into());
     let key = format!("{}global:{}", redis_constant::RATE_LIMIT, ip);
     let max = state.rate_limit_config.global_per_minute;
 
