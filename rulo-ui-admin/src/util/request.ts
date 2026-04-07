@@ -3,7 +3,7 @@ import { ElMessage } from 'element-plus'
 
 // 从 pinia-plugin-persistedstate 持久化的 localStorage 中读取 token
 // key 与 store/user.ts 中 persist.key 保持一致
-function getToken(): string {
+export function getToken(): string {
   try {
     const raw = localStorage.getItem('admin-user')
     if (!raw) return ''

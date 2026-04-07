@@ -33,8 +33,8 @@ pub async fn upload(
 
     // 生成唯一 key：按日期分目录 + UUID + 扩展名
     let ext = file_name
-        .rsplit('.')
-        .next()
+        .rsplit_once('.')
+        .map(|(_, ext)| ext)
         .unwrap_or("bin");
     let date_prefix = chrono::Utc::now().format("%Y/%m/%d");
     let key = format!("{}/{}.{}", date_prefix, Uuid::new_v4(), ext);

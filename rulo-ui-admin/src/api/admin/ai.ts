@@ -1,4 +1,4 @@
-import request from '@/util/request'
+import request, { getToken } from '@/util/request'
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system'
@@ -87,12 +87,4 @@ export async function chatStream(
   onDone()
 }
 
-function getToken(): string {
-  try {
-    const raw = localStorage.getItem('admin-user')
-    if (!raw) return ''
-    return JSON.parse(raw).token || ''
-  } catch {
-    return ''
-  }
-}
+

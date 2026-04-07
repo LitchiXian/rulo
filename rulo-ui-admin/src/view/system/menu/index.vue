@@ -180,27 +180,34 @@ const openEdit = (row: SysMenu) => {
   nextTick(() => formRef.value?.clearValidate())
 }
 
+const formSaving = ref(false)
+
 const handleSave = async () => {
   await formRef.value?.validate()
-  if (isEdit.value) {
-    const dto: SysMenuUpdateDto = {
-      id: formData.value.id!,
-      name: formData.value.name || undefined,
-      path: formData.value.path,
-      component: formData.value.component,
-      icon: formData.value.icon,
-      sort_order: formData.value.sort_order,
-      is_hidden: formData.value.is_hidden,
-      remark: formData.value.remark,
+  formSaving.value = true
+  try {
+    if (isEdit.value) {
+      const dto: SysMenuUpdateDto = {
+        id: formData.value.id!,
+        name: formData.value.name || undefined,
+        path: formData.value.path,
+        component: formData.value.component,
+        icon: formData.value.icon,
+        sort_order: formData.value.sort_order,
+        is_hidden: formData.value.is_hidden,
+        remark: formData.value.remark,
+      }
+      await menuApi.update(dto)
+    } else {
+      const saveDto = { ...formData.value } as SysMenuSaveDto
+      if (!saveDto.auto_perm_code) delete saveDto.auto_perm_code
+      await menuApi.save(saveDto)
     }
-    await menuApi.update(dto)
-  } else {
-    const saveDto = { ...formData.value } as SysMenuSaveDto
-    if (!saveDto.auto_perm_code) delete saveDto.auto_perm_code
-    await menuApi.save(saveDto)
+    dialogVisible.value = false
+    fetchList()
+  } finally {
+    formSaving.value = false
   }
-  dialogVisible.value = false
-  fetchList()
 }
 
 // ---- 删除 ----
@@ -287,7 +294,7 @@ onMounted(fetchList)
     <el-dialog :title="isEdit ? '编辑菜单' : '新增菜单'" v-model="dialogVisible" width="560px">
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="90px">
         <el-form-item label="菜单名" prop="name">
-          <el-input v-model="formData.name" placeholder="请输入菜单名" />
+          <el-input v-model="formData.name" placeholder="请输入菜单名" maxlength="50" />
         </el-form-item>
         <el-form-item label="类型">
           <el-radio-group v-model="formData.menu_type">
@@ -296,7 +303,7 @@ onMounted(fetchList)
           </el-radio-group>
         </el-form-item>
         <el-form-item v-if="!isEdit && formData.menu_type === 2" label="菜单权限码" prop="auto_perm_code">
-          <el-input v-model="formData.auto_perm_code" placeholder="如 sys:user:menu，留空则不自动关联菜单权限" clearable />
+          <el-input v-model="formData.auto_perm_code" placeholder="如 sys:user:menu，留空则不自动关联菜单权限" clearable maxlength="100" />
         </el-form-item>
         <el-form-item label="父级菜单">
           <el-tree-select
@@ -308,13 +315,13 @@ onMounted(fetchList)
           />
         </el-form-item>
         <el-form-item label="路由路径" prop="path">
-          <el-input v-model="formData.path" placeholder="如 /system/user" />
+          <el-input v-model="formData.path" placeholder="如 /system/user" maxlength="200" />
         </el-form-item>
         <el-form-item label="组件路径" v-if="formData.menu_type === 2" prop="component">
-          <el-input v-model="formData.component" placeholder="如 view/system/user/index.vue" />
+          <el-input v-model="formData.component" placeholder="如 view/system/user/index.vue" maxlength="200" />
         </el-form-item>
         <el-form-item label="图标">
-          <el-input v-model="formData.icon" placeholder="Element Plus 图标名" />
+          <el-input v-model="formData.icon" placeholder="Element Plus 图标名" maxlength="50" />
         </el-form-item>
         <el-form-item label="排序">
           <el-input-number v-model="formData.sort_order" :min="0" />
@@ -323,12 +330,12 @@ onMounted(fetchList)
           <el-switch v-model="formData.is_hidden" />
         </el-form-item>
         <el-form-item label="备注">
-          <el-input v-model="formData.remark" type="textarea" />
+          <el-input v-model="formData.remark" type="textarea" maxlength="200" show-word-limit />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSave">确定</el-button>
+        <el-button type="primary" :loading="formSaving" @click="handleSave">确定</el-button>
       </template>
     </el-dialog>
   </div>

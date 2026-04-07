@@ -47,14 +47,44 @@ async fn main() {
     let listener =
         tokio::net::TcpListener::bind(format!("{}:{}", cfg.server.ipaddr, cfg.server.port))
             .await
-            .unwrap();
+            .expect("failed to bind TcpListener, port may already be in use");
 
-    info!("listener on {}", listener.local_addr().unwrap());
+    info!(
+        "listener on {}",
+        listener.local_addr().expect("failed to get local_addr")
+    );
 
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<SocketAddr>(),
     )
+    .with_graceful_shutdown(shutdown_signal())
     .await
-    .unwrap();
+    .expect("axum server exited with error");
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler")
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install SIGTERM handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    info!("shutdown signal received, stopping server gracefully");
 }

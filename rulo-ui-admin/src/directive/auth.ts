@@ -21,9 +21,7 @@ function check(el: HTMLElement, value: string | string[]) {
   const userStore = useUserStore()
   const codes = Array.isArray(value) ? value : [value]
   const hasAuth = codes.some((code) => userStore.hasPerm(code))
-  if (!hasAuth) {
-    el.parentNode?.removeChild(el)
-  }
+  el.style.display = hasAuth ? '' : 'none'
 }
 
 export default auth

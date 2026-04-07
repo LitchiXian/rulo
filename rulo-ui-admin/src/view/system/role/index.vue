@@ -83,22 +83,29 @@ const openEdit = (row: SysRole) => {
   nextTick(() => formRef.value?.clearValidate())
 }
 
+const formSaving = ref(false)
+
 const handleSave = async () => {
   await formRef.value?.validate()
-  if (isEdit.value) {
-    const dto: SysRoleUpdateDto = {
-      id: formData.value.id!,
-      role_name: formData.value.role_name || undefined,
-      role_key: formData.value.role_key || undefined,
-      is_active: formData.value.is_active,
-      remark: formData.value.remark,
+  formSaving.value = true
+  try {
+    if (isEdit.value) {
+      const dto: SysRoleUpdateDto = {
+        id: formData.value.id!,
+        role_name: formData.value.role_name || undefined,
+        role_key: formData.value.role_key || undefined,
+        is_active: formData.value.is_active,
+        remark: formData.value.remark,
+      }
+      await roleApi.update(dto)
+    } else {
+      await roleApi.save({ role_name: formData.value.role_name, role_key: formData.value.role_key, remark: formData.value.remark })
     }
-    await roleApi.update(dto)
-  } else {
-    await roleApi.save({ role_name: formData.value.role_name, role_key: formData.value.role_key, remark: formData.value.remark })
+    dialogVisible.value = false
+    fetchList()
+  } finally {
+    formSaving.value = false
   }
-  dialogVisible.value = false
-  fetchList()
 }
 
 // ---- 删除 ----
@@ -116,12 +123,12 @@ const currentRole = ref<SysRole | null>(null)
 const menuSaving = ref(false)
 
 interface MenuTreeNode {
-  id: number
+  id: string
   label: string
   children?: MenuTreeNode[]
 }
 
-const buildMenuTree = (menus: SysMenu[], parentId = 0): MenuTreeNode[] => {
+const buildMenuTree = (menus: SysMenu[], parentId: string = "0"): MenuTreeNode[] => {
   return menus
     .filter(m => m.parent_id === parentId)
     .sort((a, b) => a.sort_order - b.sort_order)
@@ -146,7 +153,8 @@ const openMenuDialog = async (row: SysRole) => {
     menuDialogVisible.value = true
     await nextTick()
     // 只勾选叶子节点，避免父节点被自动全选
-    const leafIds = checkedIds.filter(id => {
+    const strIds = checkedIds.map(String)
+    const leafIds = strIds.filter(id => {
       return !menus.some(m => m.parent_id === id)
     })
     menuTreeRef.value?.setCheckedKeys(leafIds)
@@ -157,8 +165,8 @@ const handleMenuSave = async () => {
   if (!currentRole.value) return
   menuSaving.value = true
   try {
-    const checked = menuTreeRef.value?.getCheckedKeys() as number[]
-    const halfChecked = menuTreeRef.value?.getHalfCheckedKeys() as number[]
+    const checked = menuTreeRef.value?.getCheckedKeys() as string[]
+    const halfChecked = menuTreeRef.value?.getHalfCheckedKeys() as string[]
     const menu_ids = [...checked, ...halfChecked]
     await roleApi.updateBindMenus({ role_id: currentRole.value.id, menu_ids })
     ElMessage.success('分配菜单成功')
@@ -171,7 +179,7 @@ const handleMenuSave = async () => {
 // ---- 分配权限弹窗 ----
 const permDialogVisible = ref(false)
 const allPerms = ref<SysPermission[]>([])
-const checkedPermIds = ref<number[]>([])
+const checkedPermIds = ref<string[]>([])
 const permSaving = ref(false)
 const permSearch = ref('')
 
@@ -228,7 +236,7 @@ const openPermDialog = async (row: SysRole) => {
       roleApi.listPerms(row.id),
     ])
     allPerms.value = perms
-    checkedPermIds.value = checkedIds
+    checkedPermIds.value = checkedIds.map(String)
     permDialogVisible.value = true
   } catch { /* 错误已由拦截器提示 */ }
 }
@@ -319,21 +327,21 @@ onMounted(fetchList)
     <el-dialog :title="isEdit ? '编辑角色' : '新增角色'" v-model="dialogVisible" width="500px">
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="90px">
         <el-form-item label="角色名" prop="role_name">
-          <el-input v-model="formData.role_name" placeholder="请输入角色名" />
+          <el-input v-model="formData.role_name" placeholder="请输入角色名" maxlength="50" />
         </el-form-item>
         <el-form-item label="角色标识" prop="role_key">
-          <el-input v-model="formData.role_key" placeholder="如 admin / editor" :disabled="isEdit" />
+          <el-input v-model="formData.role_key" placeholder="如 admin / editor" :disabled="isEdit" maxlength="50" />
         </el-form-item>
         <el-form-item label="状态" v-if="isEdit">
           <el-switch v-model="formData.is_active" />
         </el-form-item>
         <el-form-item label="备注">
-          <el-input v-model="formData.remark" type="textarea" />
+          <el-input v-model="formData.remark" type="textarea" maxlength="200" show-word-limit />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSave">确定</el-button>
+        <el-button type="primary" :loading="formSaving" @click="handleSave">确定</el-button>
       </template>
     </el-dialog>
 

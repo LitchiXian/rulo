@@ -86,21 +86,28 @@ const openEdit = (row: SysPermission) => {
   nextTick(() => formRef.value?.clearValidate())
 }
 
+const formSaving = ref(false)
+
 const handleSave = async () => {
   await formRef.value?.validate()
-  if (isEdit.value) {
-    const dto: SysPermissionUpdateDto = {
-      id: formData.value.id!,
-      perm_name: formData.value.perm_name || undefined,
-      perm_type: formData.value.perm_type,
-      remark: formData.value.remark,
+  formSaving.value = true
+  try {
+    if (isEdit.value) {
+      const dto: SysPermissionUpdateDto = {
+        id: formData.value.id!,
+        perm_name: formData.value.perm_name || undefined,
+        perm_type: formData.value.perm_type,
+        remark: formData.value.remark,
+      }
+      await permissionApi.update(dto)
+    } else {
+      await permissionApi.save(formData.value as SysPermissionSaveDto)
     }
-    await permissionApi.update(dto)
-  } else {
-    await permissionApi.save(formData.value as SysPermissionSaveDto)
+    dialogVisible.value = false
+    fetchList()
+  } finally {
+    formSaving.value = false
   }
-  dialogVisible.value = false
-  fetchList()
 }
 
 // ---- 删除 ----
@@ -180,10 +187,10 @@ onMounted(fetchList)
     <el-dialog :title="isEdit ? '编辑权限' : '新增权限'" v-model="dialogVisible" width="500px">
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="90px">
         <el-form-item label="权限编码" prop="perm_code">
-          <el-input v-model="formData.perm_code" placeholder="如 sys:user:list" :disabled="isEdit" />
+          <el-input v-model="formData.perm_code" placeholder="如 sys:user:list" :disabled="isEdit" maxlength="100" />
         </el-form-item>
         <el-form-item label="权限名" prop="perm_name">
-          <el-input v-model="formData.perm_name" placeholder="请输入权限名" />
+          <el-input v-model="formData.perm_name" placeholder="请输入权限名" maxlength="50" />
         </el-form-item>
         <el-form-item label="类型" required>
           <el-radio-group v-model="formData.perm_type">
@@ -192,12 +199,12 @@ onMounted(fetchList)
           </el-radio-group>
         </el-form-item>
         <el-form-item label="备注">
-          <el-input v-model="formData.remark" type="textarea" />
+          <el-input v-model="formData.remark" type="textarea" maxlength="200" show-word-limit />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSave">确定</el-button>
+        <el-button type="primary" :loading="formSaving" @click="handleSave">确定</el-button>
       </template>
     </el-dialog>
   </div>

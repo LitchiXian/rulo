@@ -23,6 +23,10 @@ const passwordForm = reactive({
   confirmPassword: '',
 })
 const passwordFormRef = ref<FormInstance>()
+const basicFormRef = ref<FormInstance>()
+const basicRules: FormRules = {
+  email: [{ type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }],
+}
 const passwordRules: FormRules = {
   password: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
@@ -65,6 +69,7 @@ const readFileAsDataUrl = (file: File) => new Promise<string>((resolve, reject) 
 
 const handleBasicSave = async () => {
   if (!currentUser.value) return
+  await basicFormRef.value?.validate()
   basicLoading.value = true
   try {
     await userApi.update({
@@ -181,18 +186,18 @@ onMounted(async () => {
               <span>基础信息</span>
             </div>
           </template>
-          <el-form label-width="88px" class="profile-form">
+          <el-form ref="basicFormRef" :model="basicForm" :rules="basicRules" label-width="88px" class="profile-form">
             <el-form-item label="用户名">
               <el-input :model-value="currentUser?.user_name || ''" disabled />
             </el-form-item>
             <el-form-item label="昵称">
-              <el-input v-model="basicForm.nick_name" placeholder="请输入昵称" />
+              <el-input v-model="basicForm.nick_name" placeholder="请输入昵称" maxlength="50" />
             </el-form-item>
-            <el-form-item label="邮箱">
-              <el-input v-model="basicForm.email" placeholder="请输入邮箱" />
+            <el-form-item label="邮箱" prop="email">
+              <el-input v-model="basicForm.email" placeholder="请输入邮箱" maxlength="100" />
             </el-form-item>
             <el-form-item label="备注">
-              <el-input v-model="basicForm.remark" type="textarea" :rows="4" placeholder="请输入备注" />
+              <el-input v-model="basicForm.remark" type="textarea" :rows="4" placeholder="请输入备注" maxlength="200" show-word-limit />
             </el-form-item>
             <el-form-item>
               <el-button type="primary" :loading="basicLoading" @click="handleBasicSave">保存基础信息</el-button>

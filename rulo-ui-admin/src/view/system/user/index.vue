@@ -78,6 +78,7 @@ const formRules: FormRules = {
     },
     trigger: 'blur',
   }],
+  email: [{ type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }],
 }
 
 const openAdd = () => {
@@ -101,22 +102,29 @@ const openEdit = (row: UserInfo) => {
   nextTick(() => formRef.value?.clearValidate())
 }
 
+const formSaving = ref(false)
+
 const handleSave = async () => {
   await formRef.value?.validate()
-  if (isEdit.value) {
-    const dto: SysUserUpdateDto = {
-      id: formData.value.id!,
-      nick_name: formData.value.nick_name || undefined,
-      password: formData.value.password || undefined,
-      email: formData.value.email,
-      remark: formData.value.remark,
+  formSaving.value = true
+  try {
+    if (isEdit.value) {
+      const dto: SysUserUpdateDto = {
+        id: formData.value.id!,
+        nick_name: formData.value.nick_name || undefined,
+        password: formData.value.password || undefined,
+        email: formData.value.email,
+        remark: formData.value.remark,
+      }
+      await userApi.update(dto)
+    } else {
+      await userApi.save(formData.value as SysUserSaveDto)
     }
-    await userApi.update(dto)
-  } else {
-    await userApi.save(formData.value as SysUserSaveDto)
+    dialogVisible.value = false
+    fetchList()
+  } finally {
+    formSaving.value = false
   }
-  dialogVisible.value = false
-  fetchList()
 }
 
 // ---- 删除 ----
@@ -129,7 +137,7 @@ const handleDelete = async (row: UserInfo) => {
 // ---- 分配角色弹窗 ----
 const roleDialogVisible = ref(false)
 const allRoles = ref<SysRole[]>([])
-const checkedRoleIds = ref<number[]>([])
+const checkedRoleIds = ref<string[]>([])
 const currentUser = ref<UserInfo | null>(null)
 const roleSaving = ref(false)
 
@@ -141,7 +149,7 @@ const openRoleDialog = async (row: UserInfo) => {
     userApi.listRoles(row.id),
   ])
   allRoles.value = roles
-  checkedRoleIds.value = checkedIds
+  checkedRoleIds.value = checkedIds.map(String)
 }
 
 const handleRoleSave = async () => {
@@ -235,25 +243,25 @@ onMounted(fetchList)
     <el-dialog :title="isEdit ? '编辑用户' : '新增用户'" v-model="dialogVisible" width="500px">
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="80px">
         <el-form-item label="用户名" prop="user_name">
-          <el-input v-model="formData.user_name" placeholder="请输入用户名" :disabled="isEdit" />
+          <el-input v-model="formData.user_name" placeholder="请输入用户名" :disabled="isEdit" maxlength="50" />
         </el-form-item>
         <el-form-item label="昵称" prop="nick_name">
-          <el-input v-model="formData.nick_name" placeholder="请输入昵称" />
+          <el-input v-model="formData.nick_name" placeholder="请输入昵称" maxlength="50" />
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input v-model="formData.password" type="password" show-password
-            :placeholder="isEdit ? '不修改请留空' : '请输入密码'" />
+            :placeholder="isEdit ? '不修改请留空' : '请输入密码'" maxlength="30" />
         </el-form-item>
-        <el-form-item label="邮箱">
-          <el-input v-model="formData.email" placeholder="请输入邮箱" />
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="formData.email" placeholder="请输入邮箱" maxlength="100" />
         </el-form-item>
         <el-form-item label="备注">
-          <el-input v-model="formData.remark" type="textarea" />
+          <el-input v-model="formData.remark" type="textarea" maxlength="200" show-word-limit />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSave">确定</el-button>
+        <el-button type="primary" :loading="formSaving" @click="handleSave">确定</el-button>
       </template>
     </el-dialog>
 
