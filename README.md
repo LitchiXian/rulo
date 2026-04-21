@@ -9,11 +9,10 @@
 
 ## Overview
 
-Rulo is built around three active parts:
+Rulo is built around two active parts:
 
-- `rulo-server`: Rust backend based on Axum, SQLx, Redis, JWT, and tracing
-- `rulo-ui-admin`: Vue 3 + Vite admin panel for system management and monitoring
-- `rulo-ui-client`: Vue 3 client-facing frontend
+- `rulo-api`: Rust backend based on Axum, SQLx, Redis, JWT, and tracing
+- `rulo-admin`: Vue 3 + Vite admin panel for system management and monitoring
 
 ## Current Features
 
@@ -46,22 +45,15 @@ Rulo is built around three active parts:
 - Light / dark / system theme modes
 - Runtime API config and development proxy support
 
-### Client Frontend
-
-- Vue 3 + Element Plus application shell
-- Auth-aware routing structure
-- Markdown rendering support
-- Shared runtime config pattern with the admin frontend
-
 ## Repository Structure
 
 ```text
 .
-├── rulo-server/        # Rust backend workspace
-│   ├── rulo-app/       # Axum application crate
-│   └── rulo-common/    # Shared types, errors, utils, state
-├── rulo-ui-admin/      # Admin frontend (Vue 3 + Vite)
-├── rulo-ui-client/     # Client frontend (Vue 3 + Vite)
+├── rulo-api/           # Rust backend workspace
+│   ├── app/            # Axum application crate
+│   └── common/         # Shared types, errors, utils, state
+├── rulo-admin/         # Admin frontend (Vue 3 + Vite)
+├── bin/                # Build & deployment scripts (Docker / K3s)
 ├── doc/                # Project notes and roadmap
 └── sql/                # SQL scripts / historical SQL files
 ```
@@ -100,7 +92,7 @@ Rulo is built around three active parts:
 
 ## 1. Start the backend
 
-Backend config is loaded from `rulo-server/config/default.toml`.
+Backend config is loaded from `rulo-api/config/default.toml`.
 The default server port is `13000`.
 
 Set your database connection string first:
@@ -112,7 +104,7 @@ export DATABASE_URL=postgres://username:password@127.0.0.1:5432/your_db
 Then start the backend:
 
 ```bash
-cd rulo-server
+cd rulo-api
 cargo run -p app
 ```
 
@@ -125,21 +117,10 @@ Notes:
 ## 2. Start the admin frontend
 
 The admin frontend runs on port `9999`.
-Its runtime backend target is configured in `rulo-ui-admin/public/config.json`.
+Its runtime backend target is configured in `rulo-admin/public/config.json`.
 
 ```bash
-cd rulo-ui-admin
-npm install
-npm run dev
-```
-
-## 3. Start the client frontend
-
-The client frontend runs on port `8888`.
-Its runtime backend target is configured in `rulo-ui-client/public/config.json`.
-
-```bash
-cd rulo-ui-client
+cd rulo-admin
 npm install
 npm run dev
 ```

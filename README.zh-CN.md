@@ -9,11 +9,10 @@
 
 ## 项目概览
 
-当前主线由三部分组成：
+当前主线由两部分组成：
 
-- `rulo-server`：基于 Axum 的 Rust 后端
-- `rulo-ui-admin`：基于 Vue 3 + Vite 的后台管理端
-- `rulo-ui-client`：基于 Vue 3 + Vite 的客户端前端
+- `rulo-api`：基于 Axum 的 Rust 后端
+- `rulo-admin`：基于 Vue 3 + Vite 的后台管理端
 
 ## 当前已具备的能力
 
@@ -46,22 +45,15 @@
 - 亮色 / 暗色 / 跟随系统三种主题模式
 - 运行时配置与开发代理支持
 
-### 客户端前端
-
-- Vue 3 + Element Plus 应用骨架
-- 登录相关路由结构
-- Markdown 渲染能力
-- 与管理端一致的运行时配置模式
-
 ## 仓库结构
 
 ```text
 .
-├── rulo-server/        # Rust 后端 workspace
-│   ├── rulo-app/       # Axum 应用入口
-│   └── rulo-common/    # 公共类型、错误、工具、共享状态
-├── rulo-ui-admin/      # 管理端前端（Vue 3 + Vite）
-├── rulo-ui-client/     # 客户端前端（Vue 3 + Vite）
+├── rulo-api/           # Rust 后端 workspace
+│   ├── app/            # Axum 应用入口
+│   └── common/         # 公共类型、错误、工具、共享状态
+├── rulo-admin/         # 管理端前端（Vue 3 + Vite）
+├── bin/                # 构建与部署脚本（Docker / K3s）
 ├── doc/                # 项目笔记与路线图
 └── sql/                # SQL 脚本 / 历史 SQL 文件
 ```
@@ -100,7 +92,7 @@
 
 ## 1. 启动后端
 
-后端配置文件位于 `rulo-server/config/default.toml`。
+后端配置文件位于 `rulo-api/config/default.toml`。
 默认服务端口为 `13000`。
 
 先设置数据库连接串：
@@ -112,7 +104,7 @@ export DATABASE_URL=postgres://username:password@127.0.0.1:5432/your_db
 然后启动后端：
 
 ```bash
-cd rulo-server
+cd rulo-api
 cargo run -p app
 ```
 
@@ -125,21 +117,10 @@ cargo run -p app
 ## 2. 启动管理端
 
 管理端默认端口是 `9999`。
-开发环境代理目标配置在 `rulo-ui-admin/public/config.json` 中。
+开发环境代理目标配置在 `rulo-admin/public/config.json` 中。
 
 ```bash
-cd rulo-ui-admin
-npm install
-npm run dev
-```
-
-## 3. 启动客户端
-
-客户端默认端口是 `8888`。
-开发环境代理目标配置在 `rulo-ui-client/public/config.json` 中。
-
-```bash
-cd rulo-ui-client
+cd rulo-admin
 npm install
 npm run dev
 ```

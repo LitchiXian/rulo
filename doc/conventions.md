@@ -122,7 +122,7 @@ pub async fn list_bind_roles(...)   // 绑定查
 
 #### 仅含 id 的 DTO
 
-如果查询参数只有一个 `id` 字段，直接用 `rulo-common` 中的 `IdDto`，不要在各模块重复定义：
+如果查询参数只有一个 `id` 字段，直接用 `common` 中的 `IdDto`，不要在各模块重复定义：
 
 ```rust
 // ✅ 用通用 IdDto
@@ -236,7 +236,7 @@ system/
 
 ### 3.2 返回类型约定
 
-统一使用 `R<T>`（定义在 `rulo-common::result`）：
+统一使用 `R<T>`（定义在 `common::result`）：
 
 ```rust
 pub type R<T> = Result<ApiResult<T>, AppError>;
@@ -655,7 +655,7 @@ Bootstrap 启动时自动检查并创建 bucket。
 | 类型 | 位置 | 特点 |
 |------|------|------|
 | 单元测试 | 各 `.rs` 文件内 `#[cfg(test)] mod tests` | 不需要数据库，纯逻辑验证 |
-| 集成测试 | `rulo-app/tests/*.rs` | 需要 `DATABASE_URL`，自动建临时库 |
+| 集成测试 | `app/tests/*.rs` | 需要 `DATABASE_URL`，自动建临时库 |
 
 ### 9.2 单元测试
 
@@ -688,18 +688,18 @@ mod tests {
 
 | 模块 | 测试内容 | 数量 |
 |------|---------|------|
-| `rulo-common/model.rs` | `normalize_page` 分页边界 | 5 |
-| `rulo-common/util/password_util.rs` | argon2 哈希与验证 | 4 |
-| `rulo-common/util/jwt_util.rs` | JWT 生成、验证、过期、篡改 | 4 |
-| `rulo-common/util/storage_util.rs` | URL 构建与解析 | 6 |
-| `rulo-app/system/auth/service.rs` | `build_menu_tree` 树构建 | 6 |
-| `rulo-app/system/user/model.rs` | User 构造函数 | 2 |
-| `rulo-app/system/role/model.rs` | Role 构造函数 | 2 |
-| `rulo-app/system/permission/model.rs` | Permission 构造函数 | 2 |
+| `common/model.rs` | `normalize_page` 分页边界 | 5 |
+| `common/util/password_util.rs` | argon2 哈希与验证 | 4 |
+| `common/util/jwt_util.rs` | JWT 生成、验证、过期、篡改 | 4 |
+| `common/util/storage_util.rs` | URL 构建与解析 | 6 |
+| `app/system/auth/service.rs` | `build_menu_tree` 树构建 | 6 |
+| `app/system/user/model.rs` | User 构造函数 | 2 |
+| `app/system/role/model.rs` | Role 构造函数 | 2 |
+| `app/system/permission/model.rs` | Permission 构造函数 | 2 |
 
 ### 9.3 集成测试
 
-放在 `rulo-app/tests/` 目录，使用 `#[sqlx::test]` 宏自动管理数据库：
+放在 `app/tests/` 目录，使用 `#[sqlx::test]` 宏自动管理数据库：
 
 ```rust
 // app/tests/role_service_test.rs
@@ -740,7 +740,7 @@ async fn test_role_crud(pool: PgPool) {
 # ALTER USER rulo CREATEDB;
 
 # 运行全部测试（单元 + 集成）
-cd rulo-server
+cd rulo-api
 cargo test
 
 # 仅单元测试（不需数据库）
