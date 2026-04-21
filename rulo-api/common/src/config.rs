@@ -6,6 +6,14 @@ use serde::Deserialize;
 pub struct ServerConfig {
     pub ipaddr: String,
     pub port: u16,
+    /// 全局 HTTP 请求体上限（字节），防恶意大包 DoS，应≥ storage.max_file_size
+    /// 缺省 20MB，旧配置文件不写也能启动
+    #[serde(default = "default_body_limit")]
+    pub body_limit: usize,
+}
+
+fn default_body_limit() -> usize {
+    20 * 1024 * 1024
 }
 
 /// JWT 配置

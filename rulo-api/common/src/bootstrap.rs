@@ -65,7 +65,8 @@ pub async fn connect_redis(cfg: &RedisConfig) -> RedisPool {
 
 /// 创建 S3 Bucket 客户端并验证连通性
 pub async fn connect_s3(cfg: &StorageConfig) -> Box<s3::Bucket> {
-    let bucket = crate::util::storage_util::create_s3_bucket(cfg);
+    let bucket = crate::util::storage_util::create_s3_bucket(cfg)
+        .expect("S3 客户端初始化失败，请检查 storage 配置");
 
     match crate::util::storage_util::ensure_bucket_exists(cfg).await {
         Ok(true) => {

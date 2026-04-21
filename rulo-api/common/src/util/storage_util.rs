@@ -4,13 +4,14 @@ use s3::{Bucket, BucketConfiguration, Region};
 use crate::config::StorageConfig;
 
 /// 根据配置创建 S3 Bucket 客户端（兼容 MinIO / RustFS）
-pub fn create_s3_bucket(cfg: &StorageConfig) -> Box<Bucket> {
+pub fn create_s3_bucket(cfg: &StorageConfig) -> Result<Box<Bucket>, String> {
     let region = build_s3_region(cfg);
-    let credentials = build_s3_credentials(cfg);
+    let credentials = build_s3_credentials(cfg)?;
 
-    Bucket::new(&cfg.bucket, region, credentials)
-        .expect("S3 Bucket 创建失败")
-        .with_path_style()
+    let bucket = Bucket::new(&cfg.bucket, region, credentials)
+        .map_err(|e| format!("S3 Bucket 创建失败: {e}"))?
+        .with_path_style();
+    Ok(bucket)
 }
 
 pub fn build_s3_region(cfg: &StorageConfig) -> Region {
@@ -20,7 +21,7 @@ pub fn build_s3_region(cfg: &StorageConfig) -> Region {
     }
 }
 
-pub fn build_s3_credentials(cfg: &StorageConfig) -> Credentials {
+pub fn build_s3_credentials(cfg: &StorageConfig) -> Result<Credentials, String> {
     Credentials::new(
         Some(&cfg.access_key),
         Some(&cfg.secret_key),
@@ -28,12 +29,12 @@ pub fn build_s3_credentials(cfg: &StorageConfig) -> Credentials {
         None,
         None,
     )
-    .expect("S3 凭证创建失败")
+    .map_err(|e| format!("S3 凭证创建失败: {e}"))
 }
 
 /// 检查 Bucket 是否存在，不存在则创建，返回 Ok(true) 表示新建，Ok(false) 表示已存在
 pub async fn ensure_bucket_exists(cfg: &StorageConfig) -> Result<bool, String> {
-    let bucket = create_s3_bucket(cfg);
+    let bucket = create_s3_bucket(cfg)?;
 
     // 1) 先用 HEAD 检测 Bucket 是否已存在（list 也行，但 head_object 需要 key，这里用 list 限制 0）
     match bucket.list("".to_string(), Some("/".to_string())).await {
@@ -45,7 +46,7 @@ pub async fn ensure_bucket_exists(cfg: &StorageConfig) -> Result<bool, String> {
     let response = Bucket::create_with_path_style(
         &cfg.bucket,
         build_s3_region(cfg),
-        build_s3_credentials(cfg),
+        build_s3_credentials(cfg)?,
         BucketConfiguration::default(),
     )
     .await

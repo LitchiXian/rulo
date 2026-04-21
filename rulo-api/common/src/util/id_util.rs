@@ -1,5 +1,6 @@
+use parking_lot::Mutex;
 use snowflake::SnowflakeIdGenerator;
-use std::sync::{LazyLock, Mutex};
+use std::sync::LazyLock;
 
 static ID_GENERATOR: LazyLock<Mutex<SnowflakeIdGenerator>> =
     LazyLock::new(|| {
@@ -8,9 +9,8 @@ static ID_GENERATOR: LazyLock<Mutex<SnowflakeIdGenerator>> =
     });
 
 /// 生成全局唯一的雪花 ID
+///
+/// 使用 `parking_lot::Mutex`：无“中毒”语义，比 `std::sync::Mutex` 更快
 pub fn next_id() -> i64 {
-    ID_GENERATOR
-        .lock()
-        .expect("snowflake id generator lock poisoned")
-        .real_time_generate()
+    ID_GENERATOR.lock().real_time_generate()
 }

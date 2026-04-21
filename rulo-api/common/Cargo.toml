@@ -22,3 +22,4 @@ rs-snowflake = { workspace = true }
 validator = { workspace = true }
 rust-s3 = { workspace = true }
 uuid = { workspace = true }
+parking_lot = { workspace = true }

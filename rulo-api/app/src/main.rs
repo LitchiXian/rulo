@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use axum::{Router, middleware::from_fn, routing::get};
+use axum::{Router, extract::DefaultBodyLimit, middleware::from_fn, routing::get};
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
@@ -37,10 +37,17 @@ async fn main() {
         rate_limit_config: cfg.rate_limit.clone(),
     });
 
+    // 全局 HTTP 请求体上限：从 server.body_limit 读取
+    // 与 storage.max_file_size 解耦：
+    //   - body_limit：传输层硬限，防恶意大包 DoS（超过直接 413）
+    //   - max_file_size：上传 handler 内业务校验，返回中文错误
+    let body_limit = cfg.server.body_limit;
+
     let app = Router::new()
         .route("/", get(|| async { "Hello, world!" }))
         .merge(router::routes(state.clone()))
         .with_state(state)
+        .layer(DefaultBodyLimit::max(body_limit))
         .layer(TraceLayer::new_for_http())
         .layer(from_fn(error::log_app_errors));
 

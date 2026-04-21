@@ -126,11 +126,19 @@ pub async fn register(db_pool: &PgPool, dto: &AuthUserDto) -> R<()> {
 }
 
 pub async fn logout(redis_pool: &Pool, token: &str) -> R<()> {
-    let redis_key = redis_constant::USER_TOKEN.to_owned() + token;
-    match redis_util::del(redis_pool, &redis_key).await {
-        Ok(_) => success(()),
-        Err(e) => Err(e),
+    let token_key = redis_constant::USER_TOKEN.to_owned() + token;
+
+    // 先按 token 反查 user_id（用于清理用户维度的缓存）
+    // 即使 token 已失效或缓存被驱逐，也按"已登出"返回成功，符合幂等语义
+    if let Some(user_id) = redis_util::get_obj::<i64>(redis_pool, &token_key).await? {
+        let suffix = user_id.to_string();
+        let _ = redis_util::del(redis_pool, &(redis_constant::USER_INFO.to_owned() + &suffix)).await;
+        let _ = redis_util::del(redis_pool, &(redis_constant::USER_PERMS.to_owned() + &suffix)).await;
+        let _ = redis_util::del(redis_pool, &(redis_constant::USER_MENUS.to_owned() + &suffix)).await;
     }
+
+    redis_util::del(redis_pool, &token_key).await?;
+    success(())
 }
 
 pub async fn info(
