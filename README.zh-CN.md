@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="./rulo-ui-admin/public/rulo.ico" width="48" height="48" alt="Rulo logo" style="vertical-align: middle; margin-right: 10px;" />
+  <img src="rulo-admin/public/rulo.ico" width="48" height="48" alt="Rulo logo" style="vertical-align: middle; margin-right: 10px;" />
   <span style="vertical-align: middle;">Rulo</span>
 </h1>
 <p align="center">一个基于 Rust 异步生态构建的管理系统项目，整体风格参考 RuoYi 一类后台平台</p>
