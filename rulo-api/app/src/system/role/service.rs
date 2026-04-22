@@ -39,7 +39,10 @@ pub async fn save(pool: &PgPool, dto: &SysRoleSaveDto) -> R<SysRole> {
     success(new_role)
 }
 
-pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
+pub async fn remove(pool: &PgPool, dto: &IdsDto, caller_is_super: bool) -> R<()> {
+    if !caller_is_super {
+        ensure_no_super_admin_role(pool, &dto.ids).await?;
+    }
     let result = sqlx::query!(
         "UPDATE sys_role SET is_deleted = true, update_time = now() WHERE id = ANY($1)",
         &dto.ids
@@ -52,7 +55,28 @@ pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
     success(())
 }
 
-pub async fn update(pool: &PgPool, dto: &SysRoleUpdateDto) -> R<()> {
+/// 校验中不包含超级管理员角色
+async fn ensure_no_super_admin_role(pool: &PgPool, role_ids: &[i64]) -> Result<(), AppError> {
+    if role_ids.is_empty() {
+        return Ok(());
+    }
+    let cnt: i64 = query_scalar!(
+        "SELECT COUNT(*) FROM sys_role WHERE id = ANY($1) AND is_super = true AND is_deleted = false",
+        role_ids
+    )
+    .fetch_one(pool)
+    .await?
+    .unwrap_or(0);
+    if cnt > 0 {
+        return Err(AppError::Forbidden("无权操作超级管理员角色".to_string()));
+    }
+    Ok(())
+}
+
+pub async fn update(pool: &PgPool, dto: &SysRoleUpdateDto, caller_is_super: bool) -> R<()> {
+    if !caller_is_super {
+        ensure_no_super_admin_role(pool, std::slice::from_ref(&dto.id)).await?;
+    }
     if let Some(ref role_name) = dto.role_name {
         if role_name.trim().is_empty() {
             return Err(AppError::ServiceError("角色名称不能为空字符串".to_string()));
@@ -85,7 +109,10 @@ pub async fn update(pool: &PgPool, dto: &SysRoleUpdateDto) -> R<()> {
     success(())
 }
 
-pub async fn update_bind_menus(pool: &PgPool, dto: &BindMenusDto) -> R<()> {
+pub async fn update_bind_menus(pool: &PgPool, dto: &BindMenusDto, caller_is_super: bool) -> R<()> {
+    if !caller_is_super {
+        ensure_no_super_admin_role(pool, std::slice::from_ref(&dto.role_id)).await?;
+    }
     // 校验目标菜单是否存在
     if !dto.menu_ids.is_empty() {
         let valid_count: i64 = query_scalar!(
@@ -131,7 +158,10 @@ pub async fn update_bind_menus(pool: &PgPool, dto: &BindMenusDto) -> R<()> {
     success(())
 }
 
-pub async fn update_bind_perms(pool: &PgPool, dto: &BindPermsDto) -> R<()> {
+pub async fn update_bind_perms(pool: &PgPool, dto: &BindPermsDto, caller_is_super: bool) -> R<()> {
+    if !caller_is_super {
+        ensure_no_super_admin_role(pool, std::slice::from_ref(&dto.role_id)).await?;
+    }
     // 校验目标权限是否存在
     if !dto.perm_ids.is_empty() {
         let valid_count: i64 = query_scalar!(
@@ -166,7 +196,10 @@ pub async fn update_bind_perms(pool: &PgPool, dto: &BindPermsDto) -> R<()> {
     success(())
 }
 
-pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysRole> {
+pub async fn detail(pool: &PgPool, dto: &IdDto, caller_is_super: bool) -> R<SysRole> {
+    if !caller_is_super {
+        ensure_no_super_admin_role(pool, std::slice::from_ref(&dto.id)).await?;
+    }
     let data = query_as!(
         SysRole,
         "select * from sys_role where id = $1 AND is_deleted = false",
@@ -178,13 +211,18 @@ pub async fn detail(pool: &PgPool, dto: &IdDto) -> R<SysRole> {
     success(data)
 }
 
-pub async fn list(pool: &PgPool, dto: &SysRoleListDto) -> R<PageResult<SysRole>> {
+pub async fn list(pool: &PgPool, dto: &SysRoleListDto, caller_is_super: bool) -> R<PageResult<SysRole>> {
     let (page_num, page_size) = normalize_page(dto.page_num, dto.page_size);
     let offset = ((page_num - 1) * page_size) as i64;
+
+    let exclude_super_sql = " AND is_super = false";
 
     let mut count_builder = QueryBuilder::<Postgres>::new(
         "SELECT COUNT(*)::bigint FROM sys_role WHERE is_deleted = false",
     );
+    if !caller_is_super {
+        count_builder.push(exclude_super_sql);
+    }
     append_role_filters(&mut count_builder, dto);
     let total = count_builder
         .build_query_scalar::<i64>()
@@ -193,6 +231,9 @@ pub async fn list(pool: &PgPool, dto: &SysRoleListDto) -> R<PageResult<SysRole>>
 
     let mut data_builder =
         QueryBuilder::<Postgres>::new("SELECT * FROM sys_role WHERE is_deleted = false");
+    if !caller_is_super {
+        data_builder.push(exclude_super_sql);
+    }
     append_role_filters(&mut data_builder, dto);
     data_builder
         .push(" ORDER BY update_time DESC")
@@ -214,9 +255,12 @@ pub async fn list(pool: &PgPool, dto: &SysRoleListDto) -> R<PageResult<SysRole>>
     })
 }
 
-pub async fn list_all(pool: &PgPool, dto: &SysRoleListDto) -> R<Vec<SysRole>> {
+pub async fn list_all(pool: &PgPool, dto: &SysRoleListDto, caller_is_super: bool) -> R<Vec<SysRole>> {
     let mut data_builder =
         QueryBuilder::<Postgres>::new("SELECT * FROM sys_role WHERE is_deleted = false");
+    if !caller_is_super {
+        data_builder.push(" AND is_super = false");
+    }
     append_role_filters(&mut data_builder, dto);
     data_builder.push(" ORDER BY update_time DESC");
     let list = data_builder
@@ -260,7 +304,10 @@ fn append_role_filters(builder: &mut QueryBuilder<Postgres>, dto: &SysRoleListDt
     }
 }
 
-pub async fn list_bind_menus(pool: &PgPool, role_id: i64) -> R<Vec<i64>> {
+pub async fn list_bind_menus(pool: &PgPool, role_id: i64, caller_is_super: bool) -> R<Vec<i64>> {
+    if !caller_is_super {
+        ensure_no_super_admin_role(pool, std::slice::from_ref(&role_id)).await?;
+    }
     let ids = query_scalar!(
         "SELECT m.id FROM sys_menu m \
          JOIN sys_permission p ON m.perm_id = p.id \
@@ -273,7 +320,10 @@ pub async fn list_bind_menus(pool: &PgPool, role_id: i64) -> R<Vec<i64>> {
     success(ids)
 }
 
-pub async fn list_bind_perms(pool: &PgPool, role_id: i64) -> R<Vec<i64>> {
+pub async fn list_bind_perms(pool: &PgPool, role_id: i64, caller_is_super: bool) -> R<Vec<i64>> {
+    if !caller_is_super {
+        ensure_no_super_admin_role(pool, std::slice::from_ref(&role_id)).await?;
+    }
     let ids = query_scalar!(
         "SELECT rp.perm_id FROM sys_role_permission rp \
          JOIN sys_permission p ON rp.perm_id = p.id \

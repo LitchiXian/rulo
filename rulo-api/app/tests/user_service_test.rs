@@ -21,7 +21,7 @@ async fn test_user_save_and_remove(pool: PgPool) {
 
     // soft delete
     let ids_dto = IdsDto { ids: vec![user.id] };
-    service::remove(&pool, &ids_dto).await.unwrap();
+    service::remove(&pool, &ids_dto, true).await.unwrap();
 }
 
 #[sqlx::test(migrations = "../migrations")]
@@ -57,7 +57,7 @@ async fn test_update_bind_roles_with_invalid_role(pool: PgPool) {
         user_id: user.id,
         role_ids: vec![999999],
     };
-    assert!(service::update_bind_roles(&pool, &bind_dto).await.is_err());
+    assert!(service::update_bind_roles(&pool, &bind_dto, true).await.is_err());
 }
 
 #[sqlx::test(migrations = "../migrations")]
@@ -80,8 +80,8 @@ async fn test_update_bind_roles_empty_clears(pool: PgPool) {
         user_id: user.id,
         role_ids: vec![],
     };
-    service::update_bind_roles(&pool, &bind_dto).await.unwrap();
+    service::update_bind_roles(&pool, &bind_dto, true).await.unwrap();
 
-    let result = service::list_bind_roles(&pool, user.id).await.unwrap();
+    let result = service::list_bind_roles(&pool, user.id, true).await.unwrap();
     assert!(result.take_data().unwrap().is_empty());
 }

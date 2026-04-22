@@ -4,7 +4,7 @@ use axum::{Router, middleware as axum_mw};
 use common::state::AppState;
 
 use crate::middleware::rate_limit;
-use crate::system::{audit, auth, file, menu, monitor, permission, role, user};
+use crate::system::{audit, auth, dept, file, menu, monitor, permission, role, user};
 
 pub fn public_routes(state: Arc<AppState>) -> Router<Arc<AppState>> {
     Router::new()
@@ -30,6 +30,7 @@ pub fn protected_routes() -> Router<Arc<AppState>> {
         .nest("/role", role::router::routes())
         .nest("/menu", menu::router::routes())
         .nest("/permission", permission::router::routes())
+        .nest("/dept", dept::router::routes())
         .nest("/monitor", monitor::router::routes())
         .nest("/file", file::router::routes())
         .nest("/audit", audit::router::routes())

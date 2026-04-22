@@ -1,5 +1,6 @@
 pub mod audit;
 pub mod auth;
+pub mod dept;
 pub mod file;
 pub mod menu;
 pub mod monitor;

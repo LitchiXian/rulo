@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
+use axum::Extension;
 use axum::extract::{Query, State};
 use common::{
     constant::redis_constant,
     extractor::ValidatedJson,
-    model::{IdDto, IdsDto, PageResult},
+    model::{IdDto, IdsDto, IsSuperAdmin, PageResult},
     result::R,
     util::redis_util,
 };
@@ -39,9 +40,10 @@ pub async fn save_handler(
 #[perm("sys:role:remove")]
 pub async fn remove_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     ValidatedJson(dto): ValidatedJson<IdsDto>,
 ) -> R<()> {
-    let result = service::remove(&state.db_pool, &dto).await;
+    let result = service::remove(&state.db_pool, &dto, caller_is_super).await;
     if result.is_ok() {
         for role_id in &dto.ids {
             clear_role_user_cache(&state.redis_pool, &state.db_pool, *role_id).await;
@@ -59,9 +61,10 @@ pub async fn remove_handler(
 #[perm("sys:role:update")]
 pub async fn update_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     ValidatedJson(dto): ValidatedJson<SysRoleUpdateDto>,
 ) -> R<()> {
-    service::update(&state.db_pool, &dto).await
+    service::update(&state.db_pool, &dto, caller_is_super).await
 }
 
 #[utoipa::path(
@@ -73,9 +76,10 @@ pub async fn update_handler(
 #[perm("sys:role:update-bind-menus")]
 pub async fn update_bind_menus_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     ValidatedJson(dto): ValidatedJson<BindMenusDto>,
 ) -> R<()> {
-    let result = service::update_bind_menus(&state.db_pool, &dto).await;
+    let result = service::update_bind_menus(&state.db_pool, &dto, caller_is_super).await;
     clear_role_user_cache(&state.redis_pool, &state.db_pool, dto.role_id).await;
     result
 }
@@ -89,9 +93,10 @@ pub async fn update_bind_menus_handler(
 #[perm("sys:role:update-bind-perms")]
 pub async fn update_bind_perms_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     ValidatedJson(dto): ValidatedJson<BindPermsDto>,
 ) -> R<()> {
-    let result = service::update_bind_perms(&state.db_pool, &dto).await;
+    let result = service::update_bind_perms(&state.db_pool, &dto, caller_is_super).await;
     clear_role_user_cache(&state.redis_pool, &state.db_pool, dto.role_id).await;
     result
 }
@@ -105,9 +110,10 @@ pub async fn update_bind_perms_handler(
 #[perm("sys:role:detail")]
 pub async fn detail_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     Query(dto): Query<IdDto>,
 ) -> R<SysRole> {
-    service::detail(&state.db_pool, &dto).await
+    service::detail(&state.db_pool, &dto, caller_is_super).await
 }
 
 #[utoipa::path(
@@ -119,9 +125,10 @@ pub async fn detail_handler(
 #[perm("sys:role:list")]
 pub async fn list_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     Query(dto): Query<SysRoleListDto>,
 ) -> R<PageResult<SysRole>> {
-    service::list(&state.db_pool, &dto).await
+    service::list(&state.db_pool, &dto, caller_is_super).await
 }
 
 #[utoipa::path(
@@ -133,9 +140,10 @@ pub async fn list_handler(
 #[perm("sys:role:list")]
 pub async fn list_all_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     Query(dto): Query<SysRoleListDto>,
 ) -> R<Vec<SysRole>> {
-    service::list_all(&state.db_pool, &dto).await
+    service::list_all(&state.db_pool, &dto, caller_is_super).await
 }
 
 #[utoipa::path(
@@ -147,9 +155,10 @@ pub async fn list_all_handler(
 #[perm("sys:role:list-bind-menus")]
 pub async fn list_bind_menus_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     Query(dto): Query<IdDto>,
 ) -> R<Vec<i64>> {
-    service::list_bind_menus(&state.db_pool, dto.id).await
+    service::list_bind_menus(&state.db_pool, dto.id, caller_is_super).await
 }
 
 #[utoipa::path(
@@ -161,9 +170,10 @@ pub async fn list_bind_menus_handler(
 #[perm("sys:role:list-bind-perms")]
 pub async fn list_bind_perms_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     Query(dto): Query<IdDto>,
 ) -> R<Vec<i64>> {
-    service::list_bind_perms(&state.db_pool, dto.id).await
+    service::list_bind_perms(&state.db_pool, dto.id, caller_is_super).await
 }
 
 /// 清除该角色下所有用户的权限和菜单缓存
@@ -177,7 +187,7 @@ async fn clear_role_user_cache(redis_pool: &RedisPool, db_pool: &sqlx::PgPool, r
 
     if let Ok(ids) = user_ids {
         for uid in ids {
-            let perms_key = redis_constant::USER_PERMS.to_owned() + &uid.to_string();
+            let perms_key = redis_constant::USER_AUTH.to_owned() + &uid.to_string();
             let menus_key = redis_constant::USER_MENUS.to_owned() + &uid.to_string();
             let _ = redis_util::del(redis_pool, &perms_key).await;
             let _ = redis_util::del(redis_pool, &menus_key).await;

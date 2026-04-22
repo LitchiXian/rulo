@@ -62,14 +62,14 @@ pub async fn update_handler(
     }
     result
 }
-/// 清除所有角色下所有用户的权限和菜单缓存（权限变更后全量清理）
+/// 权限定义变动后清理所有已绑定角色的用户鉴权上下文与菜单缓存。
 async fn clear_all_role_user_cache(redis_pool: &deadpool_redis::Pool, db_pool: &sqlx::PgPool) {
     let user_ids = sqlx::query_scalar!("SELECT DISTINCT user_id FROM sys_user_role").fetch_all(db_pool).await;
     if let Ok(ids) = user_ids {
         for uid in ids {
-            let perms_key = common::constant::redis_constant::USER_PERMS.to_owned() + &uid.to_string();
+            let auth_key = common::constant::redis_constant::USER_AUTH.to_owned() + &uid.to_string();
             let menus_key = common::constant::redis_constant::USER_MENUS.to_owned() + &uid.to_string();
-            let _ = common::util::redis_util::del(redis_pool, &perms_key).await;
+            let _ = common::util::redis_util::del(redis_pool, &auth_key).await;
             let _ = common::util::redis_util::del(redis_pool, &menus_key).await;
         }
     }

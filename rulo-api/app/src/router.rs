@@ -11,7 +11,7 @@ use axum::{
 use common::{
     constant::redis_constant,
     error::AppError,
-    model::PermCodes,
+    model::{IsSuperAdmin, PermCodes},
     state::AppState,
     util::{jwt_util, redis_util},
 };
@@ -93,14 +93,15 @@ async fn jwt_auth(
     req.extensions_mut().insert(UserId(user_id));
     req.extensions_mut().insert(UserToken(token));
 
-    let perms =
-        match auth_service::get_user_perms_from_cache(&state.db_pool, &state.redis_pool, user_id)
+    let auth =
+        match auth_service::get_user_auth_from_cache(&state.db_pool, &state.redis_pool, user_id)
             .await
         {
-            Ok(p) => p,
+            Ok(a) => a,
             Err(e) => return e.into_response(),
         };
-    req.extensions_mut().insert(PermCodes(perms));
+    req.extensions_mut().insert(IsSuperAdmin(auth.is_super));
+    req.extensions_mut().insert(PermCodes(auth.perms));
 
     next.run(req).await
 }

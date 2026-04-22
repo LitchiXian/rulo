@@ -1,7 +1,7 @@
 <script setup lang="ts" name="AdminLayout">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Fold, Expand, Odometer, User, SwitchButton, Setting, UserFilled, Key, Menu as MenuIcon, Lock, MoreFilled, InfoFilled, Link, Sunny, Moon, FullScreen, Notebook, Monitor, DataLine, ChatDotRound, Tickets } from '@element-plus/icons-vue'
+import { Fold, Expand, Odometer, User, SwitchButton, Setting, UserFilled, Key, Menu as MenuIcon, Lock, MoreFilled, InfoFilled, Link, Sunny, Moon, FullScreen, Notebook, Monitor, DataLine, ChatDotRound, Tickets, OfficeBuilding } from '@element-plus/icons-vue'
 import type { Component } from 'vue'
 import type { MenuTreeNode } from '@/type/user'
 
@@ -19,7 +19,7 @@ const layoutStore = useLayoutStore()
 // 图标名 → 组件映射
 const iconMap: Record<string, Component> = {
   Odometer, User, Setting, UserFilled, Key, Menu: MenuIcon, Lock,
-  MoreFilled, InfoFilled, Link, Notebook, Monitor, DataLine, SwitchButton, Expand, Fold, Sunny, Moon, FullScreen, Tickets,
+  MoreFilled, InfoFilled, Link, Notebook, Monitor, DataLine, SwitchButton, Expand, Fold, Sunny, Moon, FullScreen, Tickets, OfficeBuilding,
 }
 
 // 可见菜单树（过滤 is_hidden）

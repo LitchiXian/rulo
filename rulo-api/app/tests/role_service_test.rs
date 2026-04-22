@@ -19,7 +19,7 @@ async fn test_role_crud(pool: PgPool) {
 
     // 2. detail
     let detail_dto = common::model::IdDto { id: role_id };
-    let result = service::detail(&pool, &detail_dto).await.unwrap();
+    let result = service::detail(&pool, &detail_dto, true).await.unwrap();
     let fetched = result.take_data().unwrap();
     assert_eq!(fetched.role_key, "test_role");
 
@@ -31,8 +31,8 @@ async fn test_role_crud(pool: PgPool) {
         is_active: None,
         remark: None,
     };
-    service::update(&pool, &update_dto).await.unwrap();
-    let result = service::detail(&pool, &detail_dto).await.unwrap();
+    service::update(&pool, &update_dto, true).await.unwrap();
+    let result = service::detail(&pool, &detail_dto, true).await.unwrap();
     assert_eq!(result.take_data().unwrap().role_name, "更新角色");
 
     // 4. list
@@ -45,14 +45,14 @@ async fn test_role_crud(pool: PgPool) {
         page_num: None,
         page_size: None,
     };
-    let result = service::list(&pool, &list_dto).await.unwrap();
+    let result = service::list(&pool, &list_dto, true).await.unwrap();
     let page = result.take_data().unwrap();
     assert_eq!(page.total, 1);
 
     // 5. remove (soft delete)
     let ids_dto = IdsDto { ids: vec![role_id] };
-    service::remove(&pool, &ids_dto).await.unwrap();
-    let result = service::detail(&pool, &detail_dto).await;
+    service::remove(&pool, &ids_dto, true).await.unwrap();
+    let result = service::detail(&pool, &detail_dto, true).await;
     assert!(result.is_err()); // NotFound
 }
 

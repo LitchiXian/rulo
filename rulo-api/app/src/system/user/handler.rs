@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
 use axum::extract::{Query, State};
+use axum::Extension;
 use common::{
     constant::redis_constant,
     extractor::ValidatedJson,
-    model::{IdDto, IdsDto, PageResult},
+    model::{IdDto, IdsDto, IsSuperAdmin, PageResult},
     result::R,
     util::redis_util,
 };
@@ -38,17 +39,29 @@ pub async fn save_handler(
 #[perm("sys:user:remove")]
 pub async fn remove_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     ValidatedJson(dto): ValidatedJson<IdsDto>,
 ) -> R<()> {
-    let result = service::remove(&state.db_pool, &dto).await;
+    let result = service::remove(&state.db_pool, &dto, caller_is_super).await;
     if result.is_ok() {
+        // 清理被删除用户的所有身份缓存，配合 query_user_auth 的存活检查可实现下次请求立即下线
         for user_id in &dto.ids {
-            let perms_key =
-                common::constant::redis_constant::USER_PERMS.to_owned() + &user_id.to_string();
-            let menus_key =
-                common::constant::redis_constant::USER_MENUS.to_owned() + &user_id.to_string();
-            let _ = common::util::redis_util::del(&state.redis_pool, &perms_key).await;
-            let _ = common::util::redis_util::del(&state.redis_pool, &menus_key).await;
+            let suffix = user_id.to_string();
+            let _ = redis_util::del(
+                &state.redis_pool,
+                &(redis_constant::USER_AUTH.to_owned() + &suffix),
+            )
+            .await;
+            let _ = redis_util::del(
+                &state.redis_pool,
+                &(redis_constant::USER_MENUS.to_owned() + &suffix),
+            )
+            .await;
+            let _ = redis_util::del(
+                &state.redis_pool,
+                &(redis_constant::USER_INFO.to_owned() + &suffix),
+            )
+            .await;
         }
     }
     result
@@ -63,10 +76,11 @@ pub async fn remove_handler(
 #[perm("sys:user:update")]
 pub async fn update_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     ValidatedJson(dto): ValidatedJson<SysUserUpdateDto>,
 ) -> R<()> {
     let user_id = dto.id;
-    let result = service::update(&state.db_pool, &state.storage_config, &dto).await;
+    let result = service::update(&state.db_pool, &state.storage_config, &dto, caller_is_super).await;
     if result.is_ok() {
         let info_key = redis_constant::USER_INFO.to_owned() + &user_id.to_string();
         let _ = redis_util::del(&state.redis_pool, &info_key).await;
@@ -83,14 +97,15 @@ pub async fn update_handler(
 #[perm("sys:user:update-bind-roles")]
 pub async fn update_bind_roles_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     ValidatedJson(dto): ValidatedJson<BindRolesDto>,
 ) -> R<()> {
     let user_id = dto.user_id;
-    let result = service::update_bind_roles(&state.db_pool, &dto).await;
-    // 清除该用户的权限和菜单缓存
-    let perms_key = redis_constant::USER_PERMS.to_owned() + &user_id.to_string();
+    let result = service::update_bind_roles(&state.db_pool, &dto, caller_is_super).await;
+    // 清除该用户的鉴权上下文和菜单缓存
+    let auth_key = redis_constant::USER_AUTH.to_owned() + &user_id.to_string();
     let menus_key = redis_constant::USER_MENUS.to_owned() + &user_id.to_string();
-    let _ = redis_util::del(&state.redis_pool, &perms_key).await;
+    let _ = redis_util::del(&state.redis_pool, &auth_key).await;
     let _ = redis_util::del(&state.redis_pool, &menus_key).await;
     result
 }
@@ -104,6 +119,7 @@ pub async fn update_bind_roles_handler(
 #[perm("sys:user:detail")]
 pub async fn detail_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     Query(dto): Query<IdDto>,
 ) -> R<SysUser> {
     service::detail(
@@ -111,6 +127,7 @@ pub async fn detail_handler(
         &state.s3_bucket,
         &state.storage_config,
         &dto,
+        caller_is_super,
     )
     .await
 }
@@ -124,6 +141,7 @@ pub async fn detail_handler(
 #[perm("sys:user:list")]
 pub async fn list_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     Query(dto): Query<SysUserListDto>,
 ) -> R<PageResult<SysUser>> {
     service::list(
@@ -131,6 +149,7 @@ pub async fn list_handler(
         &state.s3_bucket,
         &state.storage_config,
         &dto,
+        caller_is_super,
     )
     .await
 }
@@ -144,7 +163,8 @@ pub async fn list_handler(
 #[perm("sys:user:list-bind-roles")]
 pub async fn list_bind_roles_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     Query(dto): Query<IdDto>,
 ) -> R<Vec<i64>> {
-    service::list_bind_roles(&state.db_pool, dto.id).await
+    service::list_bind_roles(&state.db_pool, dto.id, caller_is_super).await
 }

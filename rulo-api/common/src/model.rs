@@ -40,6 +40,10 @@ pub fn normalize_page(page_num: Option<u64>, page_size: Option<u64>) -> (u64, u6
 #[derive(Debug, Clone)]
 pub struct PermCodes(pub Vec<String>);
 
+/// 当前调用者是否拥有超级管理员角色, 由 jwt_auth 中间件注入到 request Extension
+#[derive(Debug, Clone, Copy)]
+pub struct IsSuperAdmin(pub bool);
+
 #[cfg(test)]
 mod tests {
     use super::*;

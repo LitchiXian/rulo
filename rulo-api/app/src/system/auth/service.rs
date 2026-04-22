@@ -70,14 +70,14 @@ pub async fn login(db_pool: &PgPool, redis_pool: &Pool, jwt_config: &JwtConfig, 
     )
     .await?;
 
-    // 预加载权限和菜单到 Redis
-    let perms = query_user_perms(db_pool, db_user.id).await?;
-    let menus = query_user_menu_tree(db_pool, db_user.id).await?;
+    // 预加载权限和菜单到 Redis（共用 is_super 避免重复查 DB）
+    let auth = query_user_auth(db_pool, db_user.id).await?;
+    let menus = query_user_menu_tree(db_pool, db_user.id, auth.is_super).await?;
 
     redis_util::set_obj(
         redis_pool,
-        &(redis_constant::USER_PERMS.to_owned() + &db_user.id.to_string()),
-        &perms,
+        &(redis_constant::USER_AUTH.to_owned() + &db_user.id.to_string()),
+        &auth,
         redis_constant::ONE_DAY,
     )
     .await?;
@@ -133,7 +133,7 @@ pub async fn logout(redis_pool: &Pool, token: &str) -> R<()> {
     if let Some(user_id) = redis_util::get_obj::<i64>(redis_pool, &token_key).await? {
         let suffix = user_id.to_string();
         let _ = redis_util::del(redis_pool, &(redis_constant::USER_INFO.to_owned() + &suffix)).await;
-        let _ = redis_util::del(redis_pool, &(redis_constant::USER_PERMS.to_owned() + &suffix)).await;
+        let _ = redis_util::del(redis_pool, &(redis_constant::USER_AUTH.to_owned() + &suffix)).await;
         let _ = redis_util::del(redis_pool, &(redis_constant::USER_MENUS.to_owned() + &suffix)).await;
     }
 
@@ -163,23 +163,16 @@ pub async fn info(
         }
     };
 
-    // 2.权限列表 -- 优先 Redis
-    let perms_key = redis_constant::USER_PERMS.to_owned() + &user_id.to_string();
-    let perms = match redis_util::get_obj::<Vec<String>>(redis_pool, &perms_key).await? {
-        Some(user_permissions) => user_permissions,
-        None => {
-            let p = query_user_perms(db_pool, user_id).await?;
-            redis_util::set_obj(redis_pool, &perms_key, &p, redis_constant::ONE_DAY).await?;
-            p
-        }
-    };
+    // 2.权限列表 -- 优先 Redis（与 IsSuperAdmin 共用 UserAuth 缓存）
+    let auth = get_user_auth_from_cache(db_pool, redis_pool, user_id).await?;
+    let perms = auth.perms;
 
     // 3.菜单树 -- 优先 Redis
     let menus_key = redis_constant::USER_MENUS.to_owned() + &user_id.to_string();
     let menus = match redis_util::get_obj::<Vec<MenuTreeNode>>(redis_pool, &menus_key).await? {
         Some(m) => m,
         None => {
-            let m = query_user_menu_tree(db_pool, user_id).await?;
+            let m = query_user_menu_tree(db_pool, user_id, auth.is_super).await?;
             redis_util::set_obj(redis_pool, &menus_key, &m, redis_constant::ONE_DAY).await?;
             m
         }
@@ -208,9 +201,9 @@ pub async fn info(
     })
 }
 
-// 查询用户所有权限 perm_code (含超管判断)
-async fn query_user_perms(db_pool: &PgPool, user_id: i64) -> Result<Vec<String>, AppError> {
-    // 检查是否为超管角色
+/// 判断指定用户是否拥有超级管理员角色（is_super=true 且角色启用未删除）。
+/// 仅供 auth 模块内部使用：中间件预解析时一次性写入缓存。
+async fn is_super_admin_user(db_pool: &PgPool, user_id: i64) -> Result<bool, AppError> {
     let is_super = query_scalar!(
         "SELECT EXISTS(
             SELECT 1 FROM sys_user_role ur
@@ -221,6 +214,33 @@ async fn query_user_perms(db_pool: &PgPool, user_id: i64) -> Result<Vec<String>,
     )
     .fetch_one(db_pool)
     .await?;
+    Ok(is_super)
+}
+
+/// 用户鉴权上下文（超管标记 + 权限码），由中间件预解析后缓存到 redis。
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct UserAuth {
+    pub is_super: bool,
+    pub perms: Vec<String>,
+}
+
+/// 一次查出超管标记 + 权限码集合 (含超管逻辑)。
+/// 同时验证用户未被软删除且处于启用状态——中间件调用路径上出现这些情况则返回 401，
+/// 从而实现“删除/冻结账号下次请求立即生效”。
+async fn query_user_auth(db_pool: &PgPool, user_id: i64) -> Result<UserAuth, AppError> {
+    let user_alive = query_scalar!(
+        "SELECT EXISTS(SELECT 1 FROM sys_user WHERE id = $1 AND is_deleted = false AND is_active = true) AS \"alive!\"",
+        user_id
+    )
+    .fetch_one(db_pool)
+    .await?;
+    if !user_alive {
+        return Err(AppError::Unauthorized(
+            "账号不可用, 请重新登录".to_string(),
+        ));
+    }
+
+    let is_super = is_super_admin_user(db_pool, user_id).await?;
 
     if is_super {
         // 超管拥有所有权限
@@ -228,8 +248,7 @@ async fn query_user_perms(db_pool: &PgPool, user_id: i64) -> Result<Vec<String>,
             query_scalar!("SELECT perm_code FROM sys_permission WHERE is_deleted = false")
                 .fetch_all(db_pool)
                 .await?;
-
-        return Ok(perms);
+        return Ok(UserAuth { is_super, perms });
     }
 
     // 普通用户: 通过角色关联查询权限
@@ -247,22 +266,22 @@ async fn query_user_perms(db_pool: &PgPool, user_id: i64) -> Result<Vec<String>,
     .fetch_all(db_pool)
     .await?;
 
-    Ok(perms)
+    Ok(UserAuth { is_super, perms })
 }
 
-// 从 Redis 获取用户权限列表 (供中间件调用)
-pub async fn get_user_perms_from_cache(
+/// 从 Redis 获取用户鉴权上下文 (供中间件调用) - 未命中时从 DB 重建并缓存。
+pub async fn get_user_auth_from_cache(
     db_pool: &PgPool,
     redis_pool: &Pool,
     user_id: i64,
-) -> Result<Vec<String>, AppError> {
-    let perms_key = redis_constant::USER_PERMS.to_owned() + &user_id.to_string();
-    match redis_util::get_obj(redis_pool, &perms_key).await? {
-        Some(p) => Ok(p),
+) -> Result<UserAuth, AppError> {
+    let key = redis_constant::USER_AUTH.to_owned() + &user_id.to_string();
+    match redis_util::get_obj::<UserAuth>(redis_pool, &key).await? {
+        Some(a) => Ok(a),
         None => {
-            let p = query_user_perms(db_pool, user_id).await?;
-            redis_util::set_obj(redis_pool, &perms_key, &p, redis_constant::ONE_DAY).await?;
-            Ok(p)
+            let a = query_user_auth(db_pool, user_id).await?;
+            redis_util::set_obj(redis_pool, &key, &a, redis_constant::ONE_DAY).await?;
+            Ok(a)
         }
     }
 }
@@ -271,19 +290,8 @@ pub async fn get_user_perms_from_cache(
 async fn query_user_menu_tree(
     db_pool: &PgPool,
     user_id: i64,
+    is_super: bool,
 ) -> Result<Vec<MenuTreeNode>, AppError> {
-    // 检查是否为超管角色
-    let is_super = query_scalar!(
-        "SELECT EXISTS(
-            SELECT 1 FROM sys_user_role ur
-            JOIN sys_role r ON r.id = ur.role_id
-            WHERE ur.user_id = $1 AND r.is_super = true AND r.is_active = true AND r.is_deleted = false
-        ) AS \"is_super!\"",
-        user_id
-    )
-    .fetch_one(db_pool)
-    .await?;
-
     // 查可见菜单(含目录)
     let rows = if is_super {
         // 超管看所有未删除菜单

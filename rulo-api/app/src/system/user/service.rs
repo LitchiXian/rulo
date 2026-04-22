@@ -58,7 +58,10 @@ pub async fn save(pool: &PgPool, dto: &SysUserSaveDto) -> R<SysUser> {
     success(new_user)
 }
 
-pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
+pub async fn remove(pool: &PgPool, dto: &IdsDto, caller_is_super: bool) -> R<()> {
+    if !caller_is_super {
+        ensure_no_super_admin_target(pool, &dto.ids).await?;
+    }
     let result = sqlx::query!(
         "UPDATE sys_user SET is_deleted = true, update_time = now() WHERE id = ANY($1)",
         &dto.ids
@@ -71,11 +74,35 @@ pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
     success(())
 }
 
+/// 校验目标用户中不包含超级管理员（用于非超管操作者的写入操作保护）
+async fn ensure_no_super_admin_target(pool: &PgPool, user_ids: &[i64]) -> Result<(), AppError> {
+    if user_ids.is_empty() {
+        return Ok(());
+    }
+    let cnt: i64 = query_scalar!(
+        "SELECT COUNT(*) FROM sys_user_role ur \
+         JOIN sys_role r ON r.id = ur.role_id \
+         WHERE ur.user_id = ANY($1) AND r.is_super = true AND r.is_deleted = false",
+        user_ids
+    )
+    .fetch_one(pool)
+    .await?
+    .unwrap_or(0);
+    if cnt > 0 {
+        return Err(AppError::Forbidden("无权操作超级管理员用户".to_string()));
+    }
+    Ok(())
+}
+
 pub async fn update(
     pool: &PgPool,
     storage_config: &StorageConfig,
     dto: &SysUserUpdateDto,
+    caller_is_super: bool,
 ) -> R<()> {
+    if !caller_is_super {
+        ensure_no_super_admin_target(pool, std::slice::from_ref(&dto.id)).await?;
+    }
     // avatar_url 特殊处理：None=不修改, Some("")=清空, Some(url)=更新
     let avatar_url_value: Option<Option<String>> = match &dto.avatar_url {
         None => None,                              // 不修改
@@ -136,7 +163,28 @@ pub async fn update(
     success(())
 }
 
-pub async fn update_bind_roles(pool: &PgPool, dto: &BindRolesDto) -> R<()> {
+pub async fn update_bind_roles(
+    pool: &PgPool,
+    dto: &BindRolesDto,
+    caller_is_super: bool,
+) -> R<()> {
+    if !caller_is_super {
+        // 1) 不允许操作超管用户
+        ensure_no_super_admin_target(pool, std::slice::from_ref(&dto.user_id)).await?;
+        // 2) 不允许把超管角色分配给任何人
+        if !dto.role_ids.is_empty() {
+            let super_cnt: i64 = query_scalar!(
+                "SELECT COUNT(*) FROM sys_role WHERE id = ANY($1) AND is_super = true AND is_deleted = false",
+                &dto.role_ids
+            )
+            .fetch_one(pool)
+            .await?
+            .unwrap_or(0);
+            if super_cnt > 0 {
+                return Err(AppError::Forbidden("无权分配超级管理员角色".to_string()));
+            }
+        }
+    }
     // 校验目标角色是否存在
     if !dto.role_ids.is_empty() {
         let valid_count: i64 = query_scalar!(
@@ -172,7 +220,11 @@ pub async fn detail(
     bucket: &Bucket,
     storage_config: &StorageConfig,
     dto: &IdDto,
+    caller_is_super: bool,
 ) -> R<SysUser> {
+    if !caller_is_super {
+        ensure_no_super_admin_target(pool, std::slice::from_ref(&dto.id)).await?;
+    }
     let mut data = query_as!(
         SysUser,
         "select * from sys_user where id = $1 AND is_deleted = false",
@@ -193,13 +245,20 @@ pub async fn list(
     bucket: &Bucket,
     storage_config: &StorageConfig,
     dto: &SysUserListDto,
+    caller_is_super: bool,
 ) -> R<PageResult<SysUser>> {
     let (page_num, page_size) = normalize_page(dto.page_num, dto.page_size);
     let offset = ((page_num - 1) * page_size) as i64;
 
+    // 非超管操作者：从结果中排除拥有超管角色的用户
+    let exclude_super_sql = " AND id NOT IN (SELECT ur.user_id FROM sys_user_role ur JOIN sys_role r ON r.id = ur.role_id WHERE r.is_super = true AND r.is_deleted = false)";
+
     let mut count_builder = QueryBuilder::<Postgres>::new(
         "SELECT COUNT(*)::bigint FROM sys_user WHERE is_deleted = false",
     );
+    if !caller_is_super {
+        count_builder.push(exclude_super_sql);
+    }
     append_user_filters(&mut count_builder, dto);
     let total = count_builder
         .build_query_scalar::<i64>()
@@ -208,6 +267,9 @@ pub async fn list(
 
     let mut data_builder =
         QueryBuilder::<Postgres>::new("SELECT * FROM sys_user WHERE is_deleted = false");
+    if !caller_is_super {
+        data_builder.push(exclude_super_sql);
+    }
     append_user_filters(&mut data_builder, dto);
     data_builder
         .push(" ORDER BY update_time DESC")
@@ -276,7 +338,14 @@ fn append_user_filters(builder: &mut QueryBuilder<Postgres>, dto: &SysUserListDt
     }
 }
 
-pub async fn list_bind_roles(pool: &PgPool, user_id: i64) -> R<Vec<i64>> {
+pub async fn list_bind_roles(
+    pool: &PgPool,
+    user_id: i64,
+    caller_is_super: bool,
+) -> R<Vec<i64>> {
+    if !caller_is_super {
+        ensure_no_super_admin_target(pool, std::slice::from_ref(&user_id)).await?;
+    }
     let ids = query_scalar!(
         "SELECT ur.role_id FROM sys_user_role ur \
          JOIN sys_role r ON ur.role_id = r.id \
