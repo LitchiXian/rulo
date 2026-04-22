@@ -3,14 +3,13 @@ use std::sync::Arc;
 use axum::extract::{Query, State};
 use axum::Extension;
 use common::{
-    constant::redis_constant,
     extractor::ValidatedJson,
     model::{IdDto, IdsDto, IsSuperAdmin, PageResult},
     result::R,
-    util::redis_util,
 };
 use macros::perm;
 
+use crate::system::auth::cache;
 use crate::system::user::service;
 
 use super::model::*;
@@ -46,22 +45,7 @@ pub async fn remove_handler(
     if result.is_ok() {
         // 清理被删除用户的所有身份缓存，配合 query_user_auth 的存活检查可实现下次请求立即下线
         for user_id in &dto.ids {
-            let suffix = user_id.to_string();
-            let _ = redis_util::del(
-                &state.redis_pool,
-                &(redis_constant::USER_AUTH.to_owned() + &suffix),
-            )
-            .await;
-            let _ = redis_util::del(
-                &state.redis_pool,
-                &(redis_constant::USER_MENUS.to_owned() + &suffix),
-            )
-            .await;
-            let _ = redis_util::del(
-                &state.redis_pool,
-                &(redis_constant::USER_INFO.to_owned() + &suffix),
-            )
-            .await;
+            cache::invalidate_user_full(&state.redis_pool, *user_id).await;
         }
     }
     result
@@ -82,8 +66,7 @@ pub async fn update_handler(
     let user_id = dto.id;
     let result = service::update(&state.db_pool, &state.storage_config, &dto, caller_is_super).await;
     if result.is_ok() {
-        let info_key = redis_constant::USER_INFO.to_owned() + &user_id.to_string();
-        let _ = redis_util::del(&state.redis_pool, &info_key).await;
+        cache::invalidate_user_info(&state.redis_pool, user_id).await;
     }
     result
 }
@@ -102,11 +85,7 @@ pub async fn update_bind_roles_handler(
 ) -> R<()> {
     let user_id = dto.user_id;
     let result = service::update_bind_roles(&state.db_pool, &dto, caller_is_super).await;
-    // 清除该用户的鉴权上下文和菜单缓存
-    let auth_key = redis_constant::USER_AUTH.to_owned() + &user_id.to_string();
-    let menus_key = redis_constant::USER_MENUS.to_owned() + &user_id.to_string();
-    let _ = redis_util::del(&state.redis_pool, &auth_key).await;
-    let _ = redis_util::del(&state.redis_pool, &menus_key).await;
+    cache::invalidate_user_authz(&state.redis_pool, user_id).await;
     result
 }
 

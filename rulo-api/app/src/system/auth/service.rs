@@ -165,6 +165,7 @@ pub async fn info(
 
     // 2.权限列表 -- 优先 Redis（与 IsSuperAdmin 共用 UserAuth 缓存）
     let auth = get_user_auth_from_cache(db_pool, redis_pool, user_id).await?;
+    let is_super = auth.is_super;
     let perms = auth.perms;
 
     // 3.菜单树 -- 优先 Redis
@@ -172,7 +173,7 @@ pub async fn info(
     let menus = match redis_util::get_obj::<Vec<MenuTreeNode>>(redis_pool, &menus_key).await? {
         Some(m) => m,
         None => {
-            let m = query_user_menu_tree(db_pool, user_id, auth.is_super).await?;
+            let m = query_user_menu_tree(db_pool, user_id, is_super).await?;
             redis_util::set_obj(redis_pool, &menus_key, &m, redis_constant::ONE_DAY).await?;
             m
         }

@@ -301,8 +301,8 @@ onMounted(fetchList)
         <el-table-column label="操作" width="360" fixed="right" align="center">
           <template #default="{ row }">
             <el-button v-auth="'sys:role:update'" link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
-            <el-button v-auth="'sys:role:update-bind-menus'" link type="warning" :icon="Menu" @click="openMenuDialog(row)">分配菜单</el-button>
-            <el-button v-auth="'sys:role:update-bind-perms'" link type="success" :icon="Key" @click="openPermDialog(row)">分配权限</el-button>
+            <el-button v-auth.all="['sys:role:list-bind-menus', 'sys:role:update-bind-menus']" link type="warning" :icon="Menu" @click="openMenuDialog(row)">分配菜单</el-button>
+            <el-button v-auth.all="['sys:role:list-bind-perms', 'sys:role:update-bind-perms']" link type="success" :icon="Key" @click="openPermDialog(row)">分配权限</el-button>
             <el-button v-auth="'sys:role:remove'" link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>

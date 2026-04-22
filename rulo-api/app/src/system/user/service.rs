@@ -202,11 +202,14 @@ pub async fn update_bind_roles(
     query!("DELETE FROM sys_user_role WHERE user_id = $1", dto.user_id)
         .execute(&mut *tx)
         .await?;
-    for role_id in &dto.role_ids {
+    if !dto.role_ids.is_empty() {
+        // 批量 INSERT： UNNEST 展开两个同长数组为多行，一次往返完成
+        let user_ids = vec![dto.user_id; dto.role_ids.len()];
         query!(
-            "INSERT INTO sys_user_role (user_id, role_id) VALUES ($1, $2)",
-            dto.user_id,
-            role_id
+            "INSERT INTO sys_user_role (user_id, role_id) \
+             SELECT * FROM UNNEST($1::bigint[], $2::bigint[])",
+            &user_ids,
+            &dto.role_ids
         )
         .execute(&mut *tx)
         .await?;
@@ -283,11 +286,15 @@ pub async fn list(
         .fetch_all(pool)
         .await?;
 
-    for user in &mut list {
-        user.avatar_url =
-            storage_util::resolve_object_url(bucket, storage_config, user.avatar_url.as_deref())
-                .await
-                .map_err(AppError::Internal)?;
+    // 并行 presign 所有头像 URL，避免列表查询出现 N 次串行 S3 往返
+    let resolved: Vec<Option<String>> = futures_util::future::try_join_all(
+        list.iter()
+            .map(|u| storage_util::resolve_object_url(bucket, storage_config, u.avatar_url.as_deref())),
+    )
+    .await
+    .map_err(AppError::Internal)?;
+    for (user, url) in list.iter_mut().zip(resolved) {
+        user.avatar_url = url;
     }
 
     success(PageResult {

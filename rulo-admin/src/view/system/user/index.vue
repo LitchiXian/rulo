@@ -218,7 +218,7 @@ onMounted(fetchList)
         <el-table-column label="操作" width="240" fixed="right" align="center">
           <template #default="{ row }">
             <el-button v-auth="'sys:user:update'" link type="primary" :icon="Edit" @click="openEdit(row)">编辑</el-button>
-            <el-button v-auth="'sys:user:update-bind-roles'" link type="warning" :icon="User" @click="openRoleDialog(row)">分配角色</el-button>
+            <el-button v-auth.all="['sys:user:list-bind-roles', 'sys:user:update-bind-roles']" link type="warning" :icon="User" @click="openRoleDialog(row)">分配角色</el-button>
             <el-button v-auth="'sys:user:remove'" link type="danger" :icon="Delete" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>

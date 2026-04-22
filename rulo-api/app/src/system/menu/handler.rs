@@ -1,14 +1,17 @@
 use std::sync::Arc;
 
 use axum::{
+    Extension,
     extract::{Query, State},
 };
 use common::{
     extractor::ValidatedJson,
-    model::{IdDto, IdsDto, PageResult},
+    model::{IdDto, IdsDto, IsSuperAdmin, PageResult},
     result::R,
 };
+use tracing::info;
 
+use crate::system::auth::cache;
 use crate::system::menu::service;
 
 use super::model::*;
@@ -24,9 +27,14 @@ use macros::perm;
 #[perm("sys:menu:save")]
 pub async fn save_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     ValidatedJson(dto): ValidatedJson<SysMenuSaveDto>,
 ) -> R<SysMenu> {
-    service::save(&state.db_pool, &dto).await
+    let result = service::save(&state.db_pool, &dto, caller_is_super).await;
+    if result.is_ok() {
+        cache::invalidate_all_users_menus(&state.redis_pool, &state.db_pool).await;
+    }
+    result
 }
 
 #[utoipa::path(
@@ -36,8 +44,12 @@ pub async fn save_handler(
     security(("bearer_auth" = []))
 )]
 #[perm("sys:menu:remove")]
-pub async fn remove_handler(State(state): State<Arc<AppState>>, ValidatedJson(dto): ValidatedJson<IdsDto>) -> R<()> {
-    service::remove(&state.db_pool, &dto).await
+pub async fn remove_handler(State(state): State<Arc<AppState>>, Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>, ValidatedJson(dto): ValidatedJson<IdsDto>) -> R<()> {
+    let result = service::remove(&state.db_pool, &dto, caller_is_super).await;
+    if result.is_ok() {
+        cache::invalidate_all_users_menus(&state.redis_pool, &state.db_pool).await;
+    }
+    result
 }
 
 #[utoipa::path(
@@ -49,9 +61,15 @@ pub async fn remove_handler(State(state): State<Arc<AppState>>, ValidatedJson(dt
 #[perm("sys:menu:update")]
 pub async fn update_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     ValidatedJson(dto): ValidatedJson<SysMenuUpdateDto>,
 ) -> R<()> {
-    service::update(&state.db_pool, &dto).await
+    info!("hello update menu");
+    let result = service::update(&state.db_pool, &dto, caller_is_super).await;
+    if result.is_ok() {
+        cache::invalidate_all_users_menus(&state.redis_pool, &state.db_pool).await;
+    }
+    result
 }
 
 #[utoipa::path(

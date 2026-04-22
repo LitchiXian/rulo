@@ -7,7 +7,10 @@ use sqlx::{PgPool, Postgres, QueryBuilder, query, query_as};
 
 use crate::system::menu::model::{SysMenu, SysMenuListDto, SysMenuSaveDto, SysMenuUpdateDto};
 
-pub async fn save(pool: &PgPool, dto: &SysMenuSaveDto) -> R<SysMenu> {
+pub async fn save(pool: &PgPool, dto: &SysMenuSaveDto, caller_is_super: bool) -> R<SysMenu> {
+    if !caller_is_super {
+        return Err(AppError::Forbidden("仅超级管理员可新增菜单".to_string()));
+    }
     // 校验 parent_id 有效性
     if let Some(parent_id) = dto.parent_id {
         let parent = query_as!(
@@ -103,7 +106,10 @@ pub async fn save(pool: &PgPool, dto: &SysMenuSaveDto) -> R<SysMenu> {
     success(new_menu)
 }
 
-pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
+pub async fn remove(pool: &PgPool, dto: &IdsDto, caller_is_super: bool) -> R<()> {
+    if !caller_is_super {
+        return Err(AppError::Forbidden("仅超级管理员可删除菜单".to_string()));
+    }
     let mut tx = pool.begin().await?;
 
     // 先查出这批菜单关联的 perm_id（只有 menu_type=2 auto 创建的才有）
@@ -142,7 +148,13 @@ pub async fn remove(pool: &PgPool, dto: &IdsDto) -> R<()> {
     success(())
 }
 
-pub async fn update(pool: &PgPool, dto: &SysMenuUpdateDto) -> R<()> {
+pub async fn update(pool: &PgPool, dto: &SysMenuUpdateDto, caller_is_super: bool) -> R<()> {
+    // 非超管不得修改路由路径、组件路径等结构性字段
+    if !caller_is_super && (dto.path.is_some() || dto.component.is_some()) {
+        return Err(AppError::Forbidden(
+            "仅超级管理员可修改菜单的路由路径与组件路径".to_string(),
+        ));
+    }
     let result = sqlx::query!(
         "UPDATE sys_menu SET
             name = COALESCE($2, name),

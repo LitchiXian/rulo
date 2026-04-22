@@ -145,11 +145,13 @@ pub async fn update_bind_menus(pool: &PgPool, dto: &BindMenusDto, caller_is_supe
     )
     .execute(&mut *tx)
     .await?;
-    for perm_id in &perm_ids {
+    if !perm_ids.is_empty() {
+        let role_ids = vec![dto.role_id; perm_ids.len()];
         query!(
-            "INSERT INTO sys_role_permission (role_id, perm_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-            dto.role_id,
-            perm_id
+            "INSERT INTO sys_role_permission (role_id, perm_id) \
+             SELECT * FROM UNNEST($1::bigint[], $2::bigint[]) ON CONFLICT DO NOTHING",
+            &role_ids,
+            &perm_ids
         )
         .execute(&mut *tx)
         .await?;
@@ -183,11 +185,13 @@ pub async fn update_bind_perms(pool: &PgPool, dto: &BindPermsDto, caller_is_supe
     )
     .execute(&mut *tx)
     .await?;
-    for perm_id in &dto.perm_ids {
+    if !dto.perm_ids.is_empty() {
+        let role_ids = vec![dto.role_id; dto.perm_ids.len()];
         query!(
-            "INSERT INTO sys_role_permission (role_id, perm_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-            dto.role_id,
-            perm_id
+            "INSERT INTO sys_role_permission (role_id, perm_id) \
+             SELECT * FROM UNNEST($1::bigint[], $2::bigint[]) ON CONFLICT DO NOTHING",
+            &role_ids,
+            &dto.perm_ids
         )
         .execute(&mut *tx)
         .await?;

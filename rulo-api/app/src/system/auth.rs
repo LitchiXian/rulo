@@ -1,3 +1,4 @@
+pub mod cache;
 pub mod handler;
 pub mod model;
 pub mod router;

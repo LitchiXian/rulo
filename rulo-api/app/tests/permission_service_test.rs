@@ -14,7 +14,7 @@ async fn test_permission_crud(pool: PgPool) {
         perm_type: 1,
         remark: None,
     };
-    let result = service::save(&pool, &save_dto).await.unwrap();
+    let result = service::save(&pool, &save_dto, true).await.unwrap();
     let perm = result.take_data().unwrap();
     assert_eq!(perm.perm_code, "test:read");
     let perm_id = perm.id;
@@ -50,7 +50,7 @@ async fn test_permission_crud(pool: PgPool) {
 
     // 5. remove
     let ids_dto = IdsDto { ids: vec![perm_id] };
-    service::remove(&pool, &ids_dto).await.unwrap();
+    service::remove(&pool, &ids_dto, true).await.unwrap();
     assert!(service::detail(&pool, &detail_dto).await.is_err());
 }
 
@@ -62,7 +62,7 @@ async fn test_permission_save_duplicate_code_fails(pool: PgPool) {
         perm_type: 1,
         remark: None,
     };
-    service::save(&pool, &dto).await.unwrap();
+    service::save(&pool, &dto, true).await.unwrap();
 
     let dto2 = SysPermissionSaveDto {
         perm_code: "dup:code".to_string(),
@@ -70,7 +70,7 @@ async fn test_permission_save_duplicate_code_fails(pool: PgPool) {
         perm_type: 1,
         remark: None,
     };
-    assert!(service::save(&pool, &dto2).await.is_err());
+    assert!(service::save(&pool, &dto2, true).await.is_err());
 }
 
 #[sqlx::test(migrations = "../migrations")]
@@ -81,5 +81,5 @@ async fn test_permission_save_invalid_type_fails(pool: PgPool) {
         perm_type: 3,
         remark: None,
     };
-    assert!(service::save(&pool, &dto).await.is_err());
+    assert!(service::save(&pool, &dto, true).await.is_err());
 }
