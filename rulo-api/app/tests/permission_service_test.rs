@@ -28,9 +28,11 @@ async fn test_permission_crud(pool: PgPool) {
     let update_dto = SysPermissionUpdateDto {
         id: perm_id,
         perm_name: Some("更新名称".to_string()),
+        perm_code: None,
+        perm_type: None,
         remark: None,
     };
-    service::update(&pool, &update_dto).await.unwrap();
+    service::update(&pool, &update_dto, true).await.unwrap();
     let result = service::detail(&pool, &detail_dto).await.unwrap();
     assert_eq!(result.take_data().unwrap().perm_name, "更新名称");
 

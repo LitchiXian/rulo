@@ -31,7 +31,7 @@ interface MenuTreeNode extends SysMenu {
 }
 
 const treeData = computed<MenuTreeNode[]>(() => {
-  const map = new Map<number, MenuTreeNode>()
+  const map = new Map<string, MenuTreeNode>()
   const roots: MenuTreeNode[] = []
   // 先把所有节点放入 map
   for (const item of tableData.value) {
@@ -80,7 +80,7 @@ const handleSizeChange = (size: number) => {
 // ---- 新增/编辑弹窗 ----
 const dialogVisible = ref(false)
 const isEdit = ref(false)
-const formData = ref<SysMenuSaveDto & { id?: number; is_hidden?: boolean }>({
+const formData = ref<SysMenuSaveDto & { id?: string; is_hidden?: boolean }>({
   name: '',
   menu_type: 2,
   sort_order: 100,
@@ -124,9 +124,9 @@ const formRules: FormRules = {
 
 // 父级菜单树选项（编辑时排除自身及其后代）
 const parentTreeOptions = computed(() => {
-  const excludeIds = new Set<number>()
+  const excludeIds = new Set<string>()
   if (isEdit.value && formData.value.id) {
-    const collectIds = (id: number) => {
+    const collectIds = (id: string) => {
       excludeIds.add(id)
       for (const item of tableData.value) {
         if (item.parent_id === id) collectIds(item.id)
@@ -134,8 +134,8 @@ const parentTreeOptions = computed(() => {
     }
     collectIds(formData.value.id)
   }
-  interface TreeOption { value: number; label: string; children?: TreeOption[] }
-  const map = new Map<number, TreeOption>()
+  interface TreeOption { value: string; label: string; children?: TreeOption[] }
+  const map = new Map<string, TreeOption>()
   const roots: TreeOption[] = []
   for (const item of tableData.value) {
     if (excludeIds.has(item.id)) continue
@@ -168,7 +168,6 @@ const openEdit = (row: SysMenu) => {
   formData.value = {
     id: row.id,
     parent_id: row.parent_id || undefined,
-    perm_id: row.perm_id ?? undefined,
     name: row.name,
     menu_type: row.menu_type,
     path: row.path ?? undefined,
