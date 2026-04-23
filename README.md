@@ -126,11 +126,7 @@ The following accounts are seeded by the init migration (`migrations/20260423000
 - Frontend menus and routes are still registered statically; dynamic menu/route generation is a planned next step
 - The backend is being evolved toward a more complete RBAC-driven management platform
 
-## Roadmap
-
-See the project roadmap and next priorities in [doc/todo.md](doc/todo.md).
-
-Current focus areas:
+## Current Focus
 
 - dynamic menus and dynamic routes
 - RBAC closure between users, roles, menus, and permissions

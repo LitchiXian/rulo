@@ -126,11 +126,7 @@ npm run dev
 
 参考 `bin/deploy-bak/`，详细步骤见其中的 `RULO_README.md`。
 
-## 路线图
-
-项目路线图与下一步优先事项参见 [doc/todo.md](doc/todo.md)。
-
-当前重点包括：
+## 当前重点
 
 - 动态菜单与动态路由
 - 用户 / 角色 / 菜单 / 权限的 RBAC 闭环
