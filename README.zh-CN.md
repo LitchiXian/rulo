@@ -18,8 +18,8 @@ Rulo 目前由两部分组成：
 
 <table border="0" cellspacing="0" cellpadding="0">
   <tr>
-    <td width="50%"><img src="assets/photo1.png" alt="Dashboard 首页（暗色）" /></td>
-    <td width="50%"><img src="assets/photo2.png" alt="部门管理（亮色）" /></td>
+    <td width="50%"><img src="assets/photo1.jpg" alt="Dashboard 首页（暗色）" /></td>
+    <td width="50%"><img src="assets/photo2.jpg" alt="部门管理（亮色）" /></td>
   </tr>
 </table>
 

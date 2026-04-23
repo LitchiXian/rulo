@@ -18,8 +18,8 @@ Rulo currently consists of two parts:
 
 <table border="0" cellspacing="0" cellpadding="0">
   <tr>
-    <td width="50%"><img src="assets/photo1.png" alt="Dashboard – dark mode" /></td>
-    <td width="50%"><img src="assets/photo2.png" alt="Department management – light mode" /></td>
+    <td width="50%"><img src="assets/photo1.jpg" alt="Dashboard – dark mode" /></td>
+    <td width="50%"><img src="assets/photo2.jpg" alt="Department management – light mode" /></td>
   </tr>
 </table>
 
