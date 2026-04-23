@@ -1,0 +1,31 @@
+# ============================================
+# rulo-api 运行镜像
+# 说明: 本地先 cargo build --release 编译好，
+#       本 Dockerfile 只负责把产物打包成最小镜像。
+# 构建: 由 build.sh 调用，从项目根目录执行
+#   docker build -f bin/rulo-docker/Dockerfile.api -t rulo-api .
+# 注意:
+#   config/ 不打进镜像，运行时通过 volume 映射进来:
+#   -v /opt/rulo/api/config:/app/config
+#   logs/ 也通过 volume 挂载
+# ============================================
+FROM debian:trixie-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# 拷贝本地编译好的二进制
+COPY rulo-api/target/release/app ./rulo-api
+
+# 拷贝数据库迁移文件（迁移脚本跟随版本走，打进镜像）
+COPY rulo-api/migrations/ ./migrations/
+
+# config/ 与 logs/ 由运行时 volume 挂载
+RUN mkdir -p config logs
+
+EXPOSE 13000
+
+CMD ["./rulo-api"]

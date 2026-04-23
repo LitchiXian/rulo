@@ -85,6 +85,7 @@ const formData = ref<SysMenuSaveDto & { id?: number; is_hidden?: boolean }>({
   menu_type: 2,
   sort_order: 100,
 })
+const editingOriginal = ref<SysMenu | null>(null)
 
 const formRef = ref<FormInstance>()
 const formRules: FormRules = {
@@ -163,6 +164,7 @@ const openAdd = () => {
 
 const openEdit = (row: SysMenu) => {
   isEdit.value = true
+  editingOriginal.value = { ...row }
   formData.value = {
     id: row.id,
     parent_id: row.parent_id || undefined,
@@ -187,11 +189,13 @@ const handleSave = async () => {
   formSaving.value = true
   try {
     if (isEdit.value) {
+      const orig = editingOriginal.value
       const dto: SysMenuUpdateDto = {
         id: formData.value.id!,
         name: formData.value.name || undefined,
-        path: formData.value.path,
-        component: formData.value.component,
+        // 只有值实际发生变化时才发送，避免非超管因携带未改动的结构字段被后端拒绝
+        path: formData.value.path !== (orig?.path ?? undefined) ? formData.value.path : undefined,
+        component: formData.value.component !== (orig?.component ?? undefined) ? formData.value.component : undefined,
         icon: formData.value.icon,
         sort_order: formData.value.sort_order,
         is_hidden: formData.value.is_hidden,

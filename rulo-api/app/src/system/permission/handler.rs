@@ -56,9 +56,10 @@ pub async fn remove_handler(State(state): State<Arc<AppState>>, Extension(IsSupe
 #[perm("sys:permission:update")]
 pub async fn update_handler(
     State(state): State<Arc<AppState>>,
+    Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     ValidatedJson(dto): ValidatedJson<SysPermissionUpdateDto>,
 ) -> R<()> {
-    let result = service::update(&state.db_pool, &dto).await;
+    let result = service::update(&state.db_pool, &dto, caller_is_super).await;
     if result.is_ok() {
         cache::invalidate_all_users_authz(&state.redis_pool, &state.db_pool).await;
     }

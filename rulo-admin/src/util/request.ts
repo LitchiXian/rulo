@@ -47,6 +47,10 @@ function handleBizError(code: number, message?: string): boolean {
     ElMessage.error('权限不足，拒绝访问')
     return true
   }
+  if (code === 40301) {
+    ElMessage.warning({ message: message || '该操作仅限超级管理员', duration: 4000 })
+    return true
+  }
   if (code === 40400) {
     ElMessage.warning('资源不存在')
     return true

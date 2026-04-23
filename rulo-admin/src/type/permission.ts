@@ -22,6 +22,7 @@ export interface SysPermissionSaveDto {
 export interface SysPermissionUpdateDto {
   id: string
   perm_name?: string
+  perm_code?: string
   perm_type?: number
   remark?: string
 }

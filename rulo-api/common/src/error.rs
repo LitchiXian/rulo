@@ -18,6 +18,8 @@ pub enum AppError {
     ServiceError(String),
     Unauthorized(String),
     Forbidden(String),
+    /// 操作被拒绝，原因是该操作仅限超级管理员（业务码 40301，区别于普通权限不足 40300）
+    SuperAdminOnly(String),
     NotFound(String),
     TooManyRequests(String),
     DbError(sqlx::Error),
@@ -33,6 +35,7 @@ impl AppError {
         match self {
             Self::Unauthorized(_) => StatusCode::UNAUTHORIZED,
             Self::Forbidden(_) => StatusCode::FORBIDDEN,
+            Self::SuperAdminOnly(_) => StatusCode::FORBIDDEN,
             Self::NotFound(_) => StatusCode::NOT_FOUND,
             Self::TooManyRequests(_) => StatusCode::TOO_MANY_REQUESTS,
             Self::ServiceError(_) => StatusCode::OK,
@@ -50,6 +53,7 @@ impl AppError {
             Self::ServiceError(_) => 40000,
             Self::Unauthorized(_) => 40100,
             Self::Forbidden(_) => 40300,
+            Self::SuperAdminOnly(_) => 40301,
             Self::NotFound(_) => 40400,
             Self::TooManyRequests(_) => 42900,
             Self::DbError(_) => 50001,
@@ -66,6 +70,7 @@ impl AppError {
             Self::ServiceError(msg) => msg.clone(),
             Self::Unauthorized(msg) => msg.clone(),
             Self::Forbidden(msg) => msg.clone(),
+            Self::SuperAdminOnly(msg) => msg.clone(),
             Self::NotFound(msg) => msg.clone(),
             Self::TooManyRequests(msg) => msg.clone(),
             Self::DbError(_) => "数据库异常".to_string(),

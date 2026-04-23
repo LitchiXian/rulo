@@ -9,7 +9,6 @@ use common::{
     model::{IdDto, IdsDto, IsSuperAdmin, PageResult},
     result::R,
 };
-use tracing::info;
 
 use crate::system::auth::cache;
 use crate::system::menu::service;
@@ -64,7 +63,6 @@ pub async fn update_handler(
     Extension(IsSuperAdmin(caller_is_super)): Extension<IsSuperAdmin>,
     ValidatedJson(dto): ValidatedJson<SysMenuUpdateDto>,
 ) -> R<()> {
-    info!("hello update menu");
     let result = service::update(&state.db_pool, &dto, caller_is_super).await;
     if result.is_ok() {
         cache::invalidate_all_users_menus(&state.redis_pool, &state.db_pool).await;

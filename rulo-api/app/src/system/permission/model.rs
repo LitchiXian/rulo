@@ -61,6 +61,12 @@ pub struct SysPermissionUpdateDto {
     pub id: i64,
     #[validate(length(min = 1, max = 50, message = "权限名称长度必须在 1-50 之间"))]
     pub perm_name: Option<String>,
+    /// 仅超级管理员可修改（会校验唯一性）
+    #[validate(length(min = 1, max = 100, message = "权限码长度必须在 1-100 之间"))]
+    pub perm_code: Option<String>,
+    /// 仅超级管理员可修改
+    #[validate(range(min = 1, max = 2, message = "权限类型仅支持 1(API权限) 或 2(菜单权限)"))]
+    pub perm_type: Option<i16>,
     #[validate(length(max = 500, message = "备注长度不能超过 500"))]
     pub remark: Option<String>,
 }

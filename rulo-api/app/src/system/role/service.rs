@@ -68,7 +68,7 @@ async fn ensure_no_super_admin_role(pool: &PgPool, role_ids: &[i64]) -> Result<(
     .await?
     .unwrap_or(0);
     if cnt > 0 {
-        return Err(AppError::Forbidden("无权操作超级管理员角色".to_string()));
+        return Err(AppError::SuperAdminOnly("无权操作超级管理员角色".to_string()));
     }
     Ok(())
 }

@@ -1,0 +1,368 @@
+# ============================================
+# rulo 项目 K3s 部署清单
+# 用法: kubectl apply -f k3s-deploy.yaml
+# 包含: PostgreSQL + Redis + RustFS + rulo-api
+# 注意: Namespace 和 aliyun-auth 由 init 脚本创建，
+#       不放在这里，避免 delete -f 时把 namespace 连同密钥一起删掉
+# ============================================
+
+# ============================================
+# Secrets（部署前请修改密码！）
+# ============================================
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rulo-secrets
+  namespace: rulo
+type: Opaque
+stringData:
+  db-password: "CHANGE_ME_DB_PASSWORD"
+  ai-api-key: "CHANGE_ME_AI_API_KEY"
+  jwt-secret: "CHANGE_ME_JWT_SECRET_AT_LEAST_32_CHARS"
+  rustfs-access-key: "rustfsadmin"
+  rustfs-secret-key: "CHANGE_ME_RUSTFS_PASSWORD"
+
+# ============================================
+# 中间件服务
+# ============================================
+
+# ---------- PostgreSQL ----------
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: rulo
+  labels:
+    app: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      imagePullSecrets:
+        - name: aliyun-auth
+      volumes:
+        - name: postgres-data
+          hostPath:
+            path: /opt/rulo/env/postgres/data
+            type: DirectoryOrCreate
+      containers:
+        - name: postgres
+          image: CHANGE_ME_REGISTRY_HOST/rulo/postgres:latest
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "rulo"
+            - name: POSTGRES_USER
+              value: "rulo"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rulo-secrets
+                  key: db-password
+            - name: TZ
+              value: "Asia/Shanghai"
+            - name: PGDATA
+              value: "/var/lib/postgresql/data/pgdata"
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: rulo
+spec:
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+      nodePort: 30432
+  type: NodePort
+
+# ---------- Redis ----------
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: rulo
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      imagePullSecrets:
+        - name: aliyun-auth
+      volumes:
+        - name: redis-data
+          hostPath:
+            path: /opt/rulo/env/redis/data
+            type: DirectoryOrCreate
+      containers:
+        - name: redis
+          image: CHANGE_ME_REGISTRY_HOST/rulo/redis:latest
+          ports:
+            - containerPort: 6379
+          command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: rulo
+spec:
+  selector:
+    app: redis
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+  type: ClusterIP
+
+# ---------- RustFS ----------
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rustfs
+  namespace: rulo
+  labels:
+    app: rustfs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rustfs
+  template:
+    metadata:
+      labels:
+        app: rustfs
+    spec:
+      imagePullSecrets:
+        - name: aliyun-auth
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+      volumes:
+        - name: rustfs-data
+          hostPath:
+            path: /opt/rulo/env/rustfs/data
+            type: DirectoryOrCreate
+        - name: rustfs-logs
+          hostPath:
+            path: /opt/rulo/env/rustfs/logs
+            type: DirectoryOrCreate
+      containers:
+        - name: rustfs
+          image: CHANGE_ME_REGISTRY_HOST/rulo/rustfs:latest
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+          env:
+            - name: RUSTFS_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rulo-secrets
+                  key: rustfs-access-key
+            - name: RUSTFS_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rulo-secrets
+                  key: rustfs-secret-key
+          args: ["server", "/data", "--console-address", ":9001"]
+          ports:
+            - containerPort: 9000
+            - containerPort: 9001
+          volumeMounts:
+            - name: rustfs-data
+              mountPath: /data
+            - name: rustfs-logs
+              mountPath: /logs
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rustfs-service
+  namespace: rulo
+spec:
+  selector:
+    app: rustfs
+  ports:
+    - protocol: TCP
+      port: 9000
+      targetPort: 9000
+      name: api
+      nodePort: 30090
+    - protocol: TCP
+      port: 9001
+      targetPort: 9001
+      name: console
+      nodePort: 30091
+  type: NodePort
+
+# ============================================
+# 业务服务
+# ============================================
+
+# ---------- rulo-api（Rust 后端） ----------
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rulo-api
+  namespace: rulo
+  labels:
+    app: rulo-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rulo-api
+  template:
+    metadata:
+      labels:
+        app: rulo-api
+    spec:
+      imagePullSecrets:
+        - name: aliyun-auth
+      initContainers:
+        - name: wait-for-postgres
+          image: CHANGE_ME_REGISTRY_HOST/rulo/postgres:latest
+          command: ['sh', '-c', 'until pg_isready -h postgres-service -p 5432 -U rulo; do echo waiting for postgres; sleep 3; done']
+        - name: wait-for-redis
+          image: CHANGE_ME_REGISTRY_HOST/rulo/redis:latest
+          command: ['sh', '-c', 'until redis-cli -h redis-service ping | grep -q PONG; do echo waiting for redis; sleep 3; done']
+      volumes:
+        - name: api-logs
+          hostPath:
+            path: /opt/rulo/api/logs
+            type: DirectoryOrCreate
+        - name: api-config
+          hostPath:
+            path: /opt/rulo/api/config
+            type: DirectoryOrCreate
+      containers:
+        - name: rulo-api
+          image: CHANGE_ME_REGISTRY_HOST/rulo/rulo-api:latest
+          ports:
+            - containerPort: 13000
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rulo-secrets
+                  key: db-password
+            - name: RULO__DATABASE__URL
+              value: "postgres://rulo:$(DB_PASSWORD)@postgres-service:5432/rulo"
+            - name: RULO__REDIS__URL
+              value: "redis://redis-service:6379/0"
+            - name: RULO__JWT__SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: rulo-secrets
+                  key: jwt-secret
+            - name: RULO__AI__API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rulo-secrets
+                  key: ai-api-key
+            - name: RULO__STORAGE__PUB_URL
+              value: "https://CHANGE_ME_YOUR_DOMAIN/storage"
+            - name: RULO__STORAGE__ENDPOINT
+              value: "http://rustfs-service:9000"
+            - name: RULO__STORAGE__ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rulo-secrets
+                  key: rustfs-access-key
+            - name: RULO__STORAGE__SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rulo-secrets
+                  key: rustfs-secret-key
+            - name: RUST_LOG
+              value: "rulo=info,tower_http=info"
+          volumeMounts:
+            - name: api-config
+              mountPath: /app/config
+            - name: api-logs
+              mountPath: /app/logs
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 13000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 13000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rulo-api-service
+  namespace: rulo
+spec:
+  selector:
+    app: rulo-api
+  ports:
+    - protocol: TCP
+      port: 13000
+      targetPort: 13000
+      nodePort: 30130
+  type: NodePort

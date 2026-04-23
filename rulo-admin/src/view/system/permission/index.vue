@@ -54,11 +54,8 @@ const handleSizeChange = (size: number) => {
 // ---- 新增/编辑弹窗 ----
 const dialogVisible = ref(false)
 const isEdit = ref(false)
-const formData = ref<SysPermissionSaveDto & { id?: number }>({
-  perm_code: '',
-  perm_name: '',
-  perm_type: 1,
-})
+const formData = ref<SysPermissionSaveDto & { id?: string }>({ perm_code: '', perm_name: '', perm_type: 1 })
+const editingOriginal = ref<SysPermission | null>(null)
 
 const formRef = ref<FormInstance>()
 const formRules: FormRules = {
@@ -75,6 +72,7 @@ const openAdd = () => {
 
 const openEdit = (row: SysPermission) => {
   isEdit.value = true
+  editingOriginal.value = { ...row }
   formData.value = {
     id: row.id,
     perm_code: row.perm_code,
@@ -93,10 +91,13 @@ const handleSave = async () => {
   formSaving.value = true
   try {
     if (isEdit.value) {
+      const orig = editingOriginal.value
       const dto: SysPermissionUpdateDto = {
         id: formData.value.id!,
         perm_name: formData.value.perm_name || undefined,
-        perm_type: formData.value.perm_type,
+        // 仅实际发生变化时才发送，非超管未改时不会触发 40301
+        perm_code: formData.value.perm_code !== orig?.perm_code ? formData.value.perm_code : undefined,
+        perm_type: formData.value.perm_type !== orig?.perm_type ? formData.value.perm_type : undefined,
         remark: formData.value.remark,
       }
       await permissionApi.update(dto)
@@ -187,7 +188,7 @@ onMounted(fetchList)
     <el-dialog :title="isEdit ? '编辑权限' : '新增权限'" v-model="dialogVisible" width="500px">
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="90px">
         <el-form-item label="权限编码" prop="perm_code">
-          <el-input v-model="formData.perm_code" placeholder="如 sys:user:list" :disabled="isEdit" maxlength="100" />
+          <el-input v-model="formData.perm_code" placeholder="如 sys:user:list" maxlength="100" />
         </el-form-item>
         <el-form-item label="权限名" prop="perm_name">
           <el-input v-model="formData.perm_name" placeholder="请输入权限名" maxlength="50" />

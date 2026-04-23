@@ -11,7 +11,7 @@ use crate::system::permission::model::{
 
 pub async fn save(pool: &PgPool, dto: &SysPermissionSaveDto, caller_is_super: bool) -> R<SysPermission> {
     if !caller_is_super {
-        return Err(AppError::Forbidden("仅超级管理员可新增权限".to_string()));
+        return Err(AppError::SuperAdminOnly("仅超级管理员可新增权限".to_string()));
     }
     if dto.perm_code.trim().is_empty() {
         return Err(AppError::ServiceError("权限编码不能为空".to_string()));
@@ -56,7 +56,7 @@ pub async fn save(pool: &PgPool, dto: &SysPermissionSaveDto, caller_is_super: bo
 
 pub async fn remove(pool: &PgPool, dto: &IdsDto, caller_is_super: bool) -> R<()> {
     if !caller_is_super {
-        return Err(AppError::Forbidden("仅超级管理员可删除权限".to_string()));
+        return Err(AppError::SuperAdminOnly("仅超级管理员可删除权限".to_string()));
     }
     // perm_type=2（菜单权限）不允许直接删除，只能通过删菜单级联删
     let menu_perm_count: i64 = sqlx::query_scalar!(
@@ -81,20 +81,43 @@ pub async fn remove(pool: &PgPool, dto: &IdsDto, caller_is_super: bool) -> R<()>
     success(())
 }
 
-pub async fn update(pool: &PgPool, dto: &SysPermissionUpdateDto) -> R<()> {
+pub async fn update(pool: &PgPool, dto: &SysPermissionUpdateDto, caller_is_super: bool) -> R<()> {
+    // 仅超管可修改权限码与类型
+    if !caller_is_super && (dto.perm_code.is_some() || dto.perm_type.is_some()) {
+        return Err(AppError::SuperAdminOnly("仅超级管理员可修改权限码与类型".to_string()));
+    }
     if let Some(ref perm_name) = dto.perm_name {
         if perm_name.trim().is_empty() {
             return Err(AppError::ServiceError("权限名称不能为空字符串".to_string()));
         }
     }
+    if let Some(ref perm_code) = dto.perm_code {
+        if perm_code.trim().is_empty() {
+            return Err(AppError::ServiceError("权限码不能为空字符串".to_string()));
+        }
+        let exists: i64 = sqlx::query_scalar!(
+            "SELECT COUNT(*) FROM sys_permission WHERE perm_code = $1 AND id != $2 AND is_deleted = false",
+            perm_code, dto.id
+        )
+        .fetch_one(pool)
+        .await?
+        .unwrap_or(0);
+        if exists > 0 {
+            return Err(AppError::ServiceError(format!("权限码 {} 已存在，请更换", perm_code)));
+        }
+    }
     let result = sqlx::query!(
         "UPDATE sys_permission SET
             perm_name = COALESCE($2, perm_name),
-            remark = COALESCE($3, remark),
+            perm_code = COALESCE($3, perm_code),
+            perm_type = COALESCE($4, perm_type),
+            remark = COALESCE($5, remark),
             update_time = now()
         WHERE id = $1 AND is_deleted = false",
         dto.id,
         dto.perm_name.as_deref(),
+        dto.perm_code.as_deref(),
+        dto.perm_type,
         dto.remark.as_deref()
     )
     .execute(pool)
